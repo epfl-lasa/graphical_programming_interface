@@ -1,0 +1,23 @@
+{"scene":
+ {"blocks": [
+   {"id": 2, "x": -554.6310678459555, "y": -220.47687047984368, "name": "Chat message", "title": "Chat message", "values": {"property": [{"name": "message", "type": "string"}]}},
+   {"id": 6, "x": -276.307252868556, "y": -118.1133638734425, "name": "delay", "title": "Delay", "values": {"property": {"delay": {"label": "Delay (s)", "type": "number", "value": 1}}}}],
+  "links": [{"id": 10, "originID": 2, "originSlot": 0, "targetID": 6, "targetSlot": 0}],
+  "container": {"centerX": 750.5596068552097, "centerY": 194.66947180398736, "scale": 0.8186068249706815}
+ },
+ "blockContent": [
+   {"description": "Show text",
+    "family": "Animations",
+    "fields": [{"attr": "property", "label": "Text", "name": "text", "type": "string"},
+               {"attr": "property", "label": "Delay (s)", "name": "delay", "type": "number"},
+               {"attr": "input", "name": "Show", "type": "event"},
+               {"attr": "input", "name": "Hide", "type": "event"},
+               {"attr": "output", "name": "onShow", "type": "event"},
+               {"attr": "output", "name": "onHide", "type": "event"}],
+    "name": "text",
+    "title": "Text"},
+   {"description": "Show animation", "family": "Animations", "fields": [{"attr": "property", "label": "Animation", "name": "animation", "type": "animation"}, {"attr": "input", "name": "Play", "type": "event"}, {"attr": "input", "name": "Stop", "type": "event"}, {"attr": "output", "name": "onEnd", "type": "event"}], "name": "animation", "title": "Animation"},
+   {"description": "", "family": "Events", "fields": [{"attr": "property", "label": "Activation message", "name": "message", "type": "string"}, {"attr": "output", "name": "onMessage", "type": "event"}], "name": "Chat message"},
+   {"description": "", "family": "Time", "fields": [{"attr": "property", "label": "Delay (s)", "name": "delay", "type": "number", "value": 1}, {"attr": "input", "name": "input", "type": "event"}, {"attr": "output", "name": "output", "type": "event"}], "name": "delay", "title": "Delay"},
+   {"description": "Press shortcut for call event", "family": "Events", "fields": [{"attr": "property", "label": "Activation keys", "name": "keys", "type": "keys"}, {"attr": "output", "name": "onPress", "type": "event"}], "name": "shortcuts", "title": "Shortcuts"},
+   {"description": "Press shortcut for call event", "family": "Helpers", "fields": [{"attr": "input", "name": "input", "type": "event"}, {"attr": "output", "name": "output", "type": "event"}, {"attr": "output", "name": "output", "type": "event"}, {"attr": "output", "name": "output", "type": "event"}, {"attr": "output", "name": "output", "type": "event"}], "name": "splitter", "title": "Splitter"}]}

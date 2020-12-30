@@ -1,0 +1,13 @@
+{
+  "name": "circular", 
+  "family": "ciruclar",
+  "library": "basic",
+  "title": "Circular",
+  "description": "Circular Module",
+  "information": "",
+  "iconpath": "circular.jpeg",
+  "fields": [{"attr": "property", "label": "Text", "name": "text","type": "string"},
+             {"attr": "input", "label": "Input", "name": "input", "type": "event"},
+             {"attr": "output", "label": "Input", "name": "output", "type": "event"}]
+}
+

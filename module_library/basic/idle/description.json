@@ -1,0 +1,12 @@
+{
+  "name": "idle",
+  "family": "idle",
+  "library": "basic",
+  "title": "Idle",
+  "description": "Idle Module",
+  "information": "",
+  "iconpath": "idle.jpeg",
+  "fields": [{"attr": "property", "label": "Text", "name": "text","type": "string"},
+             {"attr": "input", "label": "Input", "name": "input", "type": "event"},
+             {"attr": "output", "label": "Input", "name": "output", "type": "event"}]
+}
