@@ -6,7 +6,9 @@
   "description": "Idle Module",
   "information": "",
   "iconpath": "idle.jpeg",
-  "fields": [{"attr": "property", "label": "Text", "name": "text","type": "string"},
-             {"attr": "input", "label": "Input", "name": "input", "type": "event"},
-             {"attr": "output", "label": "Input", "name": "output", "type": "event"}]
+  "fields": [
+    {"attr": "property", "type": "eulerPose",  "name": "reference",  "label": "Reference"},
+    {"attr": "property", "type": "string", "name": "info",  "label": "Text"},
+    {"attr": "input", "label": "Input", "name": "input", "type": "event"},
+    {"attr": "output", "label": "Input", "name": "output", "type": "event"}]
 }

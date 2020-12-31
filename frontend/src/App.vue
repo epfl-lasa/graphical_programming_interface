@@ -16,43 +16,19 @@
             class="container"/>
 
     <template v-if="selectedBlock">
-      <VueBlockProperty :property="selectedBlockProperty" @save="saveProperty"/>
+      <VueBlockProperty
+        :module="selectedModule"
+        :property="selectedBlockProperty"
+        @save="saveProperty"/>
+
     </template>
     <template v-else-if="loadedLibrary">
+    <!-- <template v-if="0"> -->
       <VueModuleLibrary ref="module-library"
                         class="module-library"
                         :modules="modules"
                         :loadedLibrary="loadedLibrary"/>
     </template>
-
-    <label>
-      <select name="type" v-model="selectedType">
-        <template v-for="type in selectBlocksType">
-          <optgroup :label="type">
-            <option v-for="block in filteredBlocks(type)" :value="block.name"> {{block.title || block.name}}</option>
-            <!-- <option v-for="block in filteredBlocks(type)" :value="block.name"> [[block.title || block.name]]</option> -->
-          </optgroup>
-        </template>
-      </select>
-    </label>
-    <button @click.stop="addBlock">Add</button>
-
-    <label for="useContextMenu">
-       <input type="checkbox" v-model="useContextMenu" id="useContextMenu">Use right click for Add blocks
-    </label>
-
-    <ul id="contextMenu" ref="contextMenu" tabindex="-1" v-show="contextMenu.isShow"
-        @blur="closeContextMenu"
-        :style="{top: contextMenu.top + 'px', left: contextMenu.left + 'px'}">
-      <template v-for="type in selectBlocksType">
-        <li class="label">{{type}}</li>
-        <!-- <li class="label">[[type]]</li> -->
-        <li v-for="block in filteredBlocks(type)"
-            @click="addBlockContextMenu(block.name)">{{block.title || block.name}}
-            <!-- @click="addBlockContextMenu(block.name)">[[block.title || block.name]] -->
-        </li>
-      </template>
-    </ul>
   </div>
 </template>
 
@@ -78,8 +54,21 @@ export default {
     VueBlockProperty,
     VueModuleLibrary
   },
-  created () {
+  mounted () {
     this.loadLibraries()
+
+    // For Debugging & Development
+    this.loadScene('default')
+    this.loadedLibrary = 'basic'
+
+    setTimeout(() => {
+      // console.log('Wait to be sure to load the whole scene.')
+      // console.log(this.$refs.container.scene.blocks[1])
+      this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
+      // this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
+      // this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
+    }, 300)
+    // When loading finished, press default
   },
   data: function () {
     return {
@@ -105,10 +94,16 @@ export default {
       },
       modules: {},
       // loadedLibrary: null
-      loadedLibrary: 'basic'
+      loadedLibrary: null
     }
   },
   computed: {
+    selectedModule () {
+      if (!this.selectedBlock || !this.selectedBlock.values || !this.selectedBlock.values.property) {
+        return null
+      }
+      return this.selectedBlock
+    },
     selectedBlockProperty () {
       if (!this.selectedBlock || !this.selectedBlock.values || !this.selectedBlock.values.property) {
         return null
@@ -140,22 +135,25 @@ export default {
           // console.log('ERORIUS')
         })
     },
-    saveScene (filename = 'default') {
-      console.log('Sending blocks to database')
+    saveScene (filename = null) {
+      if (!filename) {
+        filename = 'default'
+      }
+      // console.log('Sending blocks to database')
       var goal = `http://localhost:5000/savetofile/` + filename
 
       // console.log('blocks')
       // console.log(this.scene)
-      console.log('blocks', JSON.stringify(this.blocks))
+      // console.log('blocks', JSON.stringify(this.blocks))
       axios.get(goal,
                 {'params': {'scene': this.scene, 'blockContent': JSON.stringify(this.blocks)}})
         .then(response => {
-          console.log(response)
+          console.log(response.statusText)
         })
         .catch(error => {
           console.log(error)
         })
-      console.log('Successfully send blocks to file')
+      console.log('Successfully saved blocks to <<' + filename + '>>')
     },
     loadScene (filename = null) {
       if (!filename) {
@@ -166,8 +164,13 @@ export default {
         .then(response => {
           console.log(response.statusText)
           this.scene = response.data.scene
-          this.blocks = response.data.blockContent
-          console.log('Load succesfull')
+          if (this.blocks.length === 0) {
+            this.blocks = response.data.blockContent
+            console.log('Load block library')
+          } else {
+            console.log('Use default block library')
+          }
+          console.log('Load succesfull from file <<' + filename + '>>')
         })
         .catch(error => {
           console.log(error)
@@ -218,6 +221,7 @@ export default {
       this.scene = merge({}, scene)
     },
     showContextMenu (e) {
+      // TODO remove from main app since list not existant anymore
       if (!this.useContextMenu) return
       if (e.preventDefault) e.preventDefault()
 
@@ -231,6 +235,7 @@ export default {
       })
     },
     setMenu (top, left) {
+      // TODO remove from main app since list not existant anymore
       let border = 5
       let contextMenuEl = this.$refs.contextMenu
       let containerElRect = this.$refs.container.$el.getBoundingClientRect()
@@ -301,6 +306,7 @@ export default {
   }
 
   #contextMenu {
+    // TODO remove from main app
     position: absolute;
     z-index: 1000;
     background: white;

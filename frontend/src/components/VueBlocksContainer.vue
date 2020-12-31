@@ -480,6 +480,7 @@ export default {
     },
     // Events
     blockSelect (block) {
+      console.log('blockSelect @ BlocksContainer')
       block.selected = true
       this.selectedBlock = block
       this.deselectAll(block.id)

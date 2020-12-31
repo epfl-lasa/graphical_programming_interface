@@ -45,6 +45,11 @@ export default {
       type: String,
       default: 'Title'
     },
+    // library: {
+      // type: String,
+      // default: ''
+    // },
+
     inputs: Array,
     outputs: Array,
 
@@ -66,10 +71,6 @@ export default {
 
     this.linking = false
     this.dragging = false
-
-    console.log('Getting constructed')
-    console.log(this.iconpath)
-    console.log('Finished constructed')
   },
   mounted () {
     document.documentElement.addEventListener('mousemove', this.handleMove, true)

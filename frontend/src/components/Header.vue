@@ -17,11 +17,11 @@
           <b-dropdown-item v-on:click="printClicked()" href="#">Load from File</b-dropdown-item>
         </b-nav-item-dropdown>
 
-        <b-nav-item v-on:click="printClicked" href="/quit">Quit</b-nav-item>
+        <b-nav-item v-on:click="quit()">Quit</b-nav-item>
 
         <!-- TODO remove after debugging -->
-        <b-nav-item v-on:click="saveBlocks()" href="#">Save</b-nav-item>
-        <b-nav-item v-on:click="loadBlocks('default_modulo')" href="#">Load Default</b-nav-item>
+        <b-nav-item v-on:click="saveBlocks('default')" href="#">Save(Default)</b-nav-item>
+        <b-nav-item v-on:click="loadBlocks('default')" href="#">Load(Default)</b-nav-item>
 
       </b-navbar-nav>
     </b-navbar>
@@ -47,7 +47,7 @@ export default {
     }
   },
   // created () {
-    // this.$parent.update_libraries()
+  // this.$parent.update_libraries()
   // },
   props: {
     modules: {
@@ -65,14 +65,11 @@ export default {
     }
   },
   methods: {
-    printClicked (message = '') {
-      console.log('Clicked ' + message)
-    },
     notImplemented () {
       console.log('Not implemented yet.')
     },
-    saveBlocks () {
-      console.log('Sent <saving> to parent')
+    saveBlocks (filename = null) {
+      // console.log('Sent <saving> to parent')
       this.$parent.saveScene()
     },
     loadBlocks (filename = null) {
@@ -82,6 +79,13 @@ export default {
     loadModuleLibrary (library) {
       console.log('Loading Module Librar: <<' + library + '>>')
       this.$parent.loadModuleLibrary(library)
+    },
+    goHome () {
+      console.log('Implement Home.')
+    },
+    quit () {
+      console.log('Implement quit.')
+      // this.$parent.loadModuleLibrary(library)
     }
   }
 }

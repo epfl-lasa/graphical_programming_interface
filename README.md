@@ -7,6 +7,10 @@
 * vue-router: 3.0.1
 * axios: 0.16.2
 
+@thanksto:  
+- oleg-agapov / flask-vue-spa 
+- ghostiam / vue-blocks 
+
 ## Structure
 ### Frontend
 Front end is structured as a vue-one-page application. This allows deployment through standard webbroswers.
