@@ -8,7 +8,8 @@
   "iconpath": "idle.jpeg",
   "fields": [
     {"attr": "property", "type": "eulerPose",  "name": "reference",  "label": "Reference"},
-    {"attr": "property", "type": "string", "name": "info",  "label": "Text"},
+    {"attr": "property", "type": "slider", "name": "stiffness",  "label": "Stiffness"},
+    {"attr": "property", "type": "string", "name": "comment",  "label": "Comment"},
     {"attr": "input", "label": "Input", "name": "input", "type": "event"},
     {"attr": "output", "label": "Input", "name": "output", "type": "event"}]
 }

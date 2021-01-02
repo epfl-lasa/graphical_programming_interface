@@ -19,6 +19,7 @@
       <VueBlockProperty
         :module="selectedModule"
         :property="selectedBlockProperty"
+        ref="property"
         @save="saveProperty"/>
 
     </template>
@@ -186,10 +187,15 @@ export default {
       }
     },
     selectBlock (block) {
-      console.log('select', block)
+      // console.log('select', block)
       this.selectedBlock = block
     },
     deselectBlock (block) {
+      // Save Automatically at exit
+      // console.log('Save properties')
+      // this.$refs.property.save()
+
+      // console.log('deselect', block.properties)
       console.log('deselect', block)
       this.selectedBlock = null
     },
@@ -210,7 +216,7 @@ export default {
       this.loadedLibrary = library
     },
     saveProperty (val) {
-      console.log(val)
+      console.log('Save', val)
 
       let scene = this.scene
       let block = scene.blocks.find(b => {

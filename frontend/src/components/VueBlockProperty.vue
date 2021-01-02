@@ -4,9 +4,10 @@
   <h5> [ Module {{ module.name }} ] </h5>
   <div class="property" v-for="p in properties">
     <div class="property-box" v-if="p.type==='eulerPose'">
-      <h3> Position </h3>
+      <h3> {{ p.label }} </h3>
       <div>
         <label> Frame: </label>
+          <!-- split-variant="outline-dark" -->
         <b-dropdown variant="dark" id="dropdown-1" v-bind:text="referenceFrames[p.value.frameId]" class="m-md-2">
           <template v-for="(frame, key) in referenceFrames">
             <b-dropdown-item v-on:click="p.value.frameId = key" href="#"> {{frame}} </b-dropdown-item>
@@ -28,8 +29,33 @@
       <br>
     </div>
 
+    <div class="property-box" v-else-if="p.type==='slider'">
+      <h4> {{ p.label }} </h4>
+      <label> {{p.value.range[0]}} </label>
+          <!-- <v-card-text> -->
+            <v-slider
+              v-model="fruits"
+              :tick-labels="ticksLabels"
+              :max="3"
+              step="1"
+              ticks="always"
+              tick-size="4"
+              ></v-slider>
+          <!-- </v-card-text> -->
+        <!-- <range-slider -->
+        <!--   class="slider" -->
+        <!--   :min="p.value.range[0]" -->
+        <!--   :max="p.value.range[1]" -->
+        <!--   :step="(p.value.range[1]-p.value.range[0])/20." -->
+        <!--   v-model="p.value.value"> -->
+        <!-- </range-slider> -->
+       <label> {{p.value.range[1]}} </label>
+    </div>
+
     <div class="property-box" v-else>
-      <label :for="p.name">{{p.label||p.name}}:</label>
+    <!-- <div class="property-box" v-else-if="p.type==='text'"> -->
+      <!-- <label :for="p.name">{{p.label||p.name}}:</label> -->
+      <h4 :for="p.name">{{p.label||p.name}}:</h4>
       <input type="text" v-model="p.value">
     </div>
 
@@ -40,8 +66,13 @@
 </template>
 
 <script>
+
 export default {
-  name: 'VueBlockProperty',
+  name: 'vue-range-sliderVueBlockProperty',
+  components: {
+    RangeSlider
+    // VueSimpleRangeSlider
+  },
   // props: ['property'],
   mounted () {
     this.loadModule()
@@ -66,7 +97,7 @@ export default {
   },
   methods: {
     // updateFrameId (prop, key) {
-      // prop.value.frameId = key
+    // prop.value.frameId = key
     // },
     // Why is it currently needed twice? Can this be changed...
     loadProperties () {
@@ -80,10 +111,11 @@ export default {
         this.properties = null
       }
 
+      // Create [new] default containers
       Object.values(this.properties)
         .forEach(prop => {
           if (prop.type === 'eulerPose') {
-            if (prop.value.frameId) {
+            if (prop.value && prop.value.frameId) {
               console.log(prop.value.frameId)
             } else {
               prop.value = {
@@ -93,15 +125,24 @@ export default {
                 eulerOrder: 'XYZ'
               }
             }
+          } else if (prop.type === 'slider') {
+            if (prop.value && prop.value.value) {
+              console.log(prop.value.frameId)
+            } else {
+              prop.value = {
+                value: 0,
+                range: [0.0, 10.5]
+              }
+            }
           }
           return prop
         })
 
-      console.log('Properties')
-      console.log(this.properties)
+      // console.log('Properties')
+      // console.log(this.properties)
 
-      console.log('Module')
-      console.log(this.module)
+      // console.log('Module')
+      // console.log(this.module)
     },
     save () {
       console.log('local props')
