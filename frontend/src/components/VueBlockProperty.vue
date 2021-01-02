@@ -33,14 +33,14 @@
       <h4> {{ p.label }} </h4>
       <label> {{p.value.range[0]}} </label>
           <!-- <v-card-text> -->
-            <v-slider
-              v-model="fruits"
-              :tick-labels="ticksLabels"
-              :max="3"
-              step="1"
-              ticks="always"
-              tick-size="4"
-              ></v-slider>
+            <!-- <v-slider -\-> -->
+              <!-- v-model="fruits" -->
+              <!-- :tick-labels="ticksLabels" -->
+              <!-- :max="3" -->
+              <!-- step="1" -->
+              <!-- ticks="always" -->
+              <!-- tick-size="4" -->
+              <!-- ></v-slider> -->
           <!-- </v-card-text> -->
         <!-- <range-slider -->
         <!--   class="slider" -->
@@ -69,10 +69,10 @@
 
 export default {
   name: 'vue-range-sliderVueBlockProperty',
-  components: {
-    RangeSlider
+  // components: {
+    // RangeSlider
     // VueSimpleRangeSlider
-  },
+  // },
   // props: ['property'],
   mounted () {
     this.loadModule()
