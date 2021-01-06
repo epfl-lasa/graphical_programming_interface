@@ -26,30 +26,33 @@
         <label>{{key}}:</label>
         <input class="position-input" type="text" v-model="p.value.orientation[key]">
       </template>
-      <br>
+      <br> <br>
+
+      <button type="button" class="btn btn-secondary" v-on:click="toggleMotion(p)">
+        {{ moveToButtonLabel }}
+      </button>
+
     </div>
 
     <div class="property-box" v-else-if="p.type==='slider'">
       <h4> {{ p.label }} </h4>
       <label> {{p.value.range[0]}} </label>
-          <!-- <v-card-text> -->
-            <!-- <v-slider -\-> -->
-              <!-- v-model="fruits" -->
-              <!-- :tick-labels="ticksLabels" -->
-              <!-- :max="3" -->
-              <!-- step="1" -->
-              <!-- ticks="always" -->
-              <!-- tick-size="4" -->
-              <!-- ></v-slider> -->
-          <!-- </v-card-text> -->
-        <!-- <range-slider -->
-        <!--   class="slider" -->
-        <!--   :min="p.value.range[0]" -->
-        <!--   :max="p.value.range[1]" -->
-        <!--   :step="(p.value.range[1]-p.value.range[0])/20." -->
-        <!--   v-model="p.value.value"> -->
-        <!-- </range-slider> -->
-       <label> {{p.value.range[1]}} </label>
+
+      <label> {{p.value.range[1]}} </label>
+      <template v-if="0">
+        <v-container fluid>
+          <v-row>
+            <v-col cols="12">
+              <v-slider
+                :min="p.value.range[0]"
+                :max="p.value.range[1]"
+                value="30"
+                v-model="p.value.value"
+                ></v-slider>
+            </v-col>
+          </v-row>
+        </v-container>
+      </template>
     </div>
 
     <div class="property-box" v-else>
@@ -66,16 +69,18 @@
 </template>
 
 <script>
+import axios from 'axios' // Needed to pass. Only temporarily?
 
 export default {
-  name: 'vue-range-sliderVueBlockProperty',
+  name: 'VueBlockProperty',
   // components: {
-    // RangeSlider
-    // VueSimpleRangeSlider
+  // RangeSlider
+  // VueSimpleRangeSlider
   // },
   // props: ['property'],
   mounted () {
     this.loadModule()
+    this.moveToButtonLabel = this.buttonLabelsList[0]
   },
   props: {
     property: Object,
@@ -92,7 +97,10 @@ export default {
   },
   data () {
     return {
-      properties: []
+      properties: [],
+      isMovingToReference: false,
+      buttonLabelsList: ['Move Robot to Reference', 'Stop Robot'],
+      moveToButtonLabel: ''
     }
   },
   methods: {
@@ -100,6 +108,37 @@ export default {
     // prop.value.frameId = key
     // },
     // Why is it currently needed twice? Can this be changed...
+    toggleMotion (eulerPose) {
+      if (this.isMovingToReference === true) {
+        // Stop moving robot
+        console.log('Stop moving robot')
+        this.isMovingToReference = false
+        axios.get(this.$localIP + `stopmotion`, {'params': {}})
+          .then(response => {
+            console.log(response.statusText)
+          })
+          .catch(error => {
+            console.log(error)
+          })
+
+        // Set button to 'start moving'
+        this.moveToButtonLabel = this.buttonLabelsList[0]
+      } else {
+        // Start moving robot
+        console.log('Move robot to reference.')
+        this.isMovingToReference = true
+        axios.get(this.$localIP + `moveto`, {'params': {'eulerPose': eulerPose}})
+          .then(response => {
+            console.log(response.statusText)
+          })
+          .catch(error => {
+            console.log(error)
+          })
+
+        // Set button to 'stop moving'
+        this.moveToButtonLabel = this.buttonLabelsList[1]
+      }
+    },
     loadProperties () {
       this.properties = this.property
       console.log(this.properties)
@@ -221,6 +260,7 @@ export default {
 .dropdown-1 {
     position: relative;
     display: inline-block;
+    font-color: #FFFFFF
     // background: #FFFFFF;
 }
 

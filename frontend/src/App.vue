@@ -122,7 +122,8 @@ export default {
   methods: {
     loadLibraries () {
       console.log('Loading libraries.')
-      axios.get(`http://localhost:5000/getlibrariesandmodules`, {'params': {}})
+      // axios.get(`http://localhost:5000/getlibrariesandmodules`, {'params': {}})
+      axios.get(this.$localIP + `getlibrariesandmodules`, {'params': {}})
         .then(response => {
           // console.log(response.data)
           // console.log('libaries')

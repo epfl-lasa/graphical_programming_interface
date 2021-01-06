@@ -45,6 +45,24 @@ def test():
     response = {'State' : 1}
     return jsonify(response)
 
+@app.route('/moveto')
+def move_to(*args, **kwargs):
+    try:
+        euler_pose = request.args.get('eulerPose')
+        print('Send start command to robot')
+        print(euler_pose)
+    except:
+        print('Could not retrieve data')
+        return 'Fail'
+    
+    return 'Success'
+
+
+@app.route('/stopmotion')
+def stopmotion(*args, **kwargs):
+    print('Send stop command to robot')
+    return 'Success'
+
 
 @app.route('/savetofile/<string:my_filename>')
 def savetofile(my_filename, *args, **kwargs):
