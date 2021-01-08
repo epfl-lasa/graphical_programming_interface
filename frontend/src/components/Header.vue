@@ -12,7 +12,7 @@
         </b-nav-item-dropdown>
 
         <b-nav-item-dropdown text="File" left>
-          <b-dropdown-item v-on:click="notImplemented" href="#">Create New</b-dropdown-item>
+          <b-dropdown-item v-on:click="createNew()" href="#">Create New</b-dropdown-item>
           <b-dropdown-item v-on:click="saveBlocks()" href="#">Save to File</b-dropdown-item>
           <b-dropdown-item v-on:click="printClicked()" href="#">Load from File</b-dropdown-item>
         </b-nav-item-dropdown>
@@ -68,9 +68,21 @@ export default {
     notImplemented () {
       console.log('Not implemented yet.')
     },
+    createNew (filename = null) {
+      this.$buefy.dialog.confirm({
+        title: `Opening New File`,
+        message: `You are about to create a new file without saving your changes.`,
+        cancelText: `Cancel`,
+        confirmText: `Confirm`,
+        type: 'is-success',
+        onConfirm: () => {
+          this.$buefy.toast.open('User does want to continue!')
+        }
+      })
+    },
     saveBlocks (filename = null) {
       // console.log('Sent <saving> to parent')
-      this.$parent.saveScene()
+      this.$parent.saveScene(filename)
     },
     loadBlocks (filename = null) {
       console.log('Sent <loading> to parent')

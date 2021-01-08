@@ -31,28 +31,47 @@
       <button type="button" class="btn btn-secondary" v-on:click="toggleMotion(p)">
         {{ moveToButtonLabel }}
       </button>
+    </div>
 
+    <div class="property-box" v-else-if="p.type==='pos3' || p.type==='vec3'">
+      <h6> {{p.label}} </h6>
+      <template v-for="(dir, key) in p.value">
+        <label>{{key}}:</label>
+        <input class="position-input" type="text" v-model="p.value[key]">
+      </template>
     </div>
 
     <div class="property-box" v-else-if="p.type==='slider'">
-      <h4> {{ p.label }} </h4>
-      <label> {{p.value.range[0]}} </label>
+      <!-- <h4> {{ p.label }}: {{p.value}} </h4> -->
+      <label> {{ p.label }} </label>
+      <input class="slider-input" type="text" v-model="p.value">
 
-      <label> {{p.value.range[1]}} </label>
-      <template v-if="0">
-        <v-container fluid>
-          <v-row>
-            <v-col cols="12">
-              <v-slider
-                :min="p.value.range[0]"
-                :max="p.value.range[1]"
-                value="30"
-                v-model="p.value.value"
-                ></v-slider>
-            </v-col>
-          </v-row>
-        </v-container>
-      </template>
+      <!-- TODO: remove after debugging -->
+      <!-- <b-field> -->
+      <!--   <p> Min </p> -->
+      <!--   <b-slider :min="-1" :max="0" :step="0.1" v-model="p.settings.min"> </b-slider> -->
+      <!-- </b-field> -->
+      <!-- <b-field> -->
+      <!--   <br> -->
+      <!--   <p> Max </p> -->
+      <!--   <b-slider :min="1" :max="100" :step="10" v-model="p.settings.max"> </b-slider> -->
+      <!-- </b-field> -->
+
+      <b-field class="slider-field">
+        <b-slider rounded
+                  :tooltip="false"
+                  :min="p.settings.min"
+                  :max="p.settings.max"
+                  :step="p.settings.step"
+                  v-model="p.value">
+          <template v-for="val in getSliderTicks(p.settings)">
+              <b-slider-tick :value="val" :key="val">
+                {{ val.toFixed(p.settings.floatDigits) }}
+                <!-- {{ val }} -->
+              </b-slider-tick>
+          </template>
+         </b-slider>
+      </b-field>
     </div>
 
     <div class="property-box" v-else>
@@ -103,11 +122,72 @@ export default {
       moveToButtonLabel: ''
     }
   },
+  // computed: {
+  // },
   methods: {
-    // updateFrameId (prop, key) {
-    // prop.value.frameId = key
-    // },
-    // Why is it currently needed twice? Can this be changed...
+    log10 (x) {
+      return Math.log(x) / Math.log(10)
+    },
+    ceilStep (x, step) {
+      return Math.ceil(x * step) / step
+    },
+    floorStep (x, step) {
+      return Math.floor(x * step) / step
+    },
+    roundDec (x, dec) {
+      return Math.round(x * Math.pow(10, dec)) / Math.pow(10, dec)
+    },
+    roundStep (x, step) {
+      return Math.round(x * Math.pow(10, step)) / Math.pow(10, step)
+    },
+    getSliderTicks (settings, minNumTicks = 4) {
+      console.log('DEBUG: running getSliderTicks')
+      const min = parseFloat(settings.min)
+      const max = parseFloat(settings.max)
+
+      var range = max - min
+      var pot = Math.floor(this.log10(range / minNumTicks))
+      var step = Math.pow(10, pot)
+
+      // Number of steps on the ruler (smaller than 50)
+      if (range / step < 20) {
+        settings.step = step / 2
+      } else if (range / step < 5) {
+        settings.step = step / 10
+      } else {
+        settings.step = step
+      }
+      settings.floatDigits = Math.max(pot * (-1), 0)
+
+      if (range / step > 11) {
+        // Additionally allow for 5er steps
+        step = step * 5
+      }
+
+      var tick
+      const tickList = []
+      if (min >= 0 || max <= 0) {
+        tick = this.ceilStep(min, step) // TODO: check if this is ideal
+        while (tick <= max) {
+          tickList.push(tick)
+          tick = tick + step
+        }
+      } else {
+        tickList.push(0)
+
+        tick = step
+        while (tick <= max) {
+          tickList.push(tick)
+          tick = tick + step
+        }
+        tick = (-1) * step
+        while (tick >= min) {
+          tickList.push(tick)
+          tick = tick - step
+        }
+      }
+      return tickList
+    },
     toggleMotion (eulerPose) {
       if (this.isMovingToReference === true) {
         // Stop moving robot
@@ -150,38 +230,55 @@ export default {
         this.properties = null
       }
 
+      console.log('loadinloading')
       // Create [new] default containers
       Object.values(this.properties)
         .forEach(prop => {
           if (prop.type === 'eulerPose') {
-            if (prop.value && prop.value.frameId) {
-              console.log(prop.value.frameId)
-            } else {
+            if (!(prop.value && prop.value.frameId)) {
               prop.value = {
                 frameId: 'base',
                 position: {x: 0, y: 0, z: 0},
                 orientation: {x: 0, y: 0, z: 0},
-                eulerOrder: 'XYZ'
+                settings: {
+                  eulerOrder: 'XYZ'
+                }
               }
+            // } else {
+              // console.log(prop.value.frameId)
+            }
+          } else if (prop.type === 'vec3' || prop.type === 'pos3') {
+            if (!(prop.value && prop.value.x)) {
+              prop.value = {
+                x: 0, y: 0, z: 0
+              }
+            // } else {
+              // console.log(prop.value.frameId)
             }
           } else if (prop.type === 'slider') {
-            if (prop.value && prop.value.value) {
-              console.log(prop.value.frameId)
-            } else {
-              prop.value = {
-                value: 0,
-                range: [0.0, 10.5]
+            console.log('Slider start')
+            console.log(prop.settings)
+            if (!prop.settings) {
+              console.log('Have to do new one')
+              prop.settings = {
+                min: 0,
+                max: 10
+              }
+              if (!prop.value) {
+                if (prop.settings.min < 0 && prop.settings.max > 0) {
+                  prop.value = 0
+                } else {
+                  prop.value = prop.settings.min
+                }
               }
             }
+            // Create steps and slider on creation
+            this.getSliderTicks(prop.settings)
+
+            // TODO: maybe safe in json / only modify on creation
           }
           return prop
         })
-
-      // console.log('Properties')
-      // console.log(this.properties)
-
-      // console.log('Module')
-      // console.log(this.module)
     },
     save () {
       console.log('local props')
@@ -261,7 +358,7 @@ export default {
     position: relative;
     display: inline-block;
     font-color: #FFFFFF
-    // background: #FFFFFF;
+                    // background: #FFFFFF;
 }
 
 .position-input {
@@ -272,5 +369,14 @@ export default {
 .orientaion-input {
     width: 50px;
     margin-right: 10px;
+}
+
+.slider-input {
+    width: 50px;
+}
+
+.slider-field{
+    margin-left: 5px;
+    margin-right: 5px;
 }
 </style>
