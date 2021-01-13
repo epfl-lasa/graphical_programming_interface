@@ -9,7 +9,8 @@ __email__ = "lukas@aica.tech"
 import os
 import warnings
 import copy
-import json
+import json # use yaml for data-exchange
+import yaml # use yaml for configuration 
 import time
 from random import *
 
@@ -26,6 +27,8 @@ app = Flask(__name__,
 # cors = CORS(app, resources={r"/": {"origins": "*"}})
 cors = CORS(app)
 
+data_directory = os.path.join('backend', 'userdata')
+
 
 @app.route('/api/random')
 def random_number():
@@ -39,11 +42,13 @@ def random_number():
 
 @app.route('/test')
 def test():
-    print('test succesfull --- Timestamp:{}'.format(time.time()))
+    # print('test succesfull --- Timestamp:{}'.format(time.time()))
     # import pdb; pdb.set_trace()
     # return 1
-    response = {'State' : 1}
-    return jsonify(response)
+    # response = {'State' : 1}
+    # return jsonify(response)
+    # return
+    return render_template("test.html")
 
 @app.route('/moveto')
 def move_to(*args, **kwargs):
@@ -107,12 +112,33 @@ def loadfromfile(my_filename):
     
     return data
 
+
+@app.route('/getfilelist')
+def getfilelist():
+    ''' Get a list of filenames from a directory. '''
+
+    print('get file list')
+    local_library_list = os.listdir(data_directory)
+
+    file_data = []
+    for filename in local_library_list:
+        file_data.append({'name': filename})
+        if os.path.isdir(os.path.join(data_directory, filename)):
+            file_data[-1]['type'] = 'dir'
+        else:
+            file_data[-1]['type'] = 'file'
+
+    # print('Get data')
+    # print(file_data)
+    return {'localfiles': file_data}
+
+
 def get_relative_filename(my_filename):
     ''' Check correct file ending and return realtive directory name. '''
     if not my_filename[-5:]=='.json':
         my_filename = my_filename + '.json'
 
-    return os.path.join('backend', 'userdata',  my_filename)
+    return os.path.join(data_directory,  my_filename)
 
 
 @app.route('/getlibrariesandmodules')
@@ -186,7 +212,7 @@ def get_scene():
     # Todo - maybe order ditcionary alphabetically
     # if os.path.isfile('main.js'):
         # pass
-
+        
     return libs_and_mods
 
 
