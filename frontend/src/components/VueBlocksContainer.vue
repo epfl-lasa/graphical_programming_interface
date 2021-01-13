@@ -20,7 +20,7 @@ import merge from 'deepmerge'
 import mouseHelper from '../helpers/mouse'
 
 import VueBlock from './VueBlock'
-import VueLink from './VueLink'
+import VueLink from './LinkCreator'
 
 export default {
   name: 'VueBlockContainer',

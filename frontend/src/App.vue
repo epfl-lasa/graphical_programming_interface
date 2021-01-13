@@ -1,35 +1,59 @@
 <template>
+  <!-- <div v-if="IS_DEBUGGING"> -->
+  <!--   <LoadSave -->
+  <!--     ref="loadsave" -->
+  <!--     class="loadsave" -->
+  <!--     /> -->
+  <!--   <\!-- :localFiles="localFiles" -\-> -->
+  <!-- </div> -->
   <div id="app">
     <Header
       ref="header"
       class="header"
       :modules="modules"/>
 
-    <VueBlocksContainer
-            @contextmenu.native="showContextMenu"
-            @click.native="closeContextMenu"
-            ref="container"
-            :blocksContent="blocks"
-            :scene.sync="scene"
-            @blockSelect="selectBlock"
-            @blockDeselect="deselectBlock"
-            class="container"/>
+    <template v-if="true">
+    <!-- <template v-if="(appMode==='main' || appMode==='programming')"> -->
+      <!-- TODO: create drawing sub-app ? -->
+      <VueBlocksContainer
+        @contextmenu.native="showContextMenu"
+        @click.native="closeContextMenu"
+        ref="container"
+        :blocksContent="blocks"
+        :scene.sync="scene"
+        @blockSelect="selectBlock"
+        @blockDeselect="deselectBlock"
+        class="container"/>
 
-    <template v-if="selectedBlock">
-      <VueBlockProperty
-        :module="selectedModule"
-        :property="selectedBlockProperty"
-        ref="property"
-        @save="saveProperty"/>
+      <template v-if="selectedBlock">
+        <VueBlockProperty
+          :module="selectedModule"
+          :property="selectedBlockProperty"
+          ref="property"
+          @save="saveProperty"/>
 
+      </template>
+      <template v-else-if="loadedLibrary">
+        <!-- <template v-if="0"> -->
+        <VueModuleLibrary ref="module-library"
+                          class="module-library"
+                          :modules="modules"
+                          :loadedLibrary="loadedLibrary"/>
+      </template>
     </template>
-    <template v-else-if="loadedLibrary">
-    <!-- <template v-if="0"> -->
-      <VueModuleLibrary ref="module-library"
-                        class="module-library"
-                        :modules="modules"
-                        :loadedLibrary="loadedLibrary"/>
+
+      <!-- <template v-if="false"> -->
+    <!-- <template v-if="true"> -->
+    <template v-if="loadSaveMode">
+      <LoadSave
+        ref="loadsave"
+        class="loadsave"
+        :localFiles="localFiles"
+        :appMode="appMode"
+        />
+        <p> Load-Safe </p>
     </template>
+
   </div>
 </template>
 
@@ -41,6 +65,7 @@ import VueBlockProperty from './components/VueBlockProperty'
 import domHelper from './helpers/dom'
 
 import Header from './components/Header'
+import LoadSave from './components/LoadSave'
 import VueModuleLibrary from './components/VueModuleLibrary'
 
 import axios from 'axios' // Needed to pass. Only temporarily?
@@ -51,6 +76,7 @@ export default {
   name: 'App',
   components: {
     Header,
+    LoadSave,
     VueBlocksContainer,
     VueBlockProperty,
     VueModuleLibrary
@@ -63,16 +89,17 @@ export default {
     this.loadedLibrary = 'basic'
 
     setTimeout(() => {
-      // console.log('Wait to be sure to load the whole scene.')
-      // console.log(this.$refs.container.scene.blocks[1])
       this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
-      // this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
-      // this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
     }, 300)
     // When loading finished, press default
   },
   data: function () {
     return {
+      // IS_DEBUGGING: true,
+      appMode: 'main',
+      loadSaveMode: false,
+      // appMode: 'load',
+      // loadSaveMode: true,
       blocks: [],
       scene: {
         blocks: [],
@@ -95,7 +122,9 @@ export default {
       },
       modules: {},
       // loadedLibrary: null
-      loadedLibrary: null
+      loadedLibrary: null,
+      // File list of the local library.
+      localFiles: []
     }
   },
   computed: {
@@ -122,61 +151,75 @@ export default {
   methods: {
     loadLibraries () {
       console.log('Loading libraries.')
-      // axios.get(`http://localhost:5000/getlibrariesandmodules`, {'params': {}})
-      axios.get(this.$localIP + `getlibrariesandmodules`, {'params': {}})
+      axios.get(this.$localIP + `/getlibrariesandmodules`, {'params': {}})
         .then(response => {
-          // console.log(response.data)
-          // console.log('libaries')
           this.modules = response.data.moduleLibraries
           this.blocks = response.data.blockContent
-          // console.log(Object.keys(this.modules))
-          // console.log('SUCCESS')
         })
         .catch(error => {
           console.log(error)
-          // console.log('ERORIUS')
         })
     },
     saveScene (filename = null) {
-      if (!filename) {
+      console.log('Saving to save')
+      console.log(filename)
+      if (!(filename)) {
         filename = 'default'
-      }
-      // console.log('Sending blocks to database')
-      var goal = `http://localhost:5000/savetofile/` + filename
+        axios.get(this.$localIP + `/getfilelist`, {'params': {}})
+          .then(response => {
+            this.localFiles = response.data.localfiles
+            this.loadSaveMode = true
+            this.appMode = 'save'
+            console.log('OK file load')
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      } else {
+        var goal = this.$localIP + `/savetofile/` + filename
 
-      // console.log('blocks')
-      // console.log(this.scene)
-      // console.log('blocks', JSON.stringify(this.blocks))
-      axios.get(goal,
-                {'params': {'scene': this.scene, 'blockContent': JSON.stringify(this.blocks)}})
-        .then(response => {
-          console.log(response.statusText)
-        })
-        .catch(error => {
-          console.log(error)
-        })
-      console.log('Successfully saved blocks to <<' + filename + '>>')
+        axios.get(goal,
+                  {'params': {'scene': this.scene, 'blockContent': JSON.stringify(this.blocks)}})
+          .then(response => {
+            console.log(response.statusText)
+          })
+          .catch(error => {
+            console.log(error)
+          })
+        console.log('Successfully saved blocks to <<' + filename + '>>')
+      }
     },
     loadScene (filename = null) {
-      if (!filename) {
-        filename = 'default'
+      console.log('Loading')
+      console.log(filename)
+      if (filename === null) {
+        axios.get(this.$localIP + `/getfilelist`, {'params': {}})
+          .then(response => {
+            this.localFiles = response.data.localfiles
+            this.loadSaveMode = true
+            this.appMode = 'load'
+            console.log('OK file load')
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      } else {
+        axios.get(this.$localIP + `/loadfromfile/` + filename)
+          .then(response => {
+            console.log(response.statusText)
+            this.scene = response.data.scene
+            if (this.blocks.length === 0) {
+              this.blocks = response.data.blockContent
+              console.log('Load block library')
+            } else {
+              console.log('Use default block library')
+            }
+            console.log('Load succesfull from file <<' + filename + '>>')
+          })
+          .catch(error => {
+            console.log(error)
+          })
       }
-      // console.log('Loading blocks from file')
-      axios.get(`http://localhost:5000/loadfromfile/` + filename)
-        .then(response => {
-          console.log(response.statusText)
-          this.scene = response.data.scene
-          if (this.blocks.length === 0) {
-            this.blocks = response.data.blockContent
-            console.log('Load block library')
-          } else {
-            console.log('Use default block library')
-          }
-          console.log('Load succesfull from file <<' + filename + '>>')
-        })
-        .catch(error => {
-          console.log(error)
-        })
     },
     newScene () {
       // Delete and create new scene
@@ -188,15 +231,9 @@ export default {
       }
     },
     selectBlock (block) {
-      // console.log('select', block)
       this.selectedBlock = block
     },
     deselectBlock (block) {
-      // Save Automatically at exit
-      // console.log('Save properties')
-      // this.$refs.property.save()
-
-      // console.log('deselect', block.properties)
       console.log('deselect', block)
       this.selectedBlock = null
     },
@@ -272,16 +309,51 @@ export default {
   },
   watch: {
     blocks (newValue) {
-      console.log(`Imported blocks succesfully.`)
+      console.log(`Update blocks`)
+      // console.log(`Imported blocks succesfully.`)
       // console.log('blocks', JSON.stringify(newValue))
     },
     scene (newValue) {
-      // console.log('update scene')
-      console.log('scene', JSON.stringify(newValue))
+      console.log('Update scene')
+      // console.log('scene', JSON.stringify(newValue))
     }
   }
 }
 </script>
+
+<style >
+html, body {
+  margin: 0;
+  padding: 0;
+}
+</style>
+
+<!-- <style lang="scss"> -->
+<!-- #app { -->
+<!--   font-family: "Avenir", Helvetica, Arial, sans-serif; -->
+<!--   -webkit-font-smoothing: antialiased; -->
+<!--   -moz-osx-font-smoothing: grayscale; -->
+<!--   text-align: center; -->
+<!--   //this is where we use the variable -->
+<!--   color: $primary; -->
+<!--   margin-top: 60px; -->
+<!-- } -->
+<!-- </style> -->
+<!-- <style lang="scss"> -->
+<!--   html, body { -->
+<!--     margin: 0; -->
+<!--     padding: 0; -->
+<!--   } -->
+  <!-- </style> -->
+<style lang="scss">
+$font-stack:    Helvetica, sans-serif
+$primary-color: #333
+
+body
+  font: 100% $font-stack
+  color: $primary-color
+</style>
+
 
 <style lang="less">
   html, body {
@@ -300,21 +372,27 @@ export default {
     background-color: #0e1624;
   }
 
+  h1 {
+      fontsize: 20px;
+  }
+
   #app {
-    width: ~"calc(100% - 00px)";
-    height: ~"calc(100% - 60px)";
-    padding: 0px 0 0 0px;
+      width: 100%;
+      height: 100%;
+      // width: ~"calc(100% - 00px)";
+      // height: ~"calc(100% - 60px)";
+      padding: 0px 0 0 0px;
   }
 
   .container {
-    width: 100%;
-    height: ~"calc(100% - 50px)";
-    border: 1px solid black;
+      width: 100%;
+      height: 95%;
+      // height: ~"calc(100% - 50px)";
   }
 
   #contextMenu {
     // TODO remove from main app
-    position: absolute;
+      position: absolute;
     z-index: 1000;
     background: white;
     border: 1px solid black;
@@ -322,7 +400,7 @@ export default {
     margin: 0;
 
     li {
-      &.label {
+      &.label{ s
         color: gray;
         font-size: 90%;
       }
@@ -333,4 +411,5 @@ export default {
       outline: none;
     }
   }
+
 </style>

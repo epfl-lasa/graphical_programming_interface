@@ -1,36 +1,72 @@
 <template>
-  <header class="header">
-    <b-navbar type="dark" variant="dark">
-      <b-navbar-nav>
-        <b-nav-item v-on:click="goHome()" href="#">Home</b-nav-item>
+<header class="header">
+  <b-navbar
+    type="dark" variant="dark" class="is-dark navigation-bar-top">
+    <!-- :mobile-burger="false"> -->
 
-        <!-- Navbar dropdowns -->
-        <b-nav-item-dropdown text="Library" right>
-          <b-dropdown-item v-for="lib in module_libraries"
-                           v-on:click="loadModuleLibrary(lib.name)"
-                           v-bind:key="lib.name">{{ lib.name }}</b-dropdown-item>
-        </b-nav-item-dropdown>
+  <!-- <b-navbar type="dark" variant="dark"> -->
+    <template #brand>
+      <!-- Insert logo here -->
+      <b-navbar-item tag="router-link" :to="{ path: '/' }">
+        <!-- TODO: use local image! -->
+        <img
+          src="https://images.squarespace-cdn.com/content/5f884bf8a4c7577ab9f18610/1603379949940-QGFEOUC3Z5YA4W4ELK4W/AICA+Original+White.png?content-type=image%2Fpng"
+          alt="AICA Programming Interface"
+          v-on:click="goHome()"
+          >
+      </b-navbar-item>
+    </template>
 
-        <b-nav-item-dropdown text="File" left>
-          <b-dropdown-item v-on:click="createNew()" href="#">Create New</b-dropdown-item>
-          <b-dropdown-item v-on:click="saveBlocks()" href="#">Save to File</b-dropdown-item>
-          <b-dropdown-item v-on:click="printClicked()" href="#">Load from File</b-dropdown-item>
-        </b-nav-item-dropdown>
+    <template #start>
+      <b-navbar-item v-on:click="goHome()" href="#">
+        Home
+      </b-navbar-item>
+      <b-navbar-dropdown label="File">
+        <b-navbar-item v-on:click="createNew()" href="#">
+          Create New
+        </b-navbar-item>
+        <b-navbar-item v-on:click="saveBlocks()" href="#">
+          Save to File
+        </b-navbar-item>
+        <b-navbar-item v-on:click="loadBlocks()" href="#">
+          Load from File
+        </b-navbar-item>
+      </b-navbar-dropdown>
+    </template>
 
-        <b-nav-item v-on:click="quit()">Quit</b-nav-item>
-
-        <!-- TODO remove after debugging -->
-        <b-nav-item v-on:click="saveBlocks('default')" href="#">Save(Default)</b-nav-item>
-        <b-nav-item v-on:click="loadBlocks('default')" href="#">Load(Default)</b-nav-item>
-
-      </b-navbar-nav>
-    </b-navbar>
-    <!-- <div id="nav"> -->
-      <!-- <router-link to="/">Home</router-link> | -->
-      <!-- <router-link to="/about">About</router-link> -->
-    <!-- </div> -->
-  </header>
+    <template #end>
+      <b-navbar-item tag="div">
+        <label> <small> Mode:</small> </label>
+        <div class="buttons">
+        <a class="button is-primary" v-on:click="drawModeToggle()" href="#">
+          {{ drawMessage }}
+        </a>
+        </div>
+      </b-navbar-item>
+      <b-navbar-dropdown label="Library">
+        <b-navbar-item
+          v-for="lib in module_libraries"
+          v-on:click="loadModuleLibrary(lib.name)"
+          v-bind:key="lib.name"
+          href="#">
+          {{ lib.name }}
+        </b-navbar-item>
+      </b-navbar-dropdown>
+      <b-navbar-item tag="div">
+        <div class="buttons">
+          <a class="button is-primary">
+            <strong> Start Robot</strong>
+          </a>
+          <a class="button is-light">
+            Reset
+          </a>
+        </div>
+      </b-navbar-item>
+    </template>
+  </b-navbar>
+</header>
 </template>
+
 
 <script>
 // import axios from 'axios' // Needed to pass. Only temporarily?
@@ -39,11 +75,7 @@ export default {
   data: function () {
     return {
       // For testing
-      posts: [
-        {id: 1, title: 'One'},
-        {id: 2, title: 'Two'},
-        {id: 3, title: 'Three'}
-      ]
+      defaultVar: []
     }
   },
   // created () {
@@ -53,7 +85,8 @@ export default {
     modules: {
       type: Object,
       default: {}
-    }
+    },
+    drawMode: false
   },
   computed: {
     module_libraries () {
@@ -62,9 +95,19 @@ export default {
         return {'name': lib, 'function_call': 'loadModuleLibrary(' + lib + ')'}
       })
       return libs
+    },
+    drawMessage () {
+      if (this.drawMode) {
+        return 'Draw Arrows'
+      } else {
+        return 'Move Move'
+      }
     }
   },
   methods: {
+    drawModeToggle () {
+      this.drawMode = !(this.drawMode)
+    },
     notImplemented () {
       console.log('Not implemented yet.')
     },
@@ -81,15 +124,15 @@ export default {
       })
     },
     saveBlocks (filename = null) {
-      // console.log('Sent <saving> to parent')
+      console.log('Sent <saving> to parent')
       this.$parent.saveScene(filename)
     },
     loadBlocks (filename = null) {
-      console.log('Sent <loading> to parent')
+      // console.log('Sent <loading> to parent')
       this.$parent.loadScene(filename)
     },
     loadModuleLibrary (library) {
-      console.log('Loading Module Librar: <<' + library + '>>')
+      // console.log('Loading Module Librar: <<' + library + '>>')
       this.$parent.loadModuleLibrary(library)
     },
     goHome () {
@@ -103,10 +146,24 @@ export default {
 }
 </script>
 
+
 <style scoped>
 .header {
-  font-size: 20px;
-  font-color: white;
+    font-size: 30px;
+    font-color: white;
+}
+
+.navigation-bar-top {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+b-navbar-dropdown {
+    font-size: large;
+
+    b-navbar-item {
+        font-size: 30px;
+    }
 }
 </style>
 <!--     background: #333; -->

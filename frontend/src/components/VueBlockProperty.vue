@@ -42,20 +42,8 @@
     </div>
 
     <div class="property-box" v-else-if="p.type==='slider'">
-      <!-- <h4> {{ p.label }}: {{p.value}} </h4> -->
       <label> {{ p.label }} </label>
       <input class="slider-input" type="text" v-model="p.value">
-
-      <!-- TODO: remove after debugging -->
-      <!-- <b-field> -->
-      <!--   <p> Min </p> -->
-      <!--   <b-slider :min="-1" :max="0" :step="0.1" v-model="p.settings.min"> </b-slider> -->
-      <!-- </b-field> -->
-      <!-- <b-field> -->
-      <!--   <br> -->
-      <!--   <p> Max </p> -->
-      <!--   <b-slider :min="1" :max="100" :step="10" v-model="p.settings.max"> </b-slider> -->
-      <!-- </b-field> -->
 
       <b-field class="slider-field">
         <b-slider rounded
@@ -75,28 +63,21 @@
     </div>
 
     <div class="property-box" v-else>
-    <!-- <div class="property-box" v-else-if="p.type==='text'"> -->
-      <!-- <label :for="p.name">{{p.label||p.name}}:</label> -->
       <h4 :for="p.name">{{p.label||p.name}}:</h4>
       <input type="text" v-model="p.value">
     </div>
 
   </div>
   <button class="save-button" @click.prevent="save">Save</button>
-  <!-- <button class="save-button" @click.prevent="check">Check</button> -->
 </div>
 </template>
+
 
 <script>
 import axios from 'axios' // Needed to pass. Only temporarily?
 
 export default {
   name: 'VueBlockProperty',
-  // components: {
-  // RangeSlider
-  // VueSimpleRangeSlider
-  // },
-  // props: ['property'],
   mounted () {
     this.loadModule()
     this.moveToButtonLabel = this.buttonLabelsList[0]
@@ -207,7 +188,7 @@ export default {
         // Start moving robot
         console.log('Move robot to reference.')
         this.isMovingToReference = true
-        axios.get(this.$localIP + `moveto`, {'params': {'eulerPose': eulerPose}})
+        axios.get(this.$localIP + `/moveto`, {'params': {'eulerPose': eulerPose}})
           .then(response => {
             console.log(response.statusText)
           })
@@ -229,8 +210,6 @@ export default {
       } else {
         this.properties = null
       }
-
-      console.log('loadinloading')
       // Create [new] default containers
       Object.values(this.properties)
         .forEach(prop => {
@@ -256,8 +235,6 @@ export default {
               // console.log(prop.value.frameId)
             }
           } else if (prop.type === 'slider') {
-            console.log('Slider start')
-            console.log(prop.settings)
             if (!prop.settings) {
               console.log('Have to do new one')
               prop.settings = {
