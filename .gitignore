@@ -7,6 +7,9 @@ npm-debug.log*
 frontend/node_modules/
 frontend/package-lock.json
 
+# Userdata
+backend/userdata/*.json
+
 # Python
 __pycache__
 backend/venv
