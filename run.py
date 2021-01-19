@@ -12,8 +12,10 @@ import copy
 import json # use yaml for data-exchange
 import yaml # use yaml for configuration 
 import time
+import datetime
 from random import *
 
+# To import
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 import requests
@@ -122,7 +124,15 @@ def getfilelist():
 
     file_data = []
     for filename in local_library_list:
+        # TODO: check if works!
         file_data.append({'name': filename})
+
+        # Get time and Date
+        statbuf = os.stat( os.path.join(data_directory, filename) )
+        datemodified = datetime.datetime.fromtimestamp(statbuf.st_mtime)
+        file_data[-1]['datemodified'] = datemodified.strftime("%m/%d/%Y, %H:%M:%S")
+
+        # Get filetypex
         if os.path.isdir(os.path.join(data_directory, filename)):
             file_data[-1]['type'] = 'dir'
         else:

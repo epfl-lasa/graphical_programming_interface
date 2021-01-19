@@ -4,6 +4,7 @@
       <h1 v-else-if="appMode==='save'"> Save as </h1>
     <h1 v-else> List Directory </h1>
 
+
     <div class="file-table-content">
       <b-table
         :data="localFiles"
@@ -13,6 +14,10 @@
         <b-table-column field="name" label="File Name" width="40" v-slot="props">
 
           {{ props.row.name }}
+        </b-table-column>
+
+        <b-table-column field="datemodified" label="Last Modified" width="40" v-slot="props">
+          {{ props.row.datemodified }}
         </b-table-column>
 
         <b-table-column field="type" label="Type" width="40" v-slot="props">
@@ -33,7 +38,6 @@
     <b-button v-else-if="appMode==='save'"
               v-on:click="saveScene(saveName)"> Save </b-button>
 
-
     <b-button v-on:click="cancelLoading()"> Cancel </b-button>
   </div>
 </template>
@@ -48,7 +52,7 @@ export default {
   data () {
     return {
       selectedListItem: {'name': ''},
-      saveName: 'default.json'
+      saveName: ''
     }
   },
   props: {
@@ -60,7 +64,7 @@ export default {
   },
   methods: {
     // selectItemSync (item) {
-      // this.selectedListItemName = item.name
+    // this.selectedListItemName = item.name
     // },
     notImplemented () {
       console.log('Not implemented yet.')
@@ -78,6 +82,13 @@ export default {
       console.log('Save')
       this.$parent.saveScene(fileName)
       this.cancelLoading()
+    }
+  },
+  watch: {
+    selectedListItem (newValue) {
+      if (this.appMode === 'save') {
+        this.saveName = newValue.name
+      }
     }
   }
 }

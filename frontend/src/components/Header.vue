@@ -37,10 +37,13 @@
     <template #end>
       <b-navbar-item tag="div">
         <label> <small> Mode:</small> </label>
-        <div class="buttons">
-        <a class="button is-primary" v-on:click="drawModeToggle()" href="#">
-          {{ drawMessage }}
-        </a>
+        <div class="button toggle">
+          <a :class="getDrawString('move')"  v-on:click="drawModeToggle(true)" href="#">
+            Move
+          </a>
+          <a :class="getDrawString('draw')"  v-on:click="drawModeToggle(false)" href="#">
+            Draw Arrows
+          </a>
         </div>
       </b-navbar-item>
       <b-navbar-dropdown label="Library">
@@ -105,8 +108,16 @@ export default {
     }
   },
   methods: {
-    drawModeToggle () {
-      this.drawMode = !(this.drawMode)
+    getDrawString (buttonType) {
+      var typeString = 'button'
+      if ((buttonType === 'draw' && !this.drawMode) || (buttonType === 'move' && this.drawMode)) {
+        typeString = typeString + ' is-primary'
+      }
+      return typeString
+    },
+    drawModeToggle (newMode) {
+      this.$parent.drawModeToggle(newMode)
+      // this.drawMode = !(this.drawMode)
     },
     notImplemented () {
       console.log('Not implemented yet.')

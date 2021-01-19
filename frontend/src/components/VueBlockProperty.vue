@@ -66,9 +66,12 @@
       <h4 :for="p.name">{{p.label||p.name}}:</h4>
       <input type="text" v-model="p.value">
     </div>
-
   </div>
-  <button class="save-button" @click.prevent="save">Save</button>
+  <!-- </br> -->
+
+  <b-button v-on:click="save" type="is-primary"> Save </b-button>
+  <b-button v-on:click="cancel" type="is-danger"> Cancel </b-button>
+  <!-- <button class="save-button" @click.prevent="save">Save</button> -->
 </div>
 </template>
 
@@ -223,7 +226,7 @@ export default {
                   eulerOrder: 'XYZ'
                 }
               }
-            // } else {
+              // } else {
               // console.log(prop.value.frameId)
             }
           } else if (prop.type === 'vec3' || prop.type === 'pos3') {
@@ -231,7 +234,7 @@ export default {
               prop.value = {
                 x: 0, y: 0, z: 0
               }
-            // } else {
+              // } else {
               // console.log(prop.value.frameId)
             }
           } else if (prop.type === 'slider') {
@@ -260,6 +263,10 @@ export default {
     save () {
       console.log('local props')
       console.log(this.properties)
+      this.$emit('save', this.properties)
+    },
+    cancel () {
+      console.log('Cancel properties')
       this.$emit('save', this.properties)
     },
     check () {

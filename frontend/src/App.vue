@@ -10,6 +10,7 @@
     <Header
       ref="header"
       class="header"
+      :drawMode="isInDrawingMode"
       :modules="modules"/>
 
     <template v-if="true">
@@ -124,7 +125,8 @@ export default {
       // loadedLibrary: null
       loadedLibrary: null,
       // File list of the local library.
-      localFiles: []
+      localFiles: [],
+      isInDrawingMode: true
     }
   },
   computed: {
@@ -278,6 +280,13 @@ export default {
         this.$refs.contextMenu.focus()
       })
     },
+    drawModeToggle (newMode) {
+      if (newMode === null) {
+        this.isInDrawingMode = !(this.isInDrawingMode)
+      } else {
+        this.isInDrawingMode = newMode
+      }
+    },
     setMenu (top, left) {
       // TODO remove from main app since list not existant anymore
       let border = 5
@@ -321,30 +330,10 @@ export default {
 }
 </script>
 
-<style >
-html, body {
-  margin: 0;
-  padding: 0;
-}
+<!-- Global stylesheet for buefy -->
+<style lang="scss">
+  @import './assets/styles/main.scss';
 </style>
-
-<!-- <style lang="scss"> -->
-<!-- #app { -->
-<!--   font-family: "Avenir", Helvetica, Arial, sans-serif; -->
-<!--   -webkit-font-smoothing: antialiased; -->
-<!--   -moz-osx-font-smoothing: grayscale; -->
-<!--   text-align: center; -->
-<!--   //this is where we use the variable -->
-<!--   color: $primary; -->
-<!--   margin-top: 60px; -->
-<!-- } -->
-<!-- </style> -->
-<!-- <style lang="scss"> -->
-<!--   html, body { -->
-<!--     margin: 0; -->
-<!--     padding: 0; -->
-<!--   } -->
-  <!-- </style> -->
 
 <style lang="less">
   html, body {
@@ -368,17 +357,16 @@ html, body {
   }
 
   #app {
-      width: 100%;
-      height: 100%;
-      // width: ~"calc(100% - 00px)";
-      // height: ~"calc(100% - 60px)";
-      padding: 0px 0 0 0px;
+      // width: 100%;
+      // height: 100%;
+      width: ~"calc(100% - 00px)";
+      height: ~"calc(100% - 60px)";
   }
 
   .container {
       width: 100%;
-      height: 95%;
-      // height: ~"calc(100% - 50px)";
+      // height: 95%;
+      height: ~"calc(100% - 50px)";
   }
 
   #contextMenu {
