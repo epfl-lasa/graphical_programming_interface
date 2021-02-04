@@ -75,4 +75,7 @@ npm run dev
 ```
 
 
+## Run using Docker
+Simply build and run the docker-image. The GUI is then located on http://127.0.0.1:8081/.
+
 

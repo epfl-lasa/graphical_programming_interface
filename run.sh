@@ -19,7 +19,7 @@ docker run \
     --privileged \
 	--net="${NETWORK}" \
 	-it \
-    -p 5001:5000 \
+    -p 5000:5000 \
     -p 8081:8080 \
     --rm \
 	"${NAME}:${TAG}" \
