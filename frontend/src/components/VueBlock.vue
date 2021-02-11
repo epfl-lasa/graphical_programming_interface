@@ -23,6 +23,12 @@
 </template>
 
 <script>
+// function sleep (ms) {
+// return new Promise((resolve) => {
+// setTimeout(resolve, ms)
+// })
+// }
+
 export default {
   name: 'VueBlock',
   props: {
@@ -46,8 +52,8 @@ export default {
       default: 'Title'
     },
     // library: {
-      // type: String,
-      // default: ''
+    // type: String,
+    // default: ''
     // },
 
     inputs: Array,
@@ -73,6 +79,7 @@ export default {
     this.dragging = false
   },
   mounted () {
+    // TODO: an event listener is added for each block (?!) -- MAYBE move to 'drawing-window-class'
     document.documentElement.addEventListener('mousemove', this.handleMove, true)
     document.documentElement.addEventListener('mousedown', this.handleDown, true)
     document.documentElement.addEventListener('mouseup', this.handleUp, true)
@@ -85,14 +92,26 @@ export default {
   data () {
     return {
       width: this.options.width,
-      hasDragged: false
+      hasDragged: false,
+
+      // Different press states
+      presstimer: null,
+      longpress: false,
+
+      // showAppDropwdown: false,
+      // showBlockMenu: true,
+      connecting: false
     }
   },
   methods: {
     handleMove (e) {
+      this.cancelLongPress()
+
       this.mouseX = e.pageX || e.clientX + document.documentElement.scrollLeft
       this.mouseY = e.pageY || e.clientY + document.documentElement.scrollTop
 
+      // console.log('Dragging')
+      // console.log(this.dragging)
       if (this.dragging && !this.linking) {
         let diffX = this.mouseX - this.lastMouseX
         let diffY = this.mouseY - this.lastMouseY
@@ -103,6 +122,8 @@ export default {
         this.moveWithDiff(diffX, diffY)
 
         this.hasDragged = true
+
+        this.$emit('disableBlockMenu')
       }
     },
     handleDown (e) {
@@ -114,14 +135,50 @@ export default {
 
       const target = e.target || e.srcElement
       if (this.$el.contains(target) && e.which === 1) {
-        this.dragging = true
+        this.dragging = false
+
+        // Check for long-click
+        // this.presstimer = setTimeout(function () {
+        // this.handleLongPress(e)
+        // }, 1000)
+        this.presstimer = setTimeout(this.handleLongPress, 300, e)
+
+        // this.presstimer = setTimeout(function () {
+        //   console.log('Long press start')
+        //   // this.handleLongPress()
+        //   console.log('long presssing...')
+        //   console.log(this.dragging)
+        // }, 300)
 
         this.$emit('select')
 
         if (e.preventDefault) e.preventDefault()
       }
     },
+    handleLongPress (e) {
+      console.log('@VueBlock: Long press handle')
+      this.longpress = true
+      this.dragging = true
+
+      this.showAppDropwdown = true
+
+      this.$emit('showBlockMenu', e)
+    },
+    cancelLongPress () {
+      if (this.presstimer !== null) {
+        clearTimeout(this.presstimer)
+
+        console.log('@VueBlock: Cancel-over')
+        console.log(this.presstimer)
+
+        this.presstimer = null
+        this.longpress = false
+      }
+    },
     handleUp () {
+      // console.log('@VueBlock: handleUp')
+      this.cancelLongPress()
+
       if (this.dragging) {
         this.dragging = false
 
@@ -172,9 +229,7 @@ export default {
         top: this.options.center.y + this.y * this.options.scale + 'px',
         left: this.options.center.x + this.x * this.options.scale + 'px',
         width: this.width + 'px',
-        // backgroundImage: 'url(' + require('./../assets/images/' + this.iconpath) + ')' + ' noRepeat',
         backgroundImage: 'url(' + require('./../assets/images/' + this.iconpath) + ')',
-        // Correct for repeat property or create uniform sized images!
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         transform: 'scale(' + (this.options.scale + '') + ')',
@@ -209,6 +264,7 @@ export default {
 @circleNewColor: #00FF00;
 @circleRemoveColor: #FF0000;
 @circleConnectedColor: #FFFF00;
+
 
 .vue-block {
     position: absolute;

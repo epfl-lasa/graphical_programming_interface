@@ -21,8 +21,8 @@ from flask_cors import CORS
 import requests
 
 app = Flask(__name__,
-            static_folder = "./dist/static",
-            template_folder = "./dist")
+            static_folder="./dist/static",
+            template_folder="./dist")
 
 # Everything allowed for api (reduced security)
 # cors = CORS(app, resources={r"/api/*": {"origins": "*"}})

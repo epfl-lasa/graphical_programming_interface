@@ -1,5 +1,5 @@
 <template>
-  <div class="vue-container">
+  <div class="vue-container" id="main-element-container">
     <VueLink :lines="lines"/>
     <VueBlock v-for="block in blocks"
               :key="block.id"
@@ -9,9 +9,23 @@
               @linkingStart="linkingStart(block, $event)"
               @linkingStop="linkingStop(block, $event)"
               @linkingBreak="linkingBreak(block, $event)"
+              @showBlockMenu="showBlockMenu(block, $event)"
+              @disableBlockMenu="disableBlockMenu()"
               @select="blockSelect(block)"
               @delete="blockDelete(block)"
-    />
+              />
+
+    <BlockDropDown v-if="blockMenuVisible"
+                   @menuContent="blockMenuContent"
+                   :posX="blockMenuX"
+                   :posY="blockMenuY"
+                   @disableBlockMenu="disableBlockMenu()"
+                   />
+    <!-- :posX="blockMenuX" -->
+
+        <!-- <BlockDropDown v-if="true" -->
+
+    <!-- @showBlockMenu="showBlockMenu" -->
   </div>
 </template>
 
@@ -20,13 +34,15 @@ import merge from 'deepmerge'
 import mouseHelper from '../helpers/mouse'
 
 import VueBlock from './VueBlock'
-import VueLink from './LinkCreator'
+import VueLink from './LinkCreator' // TODO: rename file to linkCreator
+import BlockDropDown from './BlockDropDown'
 
 export default {
   name: 'VueBlockContainer',
   components: {
     VueBlock,
-    VueLink
+    VueLink,
+    BlockDropDown
   },
   props: {
     blocksContent: {
@@ -100,7 +116,12 @@ export default {
       //
       tempLink: null,
       selectedBlock: null,
-      hasDragged: false
+      hasDragged: false,
+      //
+      blockMenuVisible: false,
+      blockMenuContent: [],
+      blockMenuX: 0,
+      blockMenuY: 0
     }
   },
   computed: {
@@ -472,15 +493,37 @@ export default {
       }
     },
     deselectAll (withoutID = null) {
+      // TOOD: rather use props for this (?!)
       this.blocks.forEach((value) => {
         if (value.id !== withoutID && value.selected) {
           this.blockDeselect(value)
         }
       })
+      this.disableBlockMenu()
+      console.log('@VueBlockContainer: deselectAll')
+    },
+    disableBlockMenu () {
+      console.log('@VueBlockContainer: Deselect block')
+      this.blockMenuContent = []
+      this.blockMenuVisible = false
+    },
+    showBlockMenu (block, e, action = true) {
+      console.log('@VueBlockContainer: showBlockMenu')
+
+      block.selected = true
+      this.selectedBlock = block
+      this.blockMenuContent = []
+      this.blockMenuVisible = true
+
+      var containerElem = document.getElementById('main-element-container')
+
+      this.blockMenuX = e.clientX - containerElem.offsetLeft
+      this.blockMenuY = e.clientY - containerElem.offsetTop
     },
     // Events
     blockSelect (block) {
       console.log('blockSelect @ BlocksContainer')
+      console.log(block)
       block.selected = true
       this.selectedBlock = block
       this.deselectAll(block.id)

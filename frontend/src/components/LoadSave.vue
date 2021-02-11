@@ -12,7 +12,6 @@
         focusable>
         <!-- :columns="columns"> -->
         <b-table-column field="name" label="File Name" width="40" v-slot="props">
-
           {{ props.row.name }}
         </b-table-column>
 

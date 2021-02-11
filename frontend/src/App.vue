@@ -236,7 +236,7 @@ export default {
       this.selectedBlock = block
     },
     deselectBlock (block) {
-      console.log('deselect', block)
+      console.log('@App: deselect', block)
       this.selectedBlock = null
     },
     filteredBlocks (type) {
@@ -249,14 +249,14 @@ export default {
       this.$refs.container.addNewBlock(this.selectedType)
     },
     addModule (module) {
-      console.log('Add module <<' + module + '>>')
+      console.log('@App: Add module <<' + module + '>>')
       this.$refs.container.addNewBlock(module)
     },
     loadModuleLibrary (library) {
       this.loadedLibrary = library
     },
     saveProperty (val) {
-      console.log('Save', val)
+      console.log('@App: Save', val)
 
       let scene = this.scene
       let block = scene.blocks.find(b => {
@@ -295,6 +295,7 @@ export default {
       let largestWidth = containerElRect.right - contextMenuEl.offsetWidth - border
       let largestHeight = containerElRect.bottom - contextMenuEl.offsetHeight - border
 
+      console.log('@App')
       console.log(this.$refs.container)
       console.log(containerElRect)
 
