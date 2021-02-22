@@ -12,7 +12,6 @@
         focusable>
         <!-- :columns="columns"> -->
         <b-table-column field="name" label="File Name" width="40" v-slot="props">
-
           {{ props.row.name }}
         </b-table-column>
 
@@ -32,12 +31,10 @@
       <label> File Name </label>
       <input class="position-input" type="text" v-model="saveName">
     </template>
-
     <b-button v-if="appMode==='load'"
               v-on:click="loadScene(selectedListItem.name)"> Load </b-button>
     <b-button v-else-if="appMode==='save'"
               v-on:click="saveScene(saveName)"> Save </b-button>
-
     <b-button v-on:click="cancelLoading()"> Cancel </b-button>
   </div>
 </template>
@@ -122,5 +119,4 @@ export default {
     /* max-height: 80%; */
     /* overflow-y: auto; */
 /* } */
-
 </style>

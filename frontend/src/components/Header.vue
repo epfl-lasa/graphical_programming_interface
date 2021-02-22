@@ -18,9 +18,9 @@
     </template>
 
     <template #start>
-      <b-navbar-item v-on:click="goHome()" href="#">
-        Home
-      </b-navbar-item>
+      <!-- <b-navbar-item v-on:click="goHome()" href="#"> -->
+        <!-- Home -->
+      <!-- </b-navbar-item> -->
       <b-navbar-dropdown label="File">
         <b-navbar-item v-on:click="createNew()" href="#">
           Create New
@@ -35,7 +35,7 @@
     </template>
 
     <template #end>
-      <b-navbar-item tag="div">
+      <b-navbar-item tag="div" v-if="false">
         <label> <small> Mode:</small> </label>
         <div class="button toggle">
           <a :class="getDrawString('move')"  v-on:click="drawModeToggle(true)" href="#">
@@ -46,6 +46,7 @@
           </a>
         </div>
       </b-navbar-item>
+
       <b-navbar-dropdown label="Library">
         <b-navbar-item
           v-for="lib in module_libraries"
@@ -55,7 +56,11 @@
           {{ lib.name }}
         </b-navbar-item>
       </b-navbar-dropdown>
+
       <b-navbar-item tag="div">
+        <!-- <a class="button is-primary" :on-click="update_program"> -->
+            <!-- <strong> Update </strong> -->
+        <!-- </a> -->
         <div class="buttons">
           <a class="button is-primary">
             <strong> Start Robot</strong>

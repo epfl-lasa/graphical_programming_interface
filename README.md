@@ -11,6 +11,19 @@
 - oleg-agapov / flask-vue-spa 
 - ghostiam / vue-blocks 
 
+# TODO
+> Update fields of block
+> Synchronize back & front-end 
+> Visualize force (?)
+> Send parameters / commands to module
+> Filehandling: Save to file (!), save as, create new,
+> Code-Generation
+> Record Data / Delete Data / Learn Motion (send to file)
+> Get Reference Frames (?) HOW?
+> 
+
+
+
 ## Structure
 ### Frontend
 Front end is structured as a vue-one-page application. This allows deployment through standard webbroswers.
@@ -52,9 +65,9 @@ virtualenv -p python3 venv
 source venv/bin/activate
 pip install -r requirements.txt
 cd ..
-
 ```
 
+## Run Setup
 Turn on debug mode
 ``` bash
 export FLASK_DEBUG=0

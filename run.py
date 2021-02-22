@@ -7,9 +7,10 @@ __author__ = "Lukas, Gustav"
 __email__ = "lukas@aica.tech"
 
 import os
+import sys
 import warnings
 import copy
-import json # use yaml for data-exchange
+import json # use json for data-exchange
 import yaml # use yaml for configuration 
 import time
 import datetime
@@ -20,9 +21,21 @@ from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 import requests
 
+# Import custom libraries from path (TODO: install locally)
+dir_path = os.path.dirname(os.path.realpath(__file__))
+path_communication_handler = os.path.join(dir_path, "backend", "python")
+if not path_communication_handler in sys.path:
+    sys.path.append(path_communication_handler)
+
+from data_handler import DataHandler
+DataLocalHandler = DataHandler(dir_path)
+
+from ros_handler import RosHandler
+RosMainHanlder = RosHandler()
+
 app = Flask(__name__,
-            static_folder = "./dist/static",
-            template_folder = "./dist")
+            static_folder="./dist/static",
+            template_folder="./dist")
 
 # Everything allowed for api (reduced security)
 # cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -32,25 +45,35 @@ cors = CORS(app)
 data_directory = os.path.join('backend', 'userdata')
 
 
-@app.route('/api/random')
-def random_number():
-    # import pdb; pdb.set_trace()
-    response = {
-        'randomNumber': randint(1, 100)
-    }
-    print('Get random from python...')
-    return jsonify(response)
-
+IMPORT_COMMUNACTION_CONTROLLER = False
 
 @app.route('/test')
 def test():
-    # print('test succesfull --- Timestamp:{}'.format(time.time()))
-    # import pdb; pdb.set_trace()
-    # return 1
-    # response = {'State' : 1}
-    # return jsonify(response)
-    # return
+    print('Test is done')
     return render_template("test.html")
+
+
+# Update Environment
+@app.route('/updateenvironment')
+def update_environment():
+    pass
+
+# Update Environment
+@app.route('/update_block/<int:id>')
+def update_bock():
+    pass
+
+
+@app.route('/movetoposition')
+def move_to_start(*args, **kwargs):
+    # Start / end position
+    pass
+
+
+# Handle data here
+@app.route('/record_data/<int:id>')
+def record_data():
+    datetime.datetime
 
 @app.route('/moveto')
 def move_to(*args, **kwargs):
@@ -64,15 +87,37 @@ def move_to(*args, **kwargs):
     
     return 'Success'
 
+def send_data():
+    pass
 
 @app.route('/stopmotion')
 def stopmotion(*args, **kwargs):
     print('Send stop command to robot')
     return 'Success'
 
+@app.route('/updatebackend')
+def updatebackend(*args, **kwargs):
+    ''' Update ros backend'''
+    print('Updating backend.')
+
+    try:
+        scene = request.args.get('scene')
+        blockContent = request.args.get('blockContent')
+        # Transform to dict
+        scene = json.loads(scene)
+        
+    except:
+        print('Could not store data')
+        # Error no succesffull transmission of data
+        return '202: Could not transfer data' 
+
+    statusMessage = RosMainHanlder.update_scene(scene)
+    
+    return '0: Transfer successful' 
 
 @app.route('/savetofile/<string:my_filename>')
 def savetofile(my_filename, *args, **kwargs):
+    ''' Save data to file. '''
     print('Data for storage recieved.')
     
     try:
@@ -86,145 +131,45 @@ def savetofile(my_filename, *args, **kwargs):
         
     except:
         print('Could not store data')
-        return 'Fail.'
+        return '202: Could not store data.'
 
-    my_data_file = get_relative_filename(my_filename)
-    with open(my_data_file, 'w') as f:
-        # f.write(scene)
-        json.dump(data, f)
-
+    DataLocalHandler.save_to_file(my_filename, data)
+    
     print('Successfully saved data to file.')
     
-    return 'Success.'
+    return '0: savign succesffull.'
 
 @app.route('/loadfromfile/<string:my_filename>')
 def loadfromfile(my_filename):
+    # TODO: from json to yaml!
+    
     print('Backend recieved loading request.')
 
-    my_data_file = get_relative_filename(my_filename)
+    data = DataLocalHandler.load_from_file(my_filename)
     
-    with open(my_data_file, 'r') as f:
-        data = f.read()
-
     # Transform to dict (?)
-    data = json.loads(data)
     if not 'scene' in data:
         data = {'scene': data}
-    # import pdb; pdb.set_trace()
-    
+
     return data
 
 
 @app.route('/getfilelist')
 def getfilelist():
     ''' Get a list of filenames from a directory. '''
+    file_data = DataLocalHandler.get_file_list()
 
-    print('get file list')
-    local_library_list = os.listdir(data_directory)
-
-    file_data = []
-    for filename in local_library_list:
-        # TODO: check if works!
-        file_data.append({'name': filename})
-
-        # Get time and Date
-        statbuf = os.stat( os.path.join(data_directory, filename) )
-        datemodified = datetime.datetime.fromtimestamp(statbuf.st_mtime)
-        file_data[-1]['datemodified'] = datemodified.strftime("%m/%d/%Y, %H:%M:%S")
-
-        # Get filetypex
-        if os.path.isdir(os.path.join(data_directory, filename)):
-            file_data[-1]['type'] = 'dir'
-        else:
-            file_data[-1]['type'] = 'file'
-
-    # print('Get data')
-    # print(file_data)
     return {'localfiles': file_data}
-
-
-def get_relative_filename(my_filename):
-    ''' Check correct file ending and return realtive directory name. '''
-    if not my_filename[-5:]=='.json':
-        my_filename = my_filename + '.json'
-
-    return os.path.join(data_directory,  my_filename)
 
 
 @app.route('/getlibrariesandmodules')
 def get_libraries_and_modules():
-    module_libraries = {}
+    return DataLocalHandler.get_libraries_and_modules()
     
-    # Import all js files
-    local_library_list = os.listdir('module_library')
-    print(local_library_list)
-
-    module_content = []
-
-    for library in local_library_list:
-        if library != 'basic':
-            warnings.warn('Only doing it for basic right now... Debugging')
-            continue
-        if library[0]=='_':
-            continue
-        lib_dir = os.path.join('module_library', library)
-        if not os.path.isdir(lib_dir):
-            continue
-        local_module_list = os.listdir(lib_dir)
-
-        module_libraries[library] = []
-        
-        for module in local_module_list:
-            if module[0]=='_':
-                continue
-            module_description = os.path.join(lib_dir, module, 'description.json')
-            if not os.path.isfile(module_description):
-                continue
-            module_libraries[library].append(module)
-
-            with open(module_description, 'r') as f:
-                data = f.read()
-            data = json.loads(data)
-
-            module_content.append(data)
-    print('module_libraries', module_content)
-    print('module_content', module_content)
-    return {'moduleLibraries': module_libraries, 'blockContent': module_content}
-    
-# @app.route('/getlibrariesandmodules')
-
 @app.route('/home')
 def get_scene():
-    print('going home in pythonx')
-    libs_and_mods = {}
+    return DataLocalHandler.get_scene()
     
-    # Import all js files
-    local_library_list = os.listdir('module_library')
-    print(local_library_list)
-
-    for library in local_library_list:
-        lib_dir = os.path.join('module_library', library)
-        if not os.path.isdir(lib_dir) or library[0]=='_':
-            continue
-        local_module_list = os.listdir(lib_dir)
-
-        libs_and_mods[library] = []
-        
-        for module in local_module_list:
-            mod_dir = os.path.join(lib_dir, module)
-            if not os.path.isdir(lib_dir) or library[0]=='_':
-                continue
-            libs_and_mods[library].append(module)
-
-    # print('Libraries')
-    # print(libs_and_mods)
-
-    # Todo - maybe order ditcionary alphabetically
-    # if os.path.isfile('main.js'):
-        # pass
-        
-    return libs_and_mods
-
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

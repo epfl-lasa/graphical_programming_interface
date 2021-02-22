@@ -1,0 +1,29 @@
+name: idle
+title: Idle
+
+description: Idle Module
+
+family: idle
+iconpath: idle.jpeg
+
+information: ''
+library: basic
+
+inputs:
+  - name: input
+    label: Input
+    type: event
+
+outputs:
+  - name: output
+    label: Output
+    type: eventx
+    
+properties:
+- name: reference
+  label: Reference Frame
+  type: eulerPose
+  
+- label: Stiffness
+  name: stiffness
+  type: slider
