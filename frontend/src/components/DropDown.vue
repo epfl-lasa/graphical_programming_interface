@@ -2,38 +2,49 @@
 <div id="dropdown-list"
      :style="dropDownStyle">
   <!-- TODO: separate element -->
-  <div class="dropdown-element">
-    <p v-on:click="newBlockConnection"> Connect to </p>
-  </div>
-  <div class="dropdown-element">
-    <p v-on:click="generalSettings"> Settings </p>
-  </div>
-  <div class="dropdown-element">
-    <p v-on:click="moveBlock"> Move Block </p>
-  </div>
-  <div class="dropdown-element">
-    <p v-on:click="removeBlock"> Delete Block </p>
-  </div>
-  <div v-for="(element, key) in menuContent">
-    <p v-on:click="defaultAction(element.action)"> {{element.content}} </p>
-  </div>
+  <template v-if="selectionType==='block'">
+    <div class="dropdown-element">
+      <p v-on:click="newBlockConnection"> Connect to </p>
+    </div>
+    <div class="dropdown-element">
+      <p v-on:click="generalSettings"> Settings </p>
+    </div>
+    <!-- <div class="dropdown-element"> -->
+      <!-- <p v-on:click="moveBlock"> Move Block </p> -->
+    <!-- </div> -->
+    <div class="dropdown-element">
+      <p v-on:click="removeBlock"> Delete Block </p>
+    </div>
+    <div v-for="(element, key) in menuContent">
+      <p v-on:click="defaultAction(element.action)"> {{element.content}} </p>
+    </div>
+  </template>
+  <template v-else-if="selectionType==='line'">
+    <div class="dropdown-element">
+      <p v-on:click="removeLink"> Delete Link </p>
+    </div>
+    <!-- <div class="dropdown-element"> -->
+      <!-- <p v-on:click="showLineSettings"> Line Settings </p> -->
+    <!-- </div> -->
+  </template>
 </div>
 </template>
 
 
 <script>
 export default {
-  name: 'BlockDropDown',
+  name: 'BlockDropdown',
   props: {
     menuContent: [],
     posX: 0,
     posY: 0,
     selectionType: null
   },
-  // mounted () {
-  // console.log('Mounted Dropdown')
-  // console.log(this.$parent.linking)
-  // },
+  mounted () {
+    console.log('Mounted Dropdown')
+    console.log(this.$parent.linkingMode)
+    // console.log(this.$parent.linking)
+  },
   data () {
     return {
     }
@@ -87,6 +98,7 @@ export default {
 
 
 <style lang="less" scoped>
+
 .dropdown-element {
     margin: 5px;
     padding: 10px 15px;

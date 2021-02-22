@@ -1,0 +1,28 @@
+description: Idle Module
+family: idle
+fields:
+- attr: property
+  label: Reference
+  name: reference
+  type: eulerPose
+- attr: property
+  label: Stiffness
+  name: stiffness
+  type: slider
+- attr: property
+  label: Comment
+  name: comment
+  type: string
+- attr: input
+  label: Input
+  name: input
+  type: event
+- attr: output
+  label: Input
+  name: output
+  type: event
+iconpath: idle.jpeg
+information: ''
+library: basic
+name: idle
+title: Idle

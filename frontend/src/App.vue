@@ -24,7 +24,8 @@
         :scene.sync="scene"
         @blockSelect="selectBlock"
         @blockDeselect="deselectBlock"
-        class="container"/>
+        class="container"
+        @updateBackendProgram="updateBackendProgram"/>
 
       <template v-if="selectedBlock">
         <VueBlockProperty
@@ -57,6 +58,7 @@
 
   </div>
 </template>
+
 
 <script>
 import merge from 'deepmerge'
@@ -162,10 +164,24 @@ export default {
           console.log(error)
         })
     },
+    updateBackendProgram () {
+      let goal = this.$localIP + `/updatebackend`
+      console.log('@app: Update backend.')
+      axios.get(goal,
+                {'params': {'scene': this.scene}})
+        .then(response => {
+          console.log(response.statusText)
+        })
+        .catch(error => {
+          console.log('@app: Error when updating backend.')
+          console.log(error)
+        })
+    },
     saveScene (filename = null) {
       console.log('Saving to save')
       console.log(filename)
       if (!(filename)) {
+        // console.log('No file name')
         filename = 'default'
         axios.get(this.$localIP + `/getfilelist`, {'params': {}})
           .then(response => {
@@ -178,21 +194,25 @@ export default {
             console.log(error)
           })
       } else {
-        var goal = this.$localIP + `/savetofile/` + filename
+        let goal = this.$localIP + `/savetofile/` + filename
 
         axios.get(goal,
                   {'params': {'scene': this.scene, 'blockContent': JSON.stringify(this.blocks)}})
           .then(response => {
+            console.log('@App')
             console.log(response.statusText)
+            console.log('Did it well')
           })
           .catch(error => {
+            console.log('@App')
             console.log(error)
+            console.log('Did it not')
           })
         console.log('Successfully saved blocks to <<' + filename + '>>')
       }
     },
     loadScene (filename = null) {
-      console.log('Loading')
+      console.log('@App: Loading')
       console.log(filename)
       if (filename === null) {
         axios.get(this.$localIP + `/getfilelist`, {'params': {}})
@@ -200,7 +220,7 @@ export default {
             this.localFiles = response.data.localfiles
             this.loadSaveMode = true
             this.appMode = 'load'
-            console.log('OK file load')
+            console.log('@App: OK file load')
           })
           .catch(error => {
             console.log(error)
@@ -212,9 +232,9 @@ export default {
             this.scene = response.data.scene
             if (this.blocks.length === 0) {
               this.blocks = response.data.blockContent
-              console.log('Load block library')
+              console.log('@App: Load block library')
             } else {
-              console.log('Use default block library')
+              console.log('@App: Use default block library')
             }
             console.log('Load succesfull from file <<' + filename + '>>')
           })
@@ -236,7 +256,6 @@ export default {
       this.selectedBlock = block
     },
     deselectBlock (block) {
-      console.log('@App: deselect', block)
       this.selectedBlock = null
     },
     filteredBlocks (type) {

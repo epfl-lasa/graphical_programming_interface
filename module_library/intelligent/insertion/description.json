@@ -1,0 +1,15 @@
+{
+  "name": "idle",
+  "family": "idle",
+  "library": "basic",
+  "title": "Idle",
+  "description": "Idle Module",
+  "information": "",
+  "iconpath": "idle.jpeg",
+  "fields": [
+    {"attr": "property", "type": "eulerPose",  "name": "reference",  "label": "Reference"},
+    {"attr": "property", "type": "slider", "name": "stiffness",  "label": "Stiffness"},
+    {"attr": "property", "type": "string", "name": "comment",  "label": "Comment"},
+    {"attr": "input", "label": "Input", "name": "input", "type": "event"},
+    {"attr": "output", "label": "Input", "name": "output", "type": "event"}]
+}

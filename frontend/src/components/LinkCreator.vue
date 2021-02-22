@@ -1,15 +1,22 @@
 <template>
   <svg width="100%" height="100%">
     <!-- <g v-for="p in renderedPathes" > -->
-    <g v-for="p in straightPaths" >
+      <!-- <g v-for="(p, index) in straightPaths" -->
+    <g v-for="p in straightPaths"
+       @mousedown="lineMouseDown($event, p, p.id)"
+       @mouseup="lineMouseUp($event, p)"
+       >
       <path v-if="outline" :d="p.data" :style="p.outlineStyle"></path>
       <path :d="p.data" :style="p.style"></path>
     </g>
     <g>
       <path v-for="a in straightArrows"
-        d="M -1 -1 L 0 1 L 1 -1 z"
-        :style="a.style"
-        :transform="a.transform"></path>
+            d="M -1 -1 L 0 1 L 1 -1 z"
+            :style="a.style"
+            :transform="a.transform"
+            @mousedown="lineMouseDown($event, a, a.id)"
+            @mouseup="lineMouseUp($event, a)"
+            ></path>
     </g>
   </svg>
 </template>
@@ -27,9 +34,56 @@ export default {
     outline: {
       type: Boolean,
       default: false
+    },
+    // linking: false,
+    tempLinkActive: true
+  },
+  beforeDestroy () {
+    // The whole container is still kept.
+    console.log('Destroy all')
+  },
+  data () {
+    return {
+      // Timer for longpress
+      presstimer: null,
+      longpress: false
     }
   },
   methods: {
+    lineMouseDown (e, line, lineID) {
+      if (lineID === undefined) {
+        // Temp line
+        console.log('Undefined line')
+        return 1
+      } else {
+        let linePosition = this.lines.find(element => element.id === lineID)
+
+        if (linePosition === undefined) {
+          console.log('@LinkCreator: Line not found in list')
+          return 2
+        }
+      }
+
+      this.$emit('updateSelectedLine', lineID)
+      this.presstimer = setTimeout(this.lineMouseDownLong, 300, e)
+    },
+    lineMouseDownLong (e) {
+      console.log('@LinkCreator: hLong press YES')
+      self.longpress = true
+      this.showAppDropwdown = true
+      this.$emit('showDropdownkMenu', e, 'line')
+    },
+    lineMouseUp (e) {
+      // console.log('@LinkCreator: Mouse Up on line')
+      this.cancelLongPress()
+    },
+    cancelLongPress () {
+      if (this.presstimer !== null) {
+        clearTimeout(this.presstimer)
+        this.presstimer = null
+        this.longpress = false
+      }
+    },
     updateLineEndPoints () {
       if (!this.lines) {
         return []
@@ -57,14 +111,25 @@ export default {
     }
   },
   computed: {
+    linkListID () {
+      let listID = []
+      let ii = 0
+      this.lines.forEach(l => {
+        listID.push(ii)
+        ii = ii + 1
+      })
+      return listID
+    },
     straightPaths () {
       if (!this.lines) {
         return []
       }
+
       let paths = []
       this.lines.forEach(l => {
         // let dist = this.getDistance(l.x1, l.y1, l.x2, l.y2) * 0.25
         paths.push({
+          id: l.id,
           data: `M ${l.x1}, ${l.y1}, ${l.x2}, ${l.y2}`,
           style: l.style,
           outlineStyle: l.outlineStyle
@@ -73,6 +138,7 @@ export default {
       return paths
     },
     straightArrows () {
+      // The arrows on straight link between a & b
       if (!this.lines) {
         return []
       }
@@ -85,10 +151,11 @@ export default {
         let degrees = (angle >= 0 ? angle : (2 * Math.PI + angle)) * 180 / Math.PI
 
         arrows.push({
+          id: l.id,
           transform: `translate(${pos.x}, ${pos.y}) rotate(${degrees})`,
           style: {
             stroke: l.style.stroke,
-            strokeWidth: l.style.strokeWidth * 2,
+            strokeWidth: l.style.strokeWidth * 4,
             fill: l.style.stroke
           }
         })

@@ -1,32 +1,67 @@
+<!--
+Nomenclature Introduction
+
+# Application
+
+# Task
+Task is
+
+# Action
+An action is the most basic module that can exist.
+
+# Module
+A module is
+
+# Block
+Block is the visual element created for a 'module'
+
+# Link
+Links two different modules
+
+# Line
+Line is the visual element which is created from a link between modules
+  -->
+
 <template>
-  <div class="vue-container" id="main-element-container">
-    <VueLink :lines="lines"/>
-    <VueBlock v-for="block in blocks"
-              :key="block.id"
-              v-bind.sync="block"
-              :options="optionsForChild"
-              @update="updateScene"
-              @linkingStart="linkingStart(block, $event)"
-              @linkingStop="linkingStop(block, $event)"
-              @linkingBreak="linkingBreak(block, $event)"
-              @showBlockMenu="showBlockMenu(block, $event)"
-              @disableBlockMenu="disableBlockMenu()"
-              @select="blockSelect(block)"
-              @delete="blockDelete(block)"
-              />
+<div class="vue-container" id="main-element-container">
 
-    <BlockDropDown v-if="blockMenuVisible"
-                   @menuContent="blockMenuContent"
-                   :posX="blockMenuX"
-                   :posY="blockMenuY"
-                   @disableBlockMenu="disableBlockMenu()"
-                   />
-    <!-- :posX="blockMenuX" -->
+  <!-- TODO: Iterate over links, too! -->
+  <VueLink :lines="lines"
+           :linkingMode = "linkingMode"
+           @showDropdownkMenu="showDropdownkMenu"
+           @disableDropdownMenu="disableDropdownkMenu"
+           @updateSelectedLine="updateSelectedLine"
+           @removeLink="removeLink"
+           />
 
-        <!-- <BlockDropDown v-if="true" -->
+  <VueBlock v-for="block in blocks"
+            :key="block.id"
+            :linkingMode="linkingMode"
+            v-bind.sync="block"
+            :options="optionsForChild"
+            @update="updateScene"
+            @linkingStart="linkingStart(block, $event)"
+            @linkingStop="linkingStop(block, $event)"
+            @linkingBreak="linkingBreak(block, $event)"
+            @showBlockMenu="showBlockMenu(block, $event)"
+            @disableBlockMenu="disableBlockMenu()"
+            @select="blockSelect(block)"
+            @delete="blockDelete(block)"
+            @linkingStopDrawing = "linkingStopDrawing"
+            />
 
-    <!-- @showBlockMenu="showBlockMenu" -->
-  </div>
+  <DropDown v-if="blockMenuVisible"
+            :linkingMode="linkingMode"
+            :posX="blockMenuX"
+            :posY="blockMenuY"
+            :selectionType="blockSelectionType"
+            @menuContent="blockMenuContent"
+            @disableBlockMenu="disableBlockMenu()"
+            @removeBlock="blockDelete"
+            @linkingStart="linkingStart()"
+            @removeLink="removeLink"
+            />
+</div>
 </template>
 
 <script>
@@ -35,14 +70,14 @@ import mouseHelper from '../helpers/mouse'
 
 import VueBlock from './VueBlock'
 import VueLink from './LinkCreator' // TODO: rename file to linkCreator
-import BlockDropDown from './BlockDropDown'
+import DropDown from './DropDown'
 
 export default {
   name: 'VueBlockContainer',
   components: {
     VueBlock,
     VueLink,
-    BlockDropDown
+    DropDown
   },
   props: {
     blocksContent: {
@@ -91,7 +126,7 @@ export default {
     this.minScale = 0.2
     this.maxScale = 5
 
-    this.linking = false
+    // this.linking = false
     this.linkStartData = null
 
     this.inputSlotClassName = 'inputSlot'
@@ -115,16 +150,25 @@ export default {
       links: [],
       //
       tempLink: null,
+      selectedLink: null,
       selectedBlock: null,
       hasDragged: false,
       //
       blockMenuVisible: false,
       blockMenuContent: [],
       blockMenuX: 0,
-      blockMenuY: 0
+      blockMenuY: 0,
+      blockSelectionType: null,
+      // Check if everything is saved & updated
+      isSavedToFile: true
+      // isUpdatedToProgram: true
     }
   },
   computed: {
+    linkingMode () {
+      // console.log('Double valuation for debugging')
+      return (this.tempLink !== null)
+    },
     optionsForChild () {
       return {
         width: 110,
@@ -146,6 +190,7 @@ export default {
       }
     },
     // Links calculate
+    // TODO: what is difference between lines & links (?!?!)
     lines () {
       let lines = []
 
@@ -159,7 +204,7 @@ export default {
         })
 
         if (!originBlock || !targetBlock) {
-          console.log('Remove invalid link', link)
+          console.log('@VueBlockContainer: Remove invalid link', link)
           this.removeLink(link.id)
           continue
         }
@@ -174,7 +219,7 @@ export default {
         let targetLinkPos = this.getConnectionPos(targetBlock, link.targetSlot, true)
 
         if (!originLinkPos || !targetLinkPos) {
-          console.log('Remove invalid link (slot not exist)', link)
+          console.log('@VueBlockContainer: Remove invalid link (slot not exist)', link)
           this.removeLink(link.id)
           continue
         }
@@ -186,6 +231,7 @@ export default {
         let y2 = targetLinkPos.y
 
         lines.push({
+          id: link.id,
           x1: x1,
           y1: y1,
           x2: x2,
@@ -193,7 +239,7 @@ export default {
           style: {
             stroke: '#32D9CB',
             // stroke: '#F85',
-            strokeWidth: 4 * this.scale,
+            strokeWidth: 6 * this.scale,
             fill: 'none'
           },
           outlineStyle: {
@@ -212,6 +258,7 @@ export default {
           fill: 'none'
         }
 
+        // Temp Link Is Added
         lines.push(this.tempLink)
       }
 
@@ -239,7 +286,7 @@ export default {
         this.hasDragged = true
       }
 
-      if (this.linking && this.linkStartData) {
+      if (this.linkingMode && this.linkStartData) {
         let linkStartPos = this.getConnectionPos(this.linkStartData.block, this.linkStartData.slotNumber, false)
         this.tempLink = {
           x1: linkStartPos.x,
@@ -264,6 +311,13 @@ export default {
         this.deselectAll()
         if (e.preventDefault) e.preventDefault()
       }
+
+      // Check if any block is clicked
+      let clickElementInd = this.$children.filter(item => item.$el.className === 'vue-block')
+          .find(item => item.$el.contains(target))
+      if (clickElementInd === undefined && this.linkingMode) {
+        this.linkingStopDrawing()
+      }
     },
     handleUp (e) {
       const target = e.target || e.srcElement
@@ -276,11 +330,11 @@ export default {
           this.hasDragged = false
         }
       }
-
       if (this.$el.contains(target) && (typeof target.className !== 'string' || target.className.indexOf(this.inputSlotClassName) === -1)) {
-        this.linking = false
-        this.tempLink = null
-        this.linkStartData = null
+        // this.linking = false
+        // this.tempLink = null
+        // this.linkStartData = null
+        console.log('@VueBlocksContainer: debugin without link adapting')
       }
     },
     handleWheel (e) {
@@ -314,7 +368,7 @@ export default {
       }
     },
     // Processing
-    getConnectionPos (block, slotNumber, isInput) {
+    getConnectionPos (block, slotNumber, isInput, fromCenter = true) {
       if (!block || slotNumber === -1) {
         return undefined
       }
@@ -325,20 +379,26 @@ export default {
       x += block.x
       y += block.y
 
-      y += this.optionsForChild.titleHeight
-
-      if (isInput && block.inputs.length > slotNumber) {
-      } else if (!isInput && block.outputs.length > slotNumber) {
-        x += this.optionsForChild.width
+      if (fromCenter) {
+        // Draw the arrows starting from the center
+        x += this.optionsForChild.width / 2.0
+        y += this.optionsForChild.width / 2.0
       } else {
-        console.error('slot ' + slotNumber + ' not found, is input: ' + isInput, block)
-        return undefined
-      }
+        y += this.optionsForChild.titleHeight
 
-      // (height / 2 + blockBorder + padding)
-      y += (16 / 2 + 1 + 2)
-      //  + (height * slotNumber)
-      y += (16 * slotNumber)
+        if (isInput && block.inputs.length > slotNumber) {
+        } else if (!isInput && block.outputs.length > slotNumber) {
+          x += this.optionsForChild.width
+        } else {
+          console.error('slot ' + slotNumber + ' not found, is input: ' + isInput, block)
+          return undefined
+        }
+
+        // (height / 2 + blockBorder + padding)
+        y += (16 / 2 + 1 + 2)
+        //  + (height * slotNumber)
+        y += (16 * slotNumber)
+      }
 
       x *= this.scale
       y *= this.scale
@@ -349,7 +409,12 @@ export default {
       return {x: x, y: y}
     },
     // Linking
-    linkingStart (block, slotNumber) {
+    linkingStart (block = null, slotNumber = 0) {
+      // Choose default block
+      if (block === null) {
+        block = this.selectedBlock
+      }
+
       this.linkStartData = {block: block, slotNumber: slotNumber}
       let linkStartPos = this.getConnectionPos(this.linkStartData.block, this.linkStartData.slotNumber, false)
       this.tempLink = {
@@ -359,9 +424,11 @@ export default {
         y2: this.mouseY
       }
 
-      this.linking = true
+      console.log('@VueBlocksContainer')
+      console.log(this.linkingMode)
     },
-    linkingStop (targetBlock, slotNumber) {
+    linkingStop (targetBlock, slotNumber = 0) {
+      // Successful linking - Make temp link to permanent link
       if (this.linkStartData && targetBlock && slotNumber > -1) {
         this.links = this.links.filter(value => {
           return !(value.targetID === targetBlock.id && value.targetSlot === slotNumber)
@@ -383,10 +450,15 @@ export default {
           this.updateScene()
         }
       }
-
-      this.linking = false
-      this.tempLink = null
+      this.linkingStopDrawing()
+    },
+    linkingStopDrawing () {
+      // Stop linking Everywhere
       this.linkStartData = null
+      this.tempLink = null
+      // this.blocks.forEach(function (item, index) {
+      // item.linking = false
+      // })
     },
     linkingBreak (targetBlock, slotNumber) {
       if (targetBlock && slotNumber > -1) {
@@ -409,7 +481,13 @@ export default {
         }
       }
     },
-    removeLink (linkID) {
+    removeLink (linkID = null) {
+      if (linkID === null) {
+        // Default link becoomes choose selected link ID
+        linkID = this.selectedLineID
+        this.selectedLineID = null
+      }
+
       this.links = this.links.filter(value => {
         return !(value.id === linkID)
       })
@@ -438,7 +516,7 @@ export default {
         y = (y - this.centerY) / this.scale
       }
 
-      console.log(block)
+      console.log('@VueBlocksContainer: Add block')
 
       block.x = x
       block.y = y
@@ -499,31 +577,70 @@ export default {
           this.blockDeselect(value)
         }
       })
-      this.disableBlockMenu()
       console.log('@VueBlockContainer: deselectAll')
+      console.log(this.linkingMode)
+
+      this.disableBlockMenu()
+    },
+    // --------------------------------------------
+    // DropDownMenue Setup
+    // --------------------------------------------
+    showDropdownkMenu (e, elementType) {
+      this.blockMenuVisible = true
+
+      var containerElem = document.getElementById('main-element-container')
+
+      // Relative position within div
+      this.blockMenuX = e.clientX - containerElem.offsetLeft
+      this.blockMenuY = e.clientY - containerElem.offsetTop
+
+      this.blockSelectionType = elementType
+    },
+    disableDropdownkMenu () {
+      console.log('@VueBlockContainer: Deselct DropdownMenu')
+      this.blockMenuVisible = false
+    },
+    updateSelectedLine (lineID) {
+      this.selectedLineID = lineID
+    },
+    updateSelectedBlock (block) {
+      this.selectedBlock = block
     },
     disableBlockMenu () {
       console.log('@VueBlockContainer: Deselect block')
       this.blockMenuContent = []
       this.blockMenuVisible = false
     },
-    showBlockMenu (block, e, action = true) {
-      console.log('@VueBlockContainer: showBlockMenu')
+    showBlockMenu (element, e, elementType = 'block') {
+      element.selected = true
 
-      block.selected = true
-      this.selectedBlock = block
+      if (elementType === 'block') {
+        console.log('@VueBlockContainer: show block menu')
+        this.selectedBlock = element
+      } else if (elementType === 'line') {
+        console.log('@VueBlockContainer: line is not really passed')
+      } else {
+        console.log('@VueBlockContainer:Unexpected elementType')
+      }
       this.blockMenuContent = []
       this.blockMenuVisible = true
 
       var containerElem = document.getElementById('main-element-container')
 
+      // Relative position within div
       this.blockMenuX = e.clientX - containerElem.offsetLeft
       this.blockMenuY = e.clientY - containerElem.offsetTop
+
+      this.blockSelectionType = elementType
     },
     // Events
+    linkSelect (linkId) {
+      console.log('@Blockscontainer: link select line')
+    },
+    linkDeselect (linkId) {
+      console.log('@Blockscontainer: linkDeselect line')
+    },
     blockSelect (block) {
-      console.log('blockSelect @ BlocksContainer')
-      console.log(block)
       block.selected = true
       this.selectedBlock = block
       this.deselectAll(block.id)
@@ -541,10 +658,15 @@ export default {
 
       this.$emit('blockDeselect', block)
     },
-    blockDelete (block) {
-      if (block.selected) {
+    blockDelete (block = null) {
+      console.log('@VueBlocksContainer: delete block')
+      if (block === null) {
+        block = this.selectedBlock
+        this.blockDeselect(block)
+      } else if (block.selected) {
         this.blockDeselect(block)
       }
+
       this.links.forEach(l => {
         if (l.originID === block.id || l.targetID === block.id) {
           this.removeLink(l.id)
@@ -661,6 +783,9 @@ export default {
     },
     updateScene () {
       this.$emit('update:scene', this.exportScene())
+      // Send scene to backend file
+      this.$emit('updateBackendProgram')
+      console.log('@BlocksContainer: Updating Scene')
     }
   },
   watch: {
@@ -670,6 +795,10 @@ export default {
     scene () {
       this.importScene()
     }
+    // tempLink () {
+      // console.log('@VueBlocksContainer Change temp link')
+      // console.log(this.tempLink)
+    // }
   }
 }
 </script>

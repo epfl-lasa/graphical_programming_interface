@@ -1,24 +1,35 @@
+<!--
+TODO:
+> Divide sensible into links, block, & container
+
+-->
 <template>
-  <div class="vue-block" :class="{selected: selected}" :style="style">
+<div class="vue-block" :class="{selected: selected}" :style="style"
+     @mousedown="handleDown($event)"
+     >
+
     <header :style="headerStyle">
       {{title}}
-      <a class="delete" @click="deleteBlock">x</a>
+      <!-- <a class="delete" @click="deleteBlock">x</a> -->
     </header>
-    <div class="inputs">
-      <div class="input" v-for="(slot, index) in inputs">
-        <div class="circle inputSlot" :class="{active: slot.active}"
-             @mouseup="slotMouseUp($event, index)"
-             @mousedown="slotBreak($event, index)"></div>
-        {{slot.label}}
-      </div>
-    </div>
-    <div class="outputs">
-      <div class="output" v-for="(slot, index) in outputs">
-        <div class="circle" :class="{active: slot.active}"
-             @mousedown="slotMouseDown($event, index)"></div>
-        {{slot.label}}
-      </div>
-    </div>
+    <template v-if="false">
+    <!-- <div class="inputs"> -->
+    <!--   <div class="input" v-for="(slot, index) in inputs"> -->
+    <!--     <div class="circle inputSlot" :class="{active: slot.active}" -->
+    <!--          @mouseup="slotMouseUp($event, index)" -->
+    <!--          @mousedown="slotMouseUp($event, index)" -->
+    <!--          ></div> -->
+    <!--     {{slot.label}} -->
+    <!--   </div> -->
+    <!-- </div> -->
+    <!-- <div class="outputs"> -->
+    <!--   <div class="output" v-for="(slot, index) in outputs"> -->
+    <!--     <div class="circle" :class="{active: slot.active}" -->
+    <!--          @mousedown="slotMouseDown($event, index)"></div> -->
+    <!--     {{slot.label}} -->
+    <!--   </div> -->
+        <!-- </div> -->
+    </template>
   </div>
 </template>
 
@@ -66,7 +77,9 @@ export default {
 
     options: {
       type: Object
-    }
+    },
+    // Linking mode for environment
+    linkingMode: false
   },
   created () {
     this.mouseX = 0
@@ -75,18 +88,19 @@ export default {
     this.lastMouseX = 0
     this.lastMouseY = 0
 
-    this.linking = false
+    // Linking & Dragging of specific block
+    // this.linking = false
     this.dragging = false
   },
   mounted () {
     // TODO: an event listener is added for each block (?!) -- MAYBE move to 'drawing-window-class'
     document.documentElement.addEventListener('mousemove', this.handleMove, true)
-    document.documentElement.addEventListener('mousedown', this.handleDown, true)
+    // document.documentElement.addEventListener('mousedown', this.handleDown, true)
     document.documentElement.addEventListener('mouseup', this.handleUp, true)
   },
   beforeDestroy () {
     document.documentElement.removeEventListener('mousemove', this.handleMove, true)
-    document.documentElement.removeEventListener('mousedown', this.handleDown, true)
+    // document.documentElement.removeEventListener('mousedown', this.handleDown, true)
     document.documentElement.removeEventListener('mouseup', this.handleUp, true)
   },
   data () {
@@ -112,7 +126,7 @@ export default {
 
       // console.log('Dragging')
       // console.log(this.dragging)
-      if (this.dragging && !this.linking) {
+      if (this.dragging && !this.linkingMode) {
         let diffX = this.mouseX - this.lastMouseX
         let diffY = this.mouseY - this.lastMouseY
 
@@ -127,6 +141,9 @@ export default {
       }
     },
     handleDown (e) {
+      // console.log('VueBlock -- gogogo (-1)')
+      // console.log(this.linkingMode)
+
       this.mouseX = e.pageX || e.clientX + document.documentElement.scrollLeft
       this.mouseY = e.pageY || e.clientY + document.documentElement.scrollTop
 
@@ -134,29 +151,25 @@ export default {
       this.lastMouseY = this.mouseY
 
       const target = e.target || e.srcElement
+
       if (this.$el.contains(target) && e.which === 1) {
+        if (this.linkingMode) {
+          console.log('@VueBock: Want to link')
+          this.$emit('linkingStop')
+          return
+        }
         this.dragging = false
 
         // Check for long-click
-        // this.presstimer = setTimeout(function () {
-        // this.handleLongPress(e)
-        // }, 1000)
         this.presstimer = setTimeout(this.handleLongPress, 300, e)
-
-        // this.presstimer = setTimeout(function () {
-        //   console.log('Long press start')
-        //   // this.handleLongPress()
-        //   console.log('long presssing...')
-        //   console.log(this.dragging)
-        // }, 300)
-
         this.$emit('select')
 
         if (e.preventDefault) e.preventDefault()
+      } else if (this.linkingMode) {
+        this.$emit('linkingStopDrawing')
       }
     },
     handleLongPress (e) {
-      console.log('@VueBlock: Long press handle')
       this.longpress = true
       this.dragging = true
 
@@ -167,9 +180,6 @@ export default {
     cancelLongPress () {
       if (this.presstimer !== null) {
         clearTimeout(this.presstimer)
-
-        console.log('@VueBlock: Cancel-over')
-        console.log(this.presstimer)
 
         this.presstimer = null
         this.longpress = false
@@ -187,15 +197,11 @@ export default {
           this.hasDragged = false
         }
       }
-
-      if (this.linking) {
-        this.linking = false
-      }
     },
-    // Slots
+    //
+    // Slots (DEPRECIATED ?!)
+    //
     slotMouseDown (e, index) {
-      this.linking = true
-
       this.$emit('linkingStart', index)
       if (e.preventDefault) e.preventDefault()
     },
@@ -204,8 +210,6 @@ export default {
       if (e.preventDefault) e.preventDefault()
     },
     slotBreak (e, index) {
-      this.linking = true
-
       this.$emit('linkingBreak', index)
       if (e.preventDefault) e.preventDefault()
     },
@@ -376,5 +380,10 @@ export default {
         }
       }
     }
-  }
+}
+
+.highlighted-block {
+    box-shadow: 0 4px 8px 0 rgba(1, 1, 1, 1.0), 0 6px 20px 0 rgba(1.0, 1.0, 1.0, 0.0);
+}
+
 </style>
