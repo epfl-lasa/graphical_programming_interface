@@ -36,11 +36,13 @@
 
       </template>
       <template v-else-if="loadedLibrary">
-        <!-- <template v-if="0"> -->
-        <VueModuleLibrary ref="module-library"
-                          class="module-library"
-                          :modules="modules"
-                          :loadedLibrary="loadedLibrary"/>
+        <VueModuleLibrary
+          ref="module-library"
+          class="module-library"
+          :modules="modules"
+          :blockContent="blocks"
+          :loadedLibrary="loadedLibrary"/>
+
       </template>
     </template>
 
@@ -55,7 +57,6 @@
         />
         <p> Load-Safe </p>
     </template>
-
   </div>
 </template>
 
@@ -89,7 +90,7 @@ export default {
 
     // For Debugging & Development
     this.loadScene('default')
-    this.loadedLibrary = 'basic'
+    this.loadedLibrary = 'polishing_machine'
 
     setTimeout(() => {
       this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
@@ -208,7 +209,7 @@ export default {
             console.log(error)
             console.log('Did it not')
           })
-        console.log('Successfully saved blocks to <<' + filename + '>>')
+        console.log('@App: Successfully saved blocks to <<' + filename + '>>')
       }
     },
     loadScene (filename = null) {
@@ -236,7 +237,7 @@ export default {
             } else {
               console.log('@App: Use default block library')
             }
-            console.log('Load succesfull from file <<' + filename + '>>')
+            console.log('@App: Load succesfull from file <<' + filename + '>>')
           })
           .catch(error => {
             console.log(error)
@@ -272,7 +273,25 @@ export default {
       this.$refs.container.addNewBlock(module)
     },
     loadModuleLibrary (library) {
-      this.loadedLibrary = library
+      // Load library and icon-paths
+      if (this.loadedLibrary !== library) {
+        this.loadedLibrary = library
+        // axios.get(this.$localIP + `/loadiconpathsanddescription/` + library)
+        //   .then(response => {
+        //     console.log(response.statusText)
+        //     this.scene = response.data.scene
+        //     if (this.blocks.length === 0) {
+        //       this.blocks = response.data.blockContent
+        //       console.log('@App: Load block library')
+        //     } else {
+        //       console.log('@App: Use default block library')
+        //     }
+        //     console.log('Load succesfull from file <<' + filename + '>>')
+        //   })
+        //   .catch(error => {
+        //     console.log(error)
+        //   })
+      }
     },
     saveProperty (val) {
       console.log('@App: Save', val)
@@ -284,6 +303,17 @@ export default {
       block.values.property = val
 
       this.scene = merge({}, scene)
+
+      axios.get(this.$localIP + `/updatemodule`,
+                {'params': {'module_data': val, 'module_id': this.selectedBlock.id}})
+        .then(response => {
+          console.log('@App: UpdateModule executed')
+          console.log(response.statusText)
+        })
+        .catch(error => {
+          console.log('@App: Update Module not Successful')
+          console.log(error)
+        })
     },
     showContextMenu (e) {
       // TODO remove from main app since list not existant anymore
@@ -338,12 +368,12 @@ export default {
   },
   watch: {
     blocks (newValue) {
-      console.log(`Update blocks`)
+      console.log(`@App: Update blocks`)
       // console.log(`Imported blocks succesfully.`)
       // console.log('blocks', JSON.stringify(newValue))
     },
     scene (newValue) {
-      console.log('Update scene')
+      console.log('@App: Update scene')
       // console.log('scene', JSON.stringify(newValue))
     }
   }

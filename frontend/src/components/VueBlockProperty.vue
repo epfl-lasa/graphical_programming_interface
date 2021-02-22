@@ -125,7 +125,6 @@ export default {
       return Math.round(x * Math.pow(10, step)) / Math.pow(10, step)
     },
     getSliderTicks (settings, minNumTicks = 4) {
-      console.log('DEBUG: running getSliderTicks')
       const min = parseFloat(settings.min)
       const max = parseFloat(settings.max)
 
@@ -205,6 +204,7 @@ export default {
     },
     loadProperties () {
       this.properties = this.property
+      console.log('@VueBlockProperties: properties')
       console.log(this.properties)
     },
     loadModule () {
