@@ -1,10 +1,21 @@
+information: ''
+name: linear
+
+title: Linear
 description: Linear Module
+
 family: linear
+iconpath: linear.jpeg
+
 fields:
 - attr: property
-  label: Text
-  name: text
-  type: string
+  label: Reference
+  name: reference
+  type: eulerPose
+- attr: property
+  label: Stiffness
+  name: stiffness
+  type: slider
 - attr: input
   label: Input
   name: input
@@ -13,8 +24,3 @@ fields:
   label: Input
   name: output
   type: event
-iconpath: linear.jpeg
-information: ''
-library: basic
-name: linear
-title: Linear

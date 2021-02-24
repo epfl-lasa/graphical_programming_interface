@@ -1,5 +1,13 @@
-description: Linear Module
-family: linear
+description: Module to Generate Constant Force
+
+title: Constant Force
+name: constantforce
+
+family: constant
+iconpath: linear.jpeg
+
+information: ''
+
 fields:
 - attr: property
   label: Text
@@ -13,8 +21,3 @@ fields:
   label: Input
   name: output
   type: event
-iconpath: linear.jpeg
-information: ''
-library: basic
-name: linear
-title: Linear

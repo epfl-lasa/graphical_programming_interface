@@ -22,10 +22,22 @@ class RosHandler():
     ''' The datahandler manages the ROS and sending it to the frontend. '''
     def __init__(self):
         # Do stuff
+        self._emergency_stop_activated = False
         pass
 
+    def relase_emergency_stop(self):
+        ''' Relase emergency stop. '''
+        self._emergency_stop_activated = False
+        
+    
+    def stop_robot(self):
+        ''' Emergency Stop of the Robot. '''
+        self._emergency_stop_activated = True
+        # TODO: stop the robot!
+        
+
     def update_scene(self, scene):
-        print('Update scene')
+        ''' Send data to ROS and initiate code-generation. '''
         loop_is_closed, ordered_block_list = RosHandler.get_ordered_list(scene)
 
         print('Successfully ordered the blocks')
@@ -34,12 +46,11 @@ class RosHandler():
             print('Do something')
         else:
             print('Loop not closed. No updating')
+            
 
     @staticmethod
     def get_ordered_list(scene):
         ''' Simplify a scene of links & blocks to an ordered_block_list. ''' 
-        print('Start ordering')
-        
         link_list = copy.deepcopy(scene['links'])
         block_list = copy.deepcopy(scene['blocks'])
         
@@ -54,8 +65,7 @@ class RosHandler():
                 del block_list[it_block]
                 break
             it_block += 1
-            print('Loop')
-
+            
         it_link = 0
         while it_link < len(link_list) and len(block_list): # Nonzero
             if link_list[it_link]['originID'] == ordered_block_list[-1]['id']:
@@ -86,15 +96,11 @@ class RosHandler():
             warnings.warn('Tail-loop detected.')
             loop_is_closed = False
 
-        print('End ordering')
         return loop_is_closed, ordered_block_list
-            
-
-    def update_module(self, moulde_id, data):
-        print('TODO: update_module')
-        print('module_id')
-        print('data')
-        pass
+    
+    def update_module(self, module_id, module_data):
+        # Module ID and data
+        print('TODO: @Gustav --- update_module')
 
 
 if (__name__)=="__main__":

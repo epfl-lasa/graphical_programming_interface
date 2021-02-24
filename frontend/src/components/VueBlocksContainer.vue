@@ -493,16 +493,17 @@ export default {
       })
     },
     // Blocks
-    addNewBlock (nodeName, x, y) {
+    addNewBlock (nodeType, x, y) {
       let maxID = Math.max(0, ...this.blocks.map(function (o) {
         return o.id
       }))
 
       let node = this.nodes.find(n => {
-        return n.name === nodeName
+        return n.type === nodeType
       })
 
       if (!node) {
+        console.log('@BlocksContainer: Node not found' + nodeType)
         return
       }
       let block = this.createBlock(node, maxID + 1)
@@ -733,6 +734,7 @@ export default {
       return newBlocks
     },
     importBlocksContent () {
+      // Get all data (also of unrecored bocks)
       if (this.blocksContent) {
         this.nodes = merge([], this.blocksContent)
       }
@@ -785,7 +787,7 @@ export default {
       this.$emit('update:scene', this.exportScene())
       // Send scene to backend file
       this.$emit('updateBackendProgram')
-      console.log('@BlocksContainer: Updating Scene')
+      console.log('BlocksContainer: Updating Scene')
     }
   },
   watch: {

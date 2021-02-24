@@ -23,11 +23,30 @@ class DataHandler():
     def __init__(self, local_path='.'):
             
         self.data_directory = os.path.join(local_path, 'backend', 'userdata', 'projects')
+        self.module_directory = os.path.join(local_path, 'module_library')
         
     def load_file(self):
         pass
 
-    def get_relative_filename(self, my_filename):
+    # def load_module_descriptions(self, my_library):
+    #     local_path = os.path.join(self.module_directory, 'my_library')
+
+    #     data_list = []
+    #     module_list = os.listdir('module_library')
+    #     for module in module_list:
+    #         module_path = os.path.join(local_path, module, 'description.yaml')
+
+    #         with open(module_path, 'r') as ff:
+    #             module_data = yaml.load(ff, Loader=yaml.FullLoader)
+
+    #         data_list.append({'name': module_data['name'],
+    #                           'iconpath': module_data['iconpath'],
+    #                           'description': module_data['description'],
+    #         }
+    #     return data_list
+            
+        
+    def get_relative_filename(self, my_filename, create_dir=False):
         ''' Check correct file ending and return realtive directory name. '''
         if my_filename[-5:] == '.json':
             warnings.warn('Old naming convention')
@@ -35,20 +54,24 @@ class DataHandler():
             
         # if not my_filename[-5:] == '.json':
             # my_filename = my_filename + '.json'
+        file_path = os.path.join(self.data_directory,  my_filename)
+        if create_dir:
+            try:
+                os.makedirs(file_path)
+            except FileExistsError:
+                print('Directory already exists')
             
-        return os.path.join(self.data_directory,  my_filename, 'main.json')
+        return os.path.join(file_path, 'main.json')
     
 
     def save_to_file(self, my_filename, my_data):
-        my_data_file = self.get_relative_filename(my_filename)
+        my_data_file = self.get_relative_filename(my_filename, create_dir=True)
 
         with open(my_data_file, 'w') as ff:
             # f.write(scene)
             json.dump(my_data, ff)
             # yaml.dump(data, f)
-
-        import pdb; pdb.set_trace()
-        return 0
+            return 0
 
     
     def load_from_file(self, my_filename):
@@ -84,7 +107,8 @@ class DataHandler():
                 file_data[-1]['type'] = 'file'
         return file_data
 
-    def get_libraries_and_modules(self):
+
+    def get_libraries_and_modules(self, library_name=None):
         module_libraries = {}
 
         # Import all js files
@@ -94,9 +118,11 @@ class DataHandler():
         module_content = []
 
         for library in local_library_list:
-            if library != 'basic':
+            if (library_name is not None) and not (library == library_name):
+                # TODO: remove after debugging
                 warnings.warn('Only doing it for basic right now... Debugging')
                 continue
+
             if library[0] == '_':
                 continue
             lib_dir = os.path.join('module_library', library)
@@ -109,18 +135,20 @@ class DataHandler():
             for module in local_module_list:
                 if module[0] == '_':
                     continue
-                module_description = os.path.join(lib_dir, module, 'description.json')
+                module_description = os.path.join(lib_dir, module, 'description.yaml')
                 if not os.path.isfile(module_description):
                     continue
                 module_libraries[library].append(module)
 
-                with open(module_description, 'r') as f:
-                    data = f.read()
-                data = json.loads(data)
+                with open(module_description, 'r') as ff:
+                    data = yaml.load(ff, Loader=yaml.FullLoader)
+
+                data['type'] = module
+                data['library'] = library
 
                 module_content.append(data)
-        print('module_libraries', module_content)
-        print('module_content', module_content)
+        # print('module_libraries', module_libraries)
+        # print('module_content', module_content)
         return {'moduleLibraries': module_libraries, 'blockContent': module_content}
 
     def get_scene(self):
@@ -144,7 +172,4 @@ class DataHandler():
                 if not os.path.isdir(lib_dir) or library[0]=='_':
                     continue
                 libs_and_mods[library].append(module)
-
         return libs_and_mods
-
-        

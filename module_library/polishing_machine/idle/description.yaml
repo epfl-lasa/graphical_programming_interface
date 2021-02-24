@@ -3,12 +3,31 @@ title: Idle
 
 description: Idle Module
 
-family: idle
+family: movement
 iconpath: idle.jpeg
 
 information: ''
 library: basic
 
+fields:
+- attr: property
+  label: Reference
+  name: reference
+  type: eulerPose
+- attr: property
+  label: Stiffness
+  name: stiffness
+  type: slider
+- attr: input
+  label: Input
+  name: input
+  type: event
+- attr: output
+  label: Input
+  name: output
+  type: event
+
+# TODO: transform fields to inputs, outputs & properties
 inputs:
   - name: input
     label: Input
@@ -17,7 +36,7 @@ inputs:
 outputs:
   - name: output
     label: Output
-    type: eventx
+    type: event
     
 properties:
 - name: reference

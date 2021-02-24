@@ -1,5 +1,12 @@
-description: Linear Module
-family: linear
+iconpath: linear.jpeg
+information: 'Learn Motion from Demonstration'
+
+name: learnmotion
+title: Learn Motion
+
+description: Learn Motion from Demonstration
+family: intelligent
+
 fields:
 - attr: property
   label: Text
@@ -13,8 +20,3 @@ fields:
   label: Input
   name: output
   type: event
-iconpath: linear.jpeg
-information: ''
-library: basic
-name: linear
-title: Linear

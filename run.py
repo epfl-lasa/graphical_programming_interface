@@ -31,7 +31,7 @@ from data_handler import DataHandler
 DataLocalHandler = DataHandler(dir_path)
 
 from ros_handler import RosHandler
-RosMainHanlder = RosHandler()
+RosMainHandler = RosHandler()
 
 app = Flask(__name__,
             static_folder="./dist/static",
@@ -87,13 +87,18 @@ def move_to(*args, **kwargs):
     
     return 'Success'
 
-def send_data():
-    pass
-
+@app.route('/emergencystop')
 @app.route('/stopmotion')
 def stopmotion(*args, **kwargs):
+    RosMainHandler.update_scene(stopmotion)
+    
     print('Send stop command to robot')
     return 'Success'
+
+@app.route('/emergencystop')
+def updatemodule(*args, **kwargs):
+    pass
+
 
 @app.route('/updatebackend')
 def updatebackend(*args, **kwargs):
@@ -103,7 +108,6 @@ def updatebackend(*args, **kwargs):
     try:
         scene = request.args.get('scene')
         blockContent = request.args.get('blockContent')
-        # Transform to dict
         scene = json.loads(scene)
         
     except:
@@ -111,7 +115,7 @@ def updatebackend(*args, **kwargs):
         # Error no succesffull transmission of data
         return '202: Could not transfer data' 
 
-    statusMessage = RosMainHanlder.update_scene(scene)
+    statusMessage = RosMainHandler.update_scene(scene)
     
     return '0: Transfer successful' 
 
@@ -123,7 +127,6 @@ def savetofile(my_filename, *args, **kwargs):
     try:
         scene = request.args.get('scene')
         blockContent = request.args.get('blockContent')
-        # import pdb; pdb.set_trace()
         # Transform to dict
         data = {}
         data['scene'] = json.loads(scene)
@@ -137,7 +140,7 @@ def savetofile(my_filename, *args, **kwargs):
     
     print('Successfully saved data to file.')
     
-    return '0: savign succesffull.'
+    return '0: saving succesffull.'
 
 @app.route('/loadfromfile/<string:my_filename>')
 def loadfromfile(my_filename):
@@ -153,6 +156,21 @@ def loadfromfile(my_filename):
 
     return data
 
+@app.route('/updatemodule')
+def saveproperty(*args, **kwargs):
+    try:
+        module_id = request.args.get('module_id')
+        module_data = request.args.get('module_data')
+        
+    except:
+        print('Could not store data')
+        # Error no succesffull transmission of data
+        return '202: Could not transfer data' 
+
+    import pdb; pdb.set_trace()
+    RosMainHandler.update_module(module_id, module_data)
+
+    return '0: No error occured'
 
 @app.route('/getfilelist')
 def getfilelist():
@@ -163,9 +181,13 @@ def getfilelist():
 
 
 @app.route('/getlibrariesandmodules')
-def get_libraries_and_modules():
-    return DataLocalHandler.get_libraries_and_modules()
-    
+def getlibrariesandmodules():
+    return DataLocalHandler.get_libraries_and_modules(library_name='polishing_machine')
+
+# @app.route('/loadiconpathsanddescription/<string:my_library>')
+# def loadiconpathsanddescription(my_library):
+#     return DataLocalHandler.load_module_descriptions(my_library)
+
 @app.route('/home')
 def get_scene():
     return DataLocalHandler.get_scene()
@@ -180,10 +202,7 @@ def catch_all(path):
 
 
 if __name__ == "__main__":
-# if True:
-    # TODO: remove for production
     app.run(debug=True)
 
     print('start flask')
-    # Start ROS?
 

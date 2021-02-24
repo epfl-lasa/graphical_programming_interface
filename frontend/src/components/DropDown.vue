@@ -40,11 +40,11 @@ export default {
     posY: 0,
     selectionType: null
   },
-  mounted () {
-    console.log('Mounted Dropdown')
-    console.log(this.$parent.linkingMode)
+  // mounted () {
+    // console.log('Mounted Dropdown')
+    // console.log(this.$parent.linkingMode)
     // console.log(this.$parent.linking)
-  },
+  // },
   data () {
     return {
     }
