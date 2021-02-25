@@ -16,25 +16,24 @@ fi
 
 docker volume create --driver local \
     --opt type=none \
-    --opt device=$PWD/backend \
+    --opt device=$PWD/src \
     --opt o=bind \
-   "backend_vol"
+   "src_vol"
 
 docker volume create --driver local \
     --opt type=none \
-    --opt device=$PWD/module_library \
+    --opt device=$PWD/userdata \
     --opt o=bind \
-   "module_library_vol"
+   "userdata_vol"
 
 xhost +
 docker run \
     --privileged \
 	--net="${NETWORK}" \
-    --volume="backend_vol:/home/ros2/backend:rw" \
-    --volume="module_library_vol:/home/ros2/module_library:rw" \
+    --volume="src_vol:/home/ros2/src:rw" \
+    --volume="userdata_vol:/home/ros2/userdata:rw" \
 	-it \
     -p 5000:5000 \
     -p 8081:8080 \
     --rm \
-	"${NAME}:${TAG}" \
-    "supervisord"
+	"${NAME}:${TAG}"

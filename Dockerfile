@@ -15,15 +15,15 @@ RUN mkdir -p /var/log/supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR ${HOME}
-COPY --chown=${USER} ./frontend ./frontend
-COPY --chown=${USER} ./backend ./backend
-COPY --chown=${USER} ./module_library ./module_library
+# COPY --chown=${USER} ./frontend ./frontend
+COPY --chown=${USER} ./src ./src
+# COPY --chown=${USER} ./module_library ./module_library
 COPY --chown=${USER} ./run.py .
 
-WORKDIR ${HOME}/frontend
-RUN npm install
+# WORKDIR ${HOME}/frontend
+# RUN npm install
 
-WORKDIR ${HOME}/backend
+WORKDIR ${HOME}/src/backend
 RUN pip3 install -r requirements.txt
 SHELL ["/bin/bash", "--login", "-c"]
 

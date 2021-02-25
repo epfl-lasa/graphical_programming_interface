@@ -89,6 +89,9 @@ npm run dev
 
 
 ## Run using Docker
-Simply build and run the docker-image. The GUI is then located on http://127.0.0.1:8081/.
+Build the Dockerimage. In a second window, build and run the backend. In the first window, run the Dockerimage and run the following code
+``` 
+FLASK_APP=run.py flask run --host 0.0.0.0
+```
 
 
