@@ -1,0 +1,30 @@
+description: Module to Generate Constant Force
+
+title: Constant Force
+name: constantforce
+
+family: constant
+iconpath: linear.jpeg
+
+information: ''
+
+fields:
+- attr: property
+  label: Reference
+  name: reference
+  type: eulerPose
+- attr: property
+  label: Force [N]
+  name: force
+  type: slider
+  settings:
+    - min: 0
+      max: 50
+- attr: input
+  label: Input
+  name: input
+  type: event
+- attr: output
+  label: Input
+  name: output
+  type: event

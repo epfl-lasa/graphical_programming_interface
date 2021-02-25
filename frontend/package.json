@@ -1,8 +1,8 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "description": "A Vue.js project",
-  "author": "Oleg Agapov <oleg@starcoders.com>",
+  "description": "AICA Porgramming interface.",
+  "author": "Lukas Huber <lukas@aica.tech>",
   "private": true,
   "scripts": {
     "dev": "node build/dev-server.js",

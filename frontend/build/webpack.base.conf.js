@@ -6,11 +6,16 @@ const vueLoaderConfig = require('./vue-loader.conf')
 
 function resolve (dir) {
   return path.join(__dirname, '..', dir)
+  // return path.join(__dirname, '../../frontend', dir)
 }
+
+// app: './src/main.js'
+// app: './../src/frontend/main.js'
 
 module.exports = {
   entry: {
     app: './src/main.js'
+    // app: './../src/frontend/main.js'
   },
   output: {
     path: config.build.assetsRoot,
@@ -71,6 +76,7 @@ module.exports = {
         }
       },
       // Vue & sass & vuetify
+      // Stil needed ?!?
       {
         test: /\.s(c|a)ss$/,
         use: [
