@@ -14,10 +14,26 @@ if [ -z "$TAG" ]; then
 	TAG="latest"
 fi
 
+docker volume create --driver local \
+    --opt type=none \
+    --opt device=$PWD/src \
+    --opt o=bind \
+   "src_vol"
+
+docker volume create --driver local \
+    --opt type=none \
+    --opt device=$PWD/userdata \
+    --opt o=bind \
+   "userdata_vol"
+
 xhost +
 docker run \
     --privileged \
 	--net="${NETWORK}" \
+    --volume="src_vol:/home/ros2/src:rw" \
+    --volume="userdata_vol:/home/ros2/userdata:rw" \
 	-it \
+    -p 5000:5000 \
+    -p 8081:8080 \
     --rm \
 	"${NAME}:${TAG}"
