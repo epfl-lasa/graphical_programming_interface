@@ -4,7 +4,6 @@
       <h1 v-else-if="appMode==='save'"> Save as </h1>
     <h1 v-else> List Directory </h1>
 
-
     <div class="file-table-content">
       <b-table
         :data="localFiles"

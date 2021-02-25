@@ -52,7 +52,7 @@ blockContent:
   family: idle
   fields:
   - attr: property
-    label: Reference
+v    label: Reference
     name: reference
     type: eulerPose
   - attr: property

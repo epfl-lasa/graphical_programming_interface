@@ -7,7 +7,6 @@
         <img v-bind:src="require('./../assets/images/'+mod.iconpath)" v-bind:alt=mod.name>
 		  </div>
       <p class="icon-name"> {{mod.title}} </p>
-      <br> <br>
     </div>
   </div>
 </template>

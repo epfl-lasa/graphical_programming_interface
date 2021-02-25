@@ -11,7 +11,11 @@
       ref="header"
       class="header"
       :drawMode="isInDrawingMode"
-      :modules="modules"/>
+      :modules="modules"
+      :robotIsMoving="robotIsMoving"
+      @setRobotStateMoving="setRobotStateMoving"
+      @stopRobot="stopRobot"
+      />
 
     <template v-if="true">
     <!-- <template v-if="(appMode==='main' || appMode==='programming')"> -->
@@ -31,10 +35,14 @@
         <VueBlockProperty
           :module="selectedModule"
           :property="selectedBlockProperty"
+          :robotIsMoving="robotIsMoving"
           ref="property"
-          @save="saveProperty"/>
-
+          @save="saveProperty"
+          @setRobotStateMoving="setRobotStateMoving"
+          @stopRobot="stopRobot"
+          />
       </template>
+
       <template v-else-if="loadedLibrary">
         <VueModuleLibrary
           ref="module-library"
@@ -86,16 +94,25 @@ export default {
     VueModuleLibrary
   },
   mounted () {
-    this.loadLibraries()
+    // axios.get(this.$localIP + `/startup/`, {'params': {}})
+    // .then(response => {
+    // console.log('@App: mounted successfull.')
+    // })
+    // .catch(error => {
+    // console.log(error)
+    // })
+    // TODO: at each new / load / save store filename
 
     // For Debugging & Development
+    this.loadLibraries()
     this.loadScene('default')
     this.loadedLibrary = 'polishing_machine'
 
     setTimeout(() => {
       this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
-    }, 300)
+    }, 500)
     // When loading finished, press default
+    // this.projectName = axios.get(this.$localIP + `/getprojectName`)
   },
   data: function () {
     return {
@@ -129,7 +146,14 @@ export default {
       loadedLibrary: null,
       // File list of the local library.
       localFiles: [],
-      isInDrawingMode: true
+      isInDrawingMode: true,
+      // File Directory
+      projectName: 'default',
+      // Main Robot Watcher
+      robotProperties: {
+        type: 'KUKA IIWA'
+      },
+      robotIsMoving: false
     }
   },
   computed: {
@@ -154,6 +178,18 @@ export default {
     }
   },
   methods: {
+    // Robot main movement handler
+    setRobotStateMoving () {
+      this.robotIsMoving = true
+    },
+    stopRobot () {
+      this.robotIsMoving = false
+      // this.stopRobot()
+      axios.get(this.$localIP + `/stoprobot`)
+        .catch(error => {
+          console.log(error)
+        })
+    },
     loadLibraries () {
       console.log('Loading libraries.')
       axios.get(this.$localIP + `/getlibrariesandmodules`, {'params': {}})
@@ -179,8 +215,6 @@ export default {
         })
     },
     saveScene (filename = null) {
-      console.log('Saving to save')
-      console.log(filename)
       if (!(filename)) {
         // console.log('No file name')
         filename = 'default'
@@ -195,9 +229,8 @@ export default {
             console.log(error)
           })
       } else {
-        let goal = this.$localIP + `/savetofile/` + filename
-
-        axios.get(goal,
+        this.projectName = filename
+        axios.get(this.$localIP + `/savetofile/` + filename,
                   {'params': {'scene': this.scene, 'blockContent': JSON.stringify(this.blocks)}})
           .then(response => {
             console.log('@App')
@@ -213,8 +246,6 @@ export default {
       }
     },
     loadScene (filename = null) {
-      console.log('@App: Loading')
-      console.log(filename)
       if (filename === null) {
         axios.get(this.$localIP + `/getfilelist`, {'params': {}})
           .then(response => {
@@ -227,6 +258,7 @@ export default {
             console.log(error)
           })
       } else {
+        this.projectName = filename
         axios.get(this.$localIP + `/loadfromfile/` + filename)
           .then(response => {
             console.log(response.statusText)
@@ -375,6 +407,14 @@ export default {
     scene (newValue) {
       console.log('@App: Update scene')
       // console.log('scene', JSON.stringify(newValue))
+    },
+    robotIsMoving (newValue) {
+      if (newValue) {
+        console.log('@App: Robot Motion is Started.')
+      } else {
+        console.log('@App: Robot Motion is Stopped.')
+        // Make sure this is communicated to the backend, too.
+      }
     }
   }
 }

@@ -10,9 +10,16 @@ information: ''
 
 fields:
 - attr: property
-  label: Text
-  name: text
-  type: string
+  label: Reference
+  name: reference
+  type: eulerPose
+- attr: property
+  label: Force [N]
+  name: force
+  type: slider
+  settings:
+    - min: 0
+      max: 50
 - attr: input
   label: Input
   name: input

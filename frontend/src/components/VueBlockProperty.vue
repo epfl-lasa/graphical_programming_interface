@@ -1,11 +1,16 @@
 <template>
 <div class="property-panel">
   <h1> {{ module.title }} </h1>
-  <h5> [ Module {{ module.name }} ] </h5>
+  <b-button v-if="robotIsMoving" v-on:click="stopRobot" type="is-primary"> Stop Robot </b-button>
+  <b-button v-else v-on:click="executeModule" type="is-primary"> Run Module </b-button>
+
+  <!-- <b-button v-on:click="debugTest" type="is-primary"> Test </b-button> -->
+  <!-- <p>Test id: {{module.id }} </p> -->
+  <!-- <h5> [ Module {{ module.name }} ] </h5> -->
   <div class="property" v-for="p in properties">
     <div class="property-box" v-if="p.type==='eulerPose'">
       <h3> {{ p.label }} </h3>
-      <div>
+      <div v-if="false">
         <label> Frame: </label>
           <!-- split-variant="outline-dark" -->
         <b-dropdown variant="dark" id="dropdown-1" v-bind:text="referenceFrames[p.value.frameId]" class="m-md-2">
@@ -28,9 +33,19 @@
       </template>
       <br> <br>
 
-      <button type="button" class="btn btn-secondary" v-on:click="toggleMotion(p)">
-        {{ moveToButtonLabel }}
-      </button>
+      <b-button v-if="robotIsMoving" v-on:click="stopRobot" type="is-primary">
+        Stop Robot
+      </b-button>
+      <b-button v-else v-on:click="moveToPosition" type="is-primary">
+        Move Robot </br> to Reference
+      </b-button>
+
+      <!-- <b-button v-if="robotIsCoupledToPose" v-on:click="stopRobot" type="is-primary"> -->
+        <!-- Uncouple Robot -->
+      <!-- </b-button> -->
+      <b-button v-if="!(robotIsMoving)" v-on:click="setToRobotPosition" type="is-primary">
+        Set to </br> Robot Position
+      </b-button>
     </div>
 
     <div class="property-box" v-else-if="p.type==='pos3' || p.type==='vec3'">
@@ -62,6 +77,16 @@
       </b-field>
     </div>
 
+    <div class="property-box" v-else-if="p.type==='database'">
+      <ModuleDataList
+        :module="module"
+        :robotIsMoving="robotIsMoving"
+        :multipleRecordings="false"
+        @setRobotStateMoving="setRobotStateMoving"
+        @stopRobot="stopRobot"
+        />
+    </div>
+
     <div class="property-box" v-else>
       <h4 :for="p.name">{{p.label||p.name}}:</h4>
       <input type="text" v-model="p.value">
@@ -79,13 +104,26 @@
 <script>
 import axios from 'axios' // Needed to pass. Only temporarily?
 
+import ModuleDataList from './ModuleDataList'
+
 export default {
   name: 'VueBlockProperty',
+  components: {
+    ModuleDataList
+  },
   mounted () {
+    // TODO: reload when new module is changed
     this.loadModule()
-    this.moveToButtonLabel = this.buttonLabelsList[0]
+    // No coupling at startup
+    this.robotIsCoupledToPose = false
+    // this.moveToButtonLabel = this.buttonLabelsList[0]
+  },
+  beforeUnmount () {
+    console.log('Unmount')
+    this.stopRobot()
   },
   props: {
+    robotIsMoving: Boolean,
     property: Object,
     module: Object,
     referenceFrames: {
@@ -101,14 +139,15 @@ export default {
   data () {
     return {
       properties: [],
-      isMovingToReference: false,
-      buttonLabelsList: ['Move Robot to Reference', 'Stop Robot'],
+      robotIsCoupledToPose: false,
+      // isMovingToReference: false,
       moveToButtonLabel: ''
     }
   },
   // computed: {
   // },
   methods: {
+    // Basic math methods
     log10 (x) {
       return Math.log(x) / Math.log(10)
     },
@@ -171,6 +210,67 @@ export default {
       }
       return tickList
     },
+    // ------------------------------
+    //    Robot Movement
+    // ------------------------------
+    setRobotStateMoving () {
+      this.$emit('setRobotStateMoving')
+    },
+    stopRobot () {
+      // console.log('Stop Robot')
+      this.$emit('stopRobot')
+    },
+    executeModule () {
+      // console.log('Execute')
+      this.setRobotStateMoving()
+      // console.log('module')
+      console.log(this.module)
+      axios.get(this.$localIP + `/executemodule/` + this.module.id)
+        .then(response => {
+          console.log(response.statusText)
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    moveToPosition (position = null) {
+      if (position === null) {
+        position = this.properties.eulerPose
+      }
+      this.setRobotStateMoving()
+      this.robotIsCoupledToPose = true
+      axios.get(this.$localIP + `/movetoposition`,
+                {'params': {'eulerPose': position}})
+        .then(response => {
+          console.log(response.statusText)
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    setToRobotPosition () {
+      console.log('@VueBlockProperty: setToRobotPosition')
+      // this.startRobot()
+      // this.robotIsCoupledToPose = false
+      axios.get(this.$localIP + `/getrobotposition`)
+        .then(response => {
+          // console.log(response.statusText)
+          console.log(response.data.pose)
+          // this.properties.eulerPose =
+          console.log(this.properties.reference)
+          this.properties.reference.value.frameId = response.data.pose.frameId
+          this.properties.reference.value.position = response.data.pose.position
+          this.properties.reference.value.orientation = response.data.pose.orientation
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    // stopAndUncoupleRobot () {
+    // this.stopRobot()
+    // this.robotIsCoupledToPose = false
+    // },
+    // stopRobot is implement in App.vue (root)
     toggleMotion (eulerPose) {
       if (this.isMovingToReference === true) {
         // Stop moving robot
@@ -202,6 +302,7 @@ export default {
         this.moveToButtonLabel = this.buttonLabelsList[1]
       }
     },
+    // Load Properties and Module
     loadProperties () {
       this.properties = this.property
       console.log('@VueBlockProperties: properties')
@@ -273,22 +374,47 @@ export default {
       // DEBUG ONLY
       console.log('check props')
       console.log(this.properties)
+    },
+    debugTest () {
+      console.log('@VueBlockProperty: Debug Test')
+      // console.log(this.properties)
     }
   },
   watch: {
     module () {
-      console.log('load module')
+      // console.log('@VueBlockProperty: load module')
       this.loadModule()
+      this.robotIsCoupledToPose = false // Reset at mounted
     },
     property () {
-      console.log('load property')
+      // console.log('@VueBlockProperty: load property')
+      console.log('@VueBlockProperty: whats the difference between properties & property')
       this.loadProperties()
+    },
+    properties (newValue) {
+      console.log('@VueBlockProperty: update of properties')
+      // TODO: update reference point
+    },
+    robotIsMoving (newValue) {
+      if (!newValue) {
+        // When robot movement is stopped make sure it gets uncoupled.
+        this.robotIsCoupledToPose = false
+      }
+      console.log('@VueBlockProperty: Robot is not Moving anymore')
     }
   }
 }
 </script>
 
 <style lang="less" scoped>
+h1 {
+    color: black;
+}
+
+h2 {
+    color: black;
+}
+
 .property-panel {
     position: absolute;
     right: 0;
@@ -299,7 +425,7 @@ export default {
     // min-height: 200px;
     box-sizing: border-box;
     padding: 8px;
-
+p
     background: #87adc4;
     // border: 5px solid #000000;
     border: 2px solid	#FFFFFF;

@@ -1,0 +1,29 @@
+information: ''
+name: gripper
+
+title: Gripper
+description: Gripper Open/Close Module
+
+family: gripper
+iconpath: gripper.jpeg
+
+fields:
+- attr: property
+  label: Reference
+  name: reference
+  type: eulerPose
+- attr: property
+  label: State
+  name: stiffness
+  type: button
+  property:
+    - Open
+    - Close
+- attr: input
+  label: Input
+  name: input
+  type: event
+- attr: output
+  label: Input
+  name: output
+  type: event

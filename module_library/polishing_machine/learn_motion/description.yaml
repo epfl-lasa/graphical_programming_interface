@@ -9,9 +9,17 @@ family: intelligent
 
 fields:
 - attr: property
-  label: Text
-  name: text
-  type: string
+  label: Reference
+  name: reference
+  type: eulerPose
+- attr: property
+  label: Learned Data
+  name: learning_data
+  type: database
+- attr: property
+  label: Force
+  name: force
+  type: slider
 - attr: input
   label: Input
   name: input

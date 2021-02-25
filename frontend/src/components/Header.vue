@@ -60,15 +60,10 @@
       <b-navbar-item tag="div">
         <!-- <a class="button is-primary" :on-click="update_program"> -->
             <!-- <strong> Update </strong> -->
-        <!-- </a> -->
-        <div class="buttons">
-          <a class="button is-primary">
-            <strong> Start Robot</strong>
-          </a>
-          <a class="button is-light">
-            Reset
-          </a>
-        </div>
+          <!-- </a> -->
+          <b-button v-if="robotIsMoving" v-on:click="stopRobot" type="is-primary"> Stop Robot </b-button>
+          <b-button v-else v-on:click="executeSequence" type="is-primary"> Run Sequence </b-button>
+
       </b-navbar-item>
     </template>
   </b-navbar>
@@ -76,7 +71,10 @@
 </template>
 
 
+
 <script>
+import axios from 'axios' // Needed to pass. Only temporarily? -- Import global?
+
 // import axios from 'axios' // Needed to pass. Only temporarily?
 export default {
   name: 'Header',
@@ -90,6 +88,7 @@ export default {
   // this.$parent.update_libraries()
   // },
   props: {
+    robotIsMoving: false,
     modules: {
       type: Object,
       default: {}
@@ -113,6 +112,23 @@ export default {
     }
   },
   methods: {
+    // Robot movement states
+    setRobotStateMoving () {
+      this.$emit('setRobotStateMoving')
+    },
+    stopRobot () {
+      this.$emit('stopRobot')
+    },
+    executeSequence () {
+      this.setRobotStateMoving()
+      axios.get(this.$localIP + `/executesequence`)
+        .then(response => {
+          console.log(response.statusText)
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
     getDrawString (buttonType) {
       var typeString = 'button'
       if ((buttonType === 'draw' && !this.drawMode) || (buttonType === 'move' && this.drawMode)) {

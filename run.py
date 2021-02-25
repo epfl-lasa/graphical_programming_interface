@@ -44,62 +44,102 @@ cors = CORS(app)
 
 data_directory = os.path.join('backend', 'userdata')
 
-
 IMPORT_COMMUNACTION_CONTROLLER = False
 
-@app.route('/test')
-def test():
-    print('Test is done')
-    return render_template("test.html")
+# ----------------------------------------
+#    Execute this at the startup
+# ----------------------------------------
+@app.route('/startup')
+def startup():
+    ''' Startup synchonization between back & front-end. '''
+    print('Startup')
+    return 0
 
 
-# Update Environment
-@app.route('/updateenvironment')
-def update_environment():
-    pass
+# ----------------------------------------
+#     Main Robot Handler Module-Parts
+# ---------------------------------------
+@app.route('/emergencystop')
+def emergencystop():
+    RosMainHandler.callback_emergency_stop()
+    return '0'
 
-# Update Environment
-@app.route('/update_block/<int:id>')
-def update_bock():
-    pass
+@app.route('/stoprobot')
+def stoprobot():
+    RosMainHandler.callback_stop_robot()
+    return '0'
 
+@app.route('/movetomodulestart/<int:module_id>')
+def movetomodulestart(module_id):
+    status = RosMainHandler.move_to_module_start(module_id=module_id)
+    return '0: Success'
 
 @app.route('/movetoposition')
-def move_to_start(*args, **kwargs):
-    # Start / end position
-    pass
-
-
-# Handle data here
-@app.route('/record_data/<int:id>')
-def record_data():
-    datetime.datetime
-
-@app.route('/moveto')
-def move_to(*args, **kwargs):
+def movetoposition(*args, **kwargs):
     try:
         euler_pose = request.args.get('eulerPose')
-        print('Send start command to robot')
-        print(euler_pose)
     except:
         print('Could not retrieve data')
-        return 'Fail'
-    
-    return 'Success'
+        return '202: Failed retrieving data.'
+    # Start / end position
+    status = RosMainHandler.move_to_position(euler_pose=euler_pose)
 
-@app.route('/emergencystop')
-@app.route('/stopmotion')
-def stopmotion(*args, **kwargs):
-    RosMainHandler.update_scene(stopmotion)
-    
-    print('Send stop command to robot')
-    return 'Success'
+    return '0: Success'
 
-@app.route('/emergencystop')
-def updatemodule(*args, **kwargs):
-    pass
+@app.route('/executemodule/<int:module_id>')
+def executemodule(module_id):
+    # Start / end position
+    status = RosMainHandler.execute_module(module_id=module_id)
+    return '0: Success'
+
+@app.route('/executesequence/<int:module_id>')
+def executesequence(module_id):
+    # Start / end position
+    status = RosMainHandler.execute_sequence(module_id=module_id)
+    return '0: Success'
+
+@app.route('/getrobotposition')
+def getcurrentrobotposition():
+    pose_data = RosMainHandler.get_robot_position(pose_type='eulerpose')
+
+    print('pose_data', pose_data)
+    return pose_data
 
 
+# ----------------------------------------
+#   Record Data for a specific Module
+# ----------------------------------------
+@app.route('/recordmoduledatabase/<int:my_id>')
+def recordmoduledatabase(my_id):
+    # print('@run: Start recording')
+    data_list = RosMainHandler.record_module_database(my_id, DataLocalHandler)
+    return data_list
+
+@app.route('/replaymoduledatabase/<int:my_id>/<string:my_filename>')
+def replay(my_id, my_filename):
+    RosMainHandler.replay_module_database(module_id=my_id, file_name=my_filename)
+    return '0: replay succesfuly finished'
+
+@app.route('/stoprecording')
+def stoprecording():
+    RosMainHandler.callback_stoprecording()
+    return '0: Stopping executed without problems.'
+
+@app.route('/deletemdouledatabase/<int:my_id>/<string:my_filename>')
+def deletemdouledatabase(my_id, my_filename):
+    data_list = DataLocalHandler.delete_module_database(module_id=my_id, file_name=my_filename)
+    return data_list
+
+@app.route('/getdataofmodule/<int:my_id>')
+def getdataofmodule(my_id):
+    data = DataLocalHandler.get_module_database_list(my_id)
+    return data
+
+
+
+# ---------------------------------------- 
+#   Update Code Generation
+# ----------------------------------------
 @app.route('/updatebackend')
 def updatebackend(*args, **kwargs):
     ''' Update ros backend'''
@@ -117,44 +157,7 @@ def updatebackend(*args, **kwargs):
 
     statusMessage = RosMainHandler.update_scene(scene)
     
-    return '0: Transfer successful' 
-
-@app.route('/savetofile/<string:my_filename>')
-def savetofile(my_filename, *args, **kwargs):
-    ''' Save data to file. '''
-    print('Data for storage recieved.')
-    
-    try:
-        scene = request.args.get('scene')
-        blockContent = request.args.get('blockContent')
-        # Transform to dict
-        data = {}
-        data['scene'] = json.loads(scene)
-        data['blockContent'] = json.loads(blockContent)
-        
-    except:
-        print('Could not store data')
-        return '202: Could not store data.'
-
-    DataLocalHandler.save_to_file(my_filename, data)
-    
-    print('Successfully saved data to file.')
-    
-    return '0: saving succesffull.'
-
-@app.route('/loadfromfile/<string:my_filename>')
-def loadfromfile(my_filename):
-    # TODO: from json to yaml!
-    
-    print('Backend recieved loading request.')
-
-    data = DataLocalHandler.load_from_file(my_filename)
-    
-    # Transform to dict (?)
-    if not 'scene' in data:
-        data = {'scene': data}
-
-    return data
+    return '0: Transfer successful'
 
 @app.route('/updatemodule')
 def saveproperty(*args, **kwargs):
@@ -172,30 +175,63 @@ def saveproperty(*args, **kwargs):
 
     return '0: No error occured'
 
+
+# ---------------------------------------- 
+#   Save & Retrieve data from backend
+# ----------------------------------------
+@app.route('/savetofile/<string:my_filename>')
+def savetofile(my_filename, *args, **kwargs):
+    ''' Save data to file. '''
+    print('Data for storage recieved.')
+    
+    try:
+        scene = request.args.get('scene')
+        blockContent = request.args.get('blockContent')
+        # Transform to dict
+        data = {}
+        data['scene'] = json.loads(scene)
+        data['blockContent'] = json.loads(blockContent)
+        
+    except:
+        print('Could not store data')
+        return '202: Could not store data.'
+
+    DataLocalHandler.save_to_file(my_data=data, my_filename=my_filename)
+    
+    print('Successfully saved data to file.')
+    
+    return '0: saving succesffull.'
+
+@app.route('/loadfromfile/<string:my_filename>')
+def loadfromfile(my_filename):
+    print('Backend recieved loading request.')
+    
+    data = DataLocalHandler.load_from_file(my_filename)
+    
+    # Transform to dict (?)
+    if not 'scene' in data:
+        data = {'scene': data}
+
+    return data
+
 @app.route('/getfilelist')
 def getfilelist():
     ''' Get a list of filenames from a directory. '''
-    file_data = DataLocalHandler.get_file_list()
-
-    return {'localfiles': file_data}
-
+    data = DataLocalHandler.get_file_list()
+    return data
 
 @app.route('/getlibrariesandmodules')
 def getlibrariesandmodules():
+    warnings.warn('For demonstration purposes, only one library is shared')
     return DataLocalHandler.get_libraries_and_modules(library_name='polishing_machine')
 
-# @app.route('/loadiconpathsanddescription/<string:my_library>')
-# def loadiconpathsanddescription(my_library):
-#     return DataLocalHandler.load_module_descriptions(my_library)
-
 @app.route('/home')
-def get_scene():
+def home():
     return DataLocalHandler.get_scene()
     
-
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
-def catch_all(path):
+def catch_them_all(path):
     if app.debug:
         return requests.get('http://localhost:8080/{}'.format(path)).text
     return render_template("index.html")
@@ -204,5 +240,5 @@ def catch_all(path):
 if __name__ == "__main__":
     app.run(debug=True)
 
-    print('start flask')
+    print('Starting Flask')
 
