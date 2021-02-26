@@ -22,8 +22,8 @@ class DataHandler():
     ''' The datahandler manages the file-management and storage. '''
     def __init__(self, local_path='.'):
             
-        self.data_directory = os.path.join(local_path, 'userdata', 'projects')
-        self.module_directory = os.path.join(local_path, 'src', 'module_library')
+        self.data_directory = os.path.join(local_path, '..', 'userdata', 'projects')
+        self.module_directory = os.path.join(local_path, 'module_library')
 
         print('@data_hanlder: Create DataHandler')
         # TODO: make sure this is always properly synchronized..
@@ -184,7 +184,7 @@ class DataHandler():
         module_libraries = {}
 
         # Import all js files
-        local_library_list = os.listdir('module_library')
+        local_library_list = os.listdir(self.module_directory)
         print(local_library_list)
 
         print('@data_handler -- project list')

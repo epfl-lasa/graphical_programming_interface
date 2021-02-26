@@ -22,3 +22,6 @@ backend/venv
 dist/*
 # (?) should this really be ignored? since useful for final build...
 
+# Don't keep ros recoring
+*/ros_recording/*
+

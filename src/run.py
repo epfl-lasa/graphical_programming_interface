@@ -23,7 +23,7 @@ import requests
 
 # Import custom libraries from path (TODO: install locally)
 dir_path = os.path.dirname(os.path.realpath(__file__))
-path_communication_handler = os.path.join(dir_path,"src", "backend", "python")
+path_communication_handler = os.path.join(dir_path, "backend", "python")
 if not path_communication_handler in sys.path:
     sys.path.append(path_communication_handler)
 
@@ -54,7 +54,6 @@ def startup():
     ''' Startup synchonization between back & front-end. '''
     print('Startup')
     return 0
-
 
 # ----------------------------------------
 #     Main Robot Handler Module-Parts

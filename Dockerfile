@@ -1,4 +1,4 @@
-ARG ROS_VERSION=foxy
+ ARG ROS_VERSION=foxy
 
 FROM ros2_ws:${ROS_VERSION}
 
@@ -18,7 +18,7 @@ WORKDIR ${HOME}
 # COPY --chown=${USER} ./frontend ./frontend
 COPY --chown=${USER} ./src ./src
 # COPY --chown=${USER} ./module_library ./module_library
-COPY --chown=${USER} ./run.py .
+# COPY --chown=${USER} ./run.py .
 
 # WORKDIR ${HOME}/frontend
 # RUN npm install

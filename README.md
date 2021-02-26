@@ -91,7 +91,12 @@ npm run dev
 ## Run using Docker
 Build the Dockerimage. In a second window, build and run the backend. In the first window, run the Dockerimage and run the following code
 ``` 
-FLASK_APP=run.py flask run --host 0.0.0.0
+FLASK_APP=src/run.py flask run --host 0.0.0.0
+```
+
+## Run a new docker with id
+``` bash
+docker exec -it ID_ bash
 ```
 
 

@@ -3,7 +3,6 @@ AICA user data handler
 
 (c) AICA SarL
 '''
-
 __author__ = "Lukas Huber"
 __email__ = "lukas@aica.tech"
 
@@ -15,24 +14,89 @@ import time
 
 import yaml
 
-# import ros?
-# Backend handler which interacts with file-system
+# Math / orientation tools
+from scipy.spatial.transform import Rotation
 
-class RosHandler():
+# ROS2 utils
+import rclpy
+from rclpy.node import Node
+
+# ROS messages
+from std_msgs.msg import Bool
+from nav_msgs_msgs.msg import Path
+from geometry_msgs.msg import WrenchStamped, Pose
+
+from rclpy.parameter import Parameter
+
+# Personal library
+from sequence_handler import SequenceHandler
+from rclpy.parameter import Parameter
+
+   
+class RosHandler(Node):
     ''' The datahandler manages the ROS and sending it to the frontend. '''
-    def __init__(self):
+    topic_names = {
+        'controller_stop': '/linear_controller/stop',
+        'controller_command': 'linear_controller/command',
+        'ft_sensor': '/ft_sensor/netft_data',
+        'robot_pose': '/iiwa/CartesianPosition',
+    }
+    
+    parameter_name = {
+        'controller_force': '/linear_controller/force',
+    }
+
+        
+    def __init__(self, controller_topic='controller'):
+        super().__init__('ros_main_handler')
+        
+        self.controller_topic = controller_topic
+
+        # Initialize the sequence handler
+        # self.SequenceHandler = SequenceHandler(MainRosHandler=self, controller_topic=self.controller_topic)
+        
+        # Publisher
+        self.publisher_trajcetory = self.create_publisher(
+            Path, self.topic_names['controller_command'], 2)
+        self.publisher_stop = self.create_publisher(
+            Bool, self.topic_names['controller_stop'], 2)
+
+        # Declare callback messages
+        self.msg_robot_pose = None
+        self.msg_ft_sensor = None
+        
+        # Subcription (potentially: only activate this when actually needed...)
+        self.subscription_robot_robot = self.create_subscription(
+            self.topic_names['robot_pose'], self.callback_robot_pose, 5)
+
+        self.subscription_ft_sensor = self.create_subscription(
+            self.topic_names['ft_sensor'], self.callback_ft_sensor, 5)
+            
+            
+        # self.publisher_controller = self.create_publisher(String, self.controller_topic, 10)
+        # self.publisher_trajcetory = self.create_publisher(String, self.controller_topic, 10)
+        
         # Do stuff
         self.emergency_stop_activated = False
         self.data_recording = True
-        pass
+        
+    # @property
+    # def emergency_stop_activated(self):
+        # return self._emergency_stop_activated
+    
+    # @emergency_stop_activated.setter
+    # def emergency_stop_activated(self, value):
+        # self._emergency_stop_activated = value
 
     @property
-    def emergency_stop_activated(self):
-        return self._emergency_stop_activated
-    
-    @emergency_stop_activated.setter
-    def emergency_stop_activated(self, value):
-        self._emergency_stop_activated = value
+    def robot_is_moving(self):
+        # TODO: maybe make this a global parameter?
+        self.publisher_stop.publish(True)
+        return self._robot_is_moving
+
+    @robot_is_moving.setter
+    def robot_is_moving(self, value):
+        self._robot_is_moving = value
 
     @staticmethod
     def transform_pose_to_euler(pose):
@@ -42,14 +106,12 @@ class RosHandler():
     def transform_euler_to_pose(euler):
         pass
 
+    # def relase_emergency_stop(self):
+        # ''' Relase emergency stop. '''
+        # self.emergency_stop_activated = False
 
-    def relase_emergency_stop(self):
-        ''' Relase emergency stop. '''
-        self.emergency_stop_activated = False
-
-    def move_to_module(self, module_id):
-        ''' Move to reference point of the module (i.e. the end-point). '''
-        print('TODO: move to reference point of module')
+    def stop_robot(self):
+        self.robot_is_moving = False
 
     def execute_module(self, module_id):
         ''' Run the module '''
@@ -72,22 +134,53 @@ class RosHandler():
         pass
 
     def move_to_position(self, euler_pose=None):
-        print('@ros_handler: TODO --- move to position')
-    
-    def get_robot_position(self, pose_type=None):
+        ''' Move to specific euler pose.'''
+        self.set_parameters([
+            Parameter(parameter_name['controller_force'], Parameter.Type.FLOAT64, 0),
+            ])
+        
+        # print('@ros_handler: TODO --- move to position')
+
+    def get_robot_position(self, pose_type=None, time_max_wait=5, time_sleep=0.1):
         ''' Get current position of the robot. '''
         print('TODO: return current position as list.')
 
-        self.pose_topic = ''
-        self.joint_pose_topic = ''
+        num_try_max = time_max_wait/time_sleep
+        rate_sleep = node.create_rate(time_sleep)
+        it = 0
+        while self.msg_robot_pose is None:
+            if it > num_try_max:
+                warnings.warn('Maximum iterations reached wihout position')
+                return
+            it += 1
+            rate_sleep.sleep()
+            
+        import pdb; pbd.set_trace()
+
+        orientation = Rotation.from_quat([
+            self.msg_robot_pose.x,
+            self.msg_robot_pose.y,
+            self.msg_robot_pose.z,
+            self.msg_robot_pose.w
+        ])
+        
+        orientation_euler = orientation.as_quat('zyx', degrees=True)
 
         # DEBUG (!)
         warnings.warn('@ros_handler: DEBUG POSE')
         pose_data = {
             'type': 'eulerPose',
             'frameId': 'base_link',
-            'position': {'x': 0, 'y': 1, 'z': 2},
-            'orientation': {'x': 0, 'y': 1.2134, 'z': 2.234},
+            'position': {
+                'x': self.msg_robot_pose.position.x,
+                'y': self.msg_robot_pose.position.y,
+                'z': self.msg_robot_pose.position.z
+            },
+            'orientation': {
+                'x': orientation_euler.x,
+                'y': orientation_euler.y,
+                'z': orientation_euler.z
+            },
         }
         
         return {'pose': pose_data}
@@ -112,7 +205,6 @@ class RosHandler():
         data_list = DataHandler.store_module_database(module_id, my_data=recorded_data)
         return data_list
 
-    
     def stop_robot(self):
         ''' Emergency Stop of the Robot. '''
         self.robot_is_moving = False
@@ -195,7 +287,24 @@ class RosHandler():
     def callback_stop_robot(self):
         self.robot_is_moving = False
 
+    def callback_robot_pose(self, msg):
+        '''ROS callback '''
+        self.msg_robot_pose = msg
 
+    def callback_ft_sensor(self, msg):
+        '''ROS callback '''
+        self.msg_ft_sensor = msg
+        
+
+
+class ListenerFt(Node):
+    def __init__(self, topic="/ft_sensor/netft_data", ):
+        ''' ''' 
+        self.topic = topic
+
+    def callback_msg(self, msg):
+        ''' Get message '''
+        
 
 
 if (__name__)=="__main__":
