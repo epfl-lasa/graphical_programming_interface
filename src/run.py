@@ -31,7 +31,7 @@ from data_handler import DataHandler
 DataLocalHandler = DataHandler(dir_path)
 
 from ros_handler import RosHandler
-RosMainHandler = RosHandler()
+RosMainHandler = RosHandler(DataHandler=DataLocalHandler)
 
 app = Flask(__name__,
             static_folder="./dist/static",
@@ -77,6 +77,9 @@ def movetomodulestart(module_id):
 def movetoposition(*args, **kwargs):
     try:
         euler_pose = request.args.get('eulerPose')
+        euler_pose = json.loads(euler_pose)
+        # print('@run.py got pose')
+        # print(euler_pose)
     except:
         print('Could not retrieve data')
         return '202: Failed retrieving data.'
@@ -91,19 +94,19 @@ def executemodule(module_id):
     status = RosMainHandler.execute_module(module_id=module_id)
     return '0: Success'
 
-@app.route('/executesequence/<int:module_id>')
-def executesequence(module_id):
+@app.route('/executesequence')
+def executesequence():
+    print('@run.py: Start executing sequence')
     # Start / end position
-    status = RosMainHandler.execute_sequence(module_id=module_id)
+    status = RosMainHandler.execute_sequence()
+    print('@run.py: Finished executing sequence')
     return '0: Success'
 
 @app.route('/getrobotposition')
 def getcurrentrobotposition():
+    ''' Get current position of the robot. '''
     pose_data = RosMainHandler.get_robot_position(pose_type='eulerpose')
-
-    print('pose_data', pose_data)
     return pose_data
-
 
 # ----------------------------------------
 #   Record Data for a specific Module
@@ -134,15 +137,13 @@ def getdataofmodule(my_id):
     data = DataLocalHandler.get_module_database_list(my_id)
     return data
 
-
-
 # ---------------------------------------- 
 #   Update Code Generation
 # ----------------------------------------
 @app.route('/updatebackend')
 def updatebackend(*args, **kwargs):
     ''' Update ros backend'''
-    print('Updating backend.')
+    print('@run.py: updatebackend')
 
     try:
         scene = request.args.get('scene')
@@ -155,11 +156,12 @@ def updatebackend(*args, **kwargs):
         return '202: Could not transfer data' 
 
     statusMessage = RosMainHandler.update_scene(scene)
+    print(statusMessage)
     
     return '0: Transfer successful'
 
 @app.route('/updatemodule')
-def saveproperty(*args, **kwargs):
+def updatemodule(*args, **kwargs):
     try:
         module_id = request.args.get('module_id')
         module_data = request.args.get('module_data')
@@ -169,11 +171,9 @@ def saveproperty(*args, **kwargs):
         # Error no succesffull transmission of data
         return '202: Could not transfer data' 
 
-    import pdb; pdb.set_trace()
     RosMainHandler.update_module(module_id, module_data)
 
     return '0: No error occured'
-
 
 # ---------------------------------------- 
 #   Save & Retrieve data from backend
@@ -240,4 +240,3 @@ if __name__ == "__main__":
     app.run(debug=True)
 
     print('Starting Flask')
-

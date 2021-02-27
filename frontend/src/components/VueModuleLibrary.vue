@@ -32,11 +32,11 @@ export default {
       if (!(this.loadedLibrary in this.modules)) {
         // TODO: only load after python return
         console.log('@VueModuleLibrary: Library not found')
+        console.log(this.loadedLibrary)
+
         return []
       }
 
-      // console.log('Active library')
-      // console.log(this.loadedLibrary)
       // console.log('blockContent')
       // console.log(this.blockContent)
       const blockContent = this.blockContent.filter(

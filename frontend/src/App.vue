@@ -105,7 +105,8 @@ export default {
 
     // For Debugging & Development
     this.loadLibraries()
-    this.loadScene('default')
+    // this.loadScene('default')
+    this.loadScene('three_object_check')
     this.loadedLibrary = 'polishing_machine'
 
     setTimeout(() => {
@@ -196,6 +197,8 @@ export default {
         .then(response => {
           this.modules = response.data.moduleLibraries
           this.blocks = response.data.blockContent
+          // console.log('@App.: Loaded')
+          // console.log(this.modules)
         })
         .catch(error => {
           console.log(error)
@@ -400,12 +403,11 @@ export default {
   },
   watch: {
     blocks (newValue) {
-      console.log(`@App: Update blocks`)
-      // console.log(`Imported blocks succesfully.`)
+      // console.log(`@App: Update blocks`)
       // console.log('blocks', JSON.stringify(newValue))
     },
     scene (newValue) {
-      console.log('@App: Update scene')
+      // console.log('@App: Update scene')
       // console.log('scene', JSON.stringify(newValue))
     },
     robotIsMoving (newValue) {

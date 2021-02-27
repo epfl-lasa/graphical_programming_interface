@@ -11,6 +11,7 @@ import sys
 import copy
 import warnings
 import time
+import threading
 
 import yaml
 
@@ -23,41 +24,43 @@ from rclpy.node import Node
 
 # ROS messages
 from std_msgs.msg import Bool
-from nav_msgs_msgs.msg import Path
-from geometry_msgs.msg import WrenchStamped, Pose
+from nav_msgs.msg import Path
+from geometry_msgs.msg import WrenchStamped, Pose, PoseStamped
 
 from rclpy.parameter import Parameter
 
 # Personal library
 from sequence_handler import SequenceHandler
-from rclpy.parameter import Parameter
 
+# Initialize(?)
+rclpy.init()
    
 class RosHandler(Node):
     ''' The datahandler manages the ROS and sending it to the frontend. '''
     topic_names = {
         'controller_stop': '/linear_controller/stop',
-        'controller_command': 'linear_controller/command',
+        'controller_command': '/linear_controller/command',
+        'controller_success': '/linear_controller/path_executed',
         'ft_sensor': '/ft_sensor/netft_data',
         'robot_pose': '/iiwa/CartesianPosition',
     }
-    
     parameter_name = {
         'controller_force': '/linear_controller/force',
     }
 
-        
-    def __init__(self, controller_topic='controller'):
+    def __init__(self, DataHandler=None):
         super().__init__('ros_main_handler')
+        # Spin in a separate thread
+        # self.thread = threading.Thread(target=rclpy.spin, args=(self, ), daemon=True)
+        # self.thread.start()
         
-        self.controller_topic = controller_topic
-
         # Initialize the sequence handler
-        # self.SequenceHandler = SequenceHandler(MainRosHandler=self, controller_topic=self.controller_topic)
+        self.SequenceHandler = SequenceHandler(MainRosHandler=self)
         
         # Publisher
-        self.publisher_trajcetory = self.create_publisher(
+        self.publisher_trajectory = self.create_publisher(
             Path, self.topic_names['controller_command'], 2)
+            
         self.publisher_stop = self.create_publisher(
             Bool, self.topic_names['controller_stop'], 2)
 
@@ -67,18 +70,25 @@ class RosHandler(Node):
         
         # Subcription (potentially: only activate this when actually needed...)
         self.subscription_robot_robot = self.create_subscription(
-            self.topic_names['robot_pose'], self.callback_robot_pose, 5)
+            Pose, self.topic_names['robot_pose'], self.callback_robot_pose, 5)
 
         self.subscription_ft_sensor = self.create_subscription(
-            self.topic_names['ft_sensor'], self.callback_ft_sensor, 5)
-            
+            WrenchStamped, self.topic_names['ft_sensor'], self.callback_ft_sensor, 5)
             
         # self.publisher_controller = self.create_publisher(String, self.controller_topic, 10)
-        # self.publisher_trajcetory = self.create_publisher(String, self.controller_topic, 10)
+        # self.publisher_trajectory = self.create_publisher(String, self.controller_topic, 10)
         
         # Do stuff
         self.emergency_stop_activated = False
         self.data_recording = True
+
+        self.DataHandler = DataHandler
+
+    def __del__(self):
+        # Sure about shutdown of rclpy(?)
+        self.robot_is_moving = False # Turn robot of
+        rclpy.shutdown()
+        # self.thread.join()
         
     # @property
     # def emergency_stop_activated(self):
@@ -90,103 +100,154 @@ class RosHandler(Node):
 
     @property
     def robot_is_moving(self):
-        # TODO: maybe make this a global parameter?
-        self.publisher_stop.publish(True)
+        # TODO: maybe (?!) make this a global parameter?
+        # import pdb; pdb.set_trace()
+        # self.publisher_stop.publish(Bool(data=True))
         return self._robot_is_moving
 
     @robot_is_moving.setter
     def robot_is_moving(self, value):
+        # import pdb; pdb.set_trace()
+        if value:
+            self.publisher_stop.publish(Bool(data=False))
+        else:
+            self.publisher_stop.publish(Bool(data=True))
         self._robot_is_moving = value
 
     @staticmethod
-    def transform_pose_to_euler(pose):
-        pass
+    def transform_poseROS_to_eulerPose(pose, frameId=None):
+        ''' Torm to front-end readable & human-understandable degrees json.'''
+        # Default frame Id
+        if frameId is None:
+            frameId = 'none'
+            
+        orientation = Rotation.from_quat([
+            pose.orientation.x,
+            pose.orientation.y,
+            pose.orientation.z,
+            pose.orientation.w
+        ])
+        orientation_euler = orientation.as_euler('zyx', degrees=True)
+        euler_pose = {
+            'type': 'eulerPose',
+            'frameId': frameId,
+            'position': {
+                'x': pose.position.x,
+                'y': pose.position.y,
+                'z': pose.position.z
+            },
+            'orientation': {
+                'x': orientation_euler[0],
+                'y': orientation_euler[1],
+                'z': orientation_euler[2],
+            },
+        }
+        return euler_pose
 
     @staticmethod
-    def transform_euler_to_pose(euler):
-        pass
+    def transform_eulerPose_to_poseROS(euler_pose):
+        ''' Transfrom front-end data to ROS2 pose. '''
+        orientation = Rotation.from_euler(
+            seq='zyx',
+            angles=[
+                float(euler_pose['orientation']['x']),
+                float(euler_pose['orientation']['y']),
+                float(euler_pose['orientation']['z'])
+            ])
+        qq = orientation.as_quat()
+
+        pose = Pose()
+        pose.position.x = float(euler_pose['position']['x'])
+        pose.position.y = float(euler_pose['position']['y'])
+        pose.position.z = float(euler_pose['position']['z'])
+        
+        pose.orientation.x = qq[0]
+        pose.orientation.y = qq[1]
+        pose.orientation.z = qq[2]
+        pose.orientation.w = qq[3]
+
+        return pose
+
+    def set_force_parameter(self, desired_force=0):
+        debugging = True
+        if debugging:
+            return 
+        Parameter(self._MainRosHandler.parameter_name['controller_force'],
+                  Parameter.Type.FLOAT64, desired_force),
+
+    def stop_robot(self):
+        ''' Emergency Stop of the Robot. '''
+
+        self.robot_is_moving = False
+
+    def startup_robot(self):
+        ''' Startup robot. '''
+        self.robot_is_moving = True
 
     # def relase_emergency_stop(self):
         # ''' Relase emergency stop. '''
         # self.emergency_stop_activated = False
 
-    def stop_robot(self):
-        self.robot_is_moving = False
+    ################################################
+    ### Active moving of the robots
+    ################################################
+    def move_to_position(self, euler_pose):
+        ''' Move to specific euler pose.'''
+        self.set_force_parameter(0)
+        
+        pose = PoseStamped()
+        pose.header.frame_id = 'none'
+        # pose.header.stamp = (?)
+        pose.pose = self.transform_eulerPose_to_poseROS(euler_pose)
+
+        # Create Path
+        msg_path = Path()
+        msg_path.poses.append(pose)
+
+        self.startup_robot()
+        self.publisher_trajectory.publish(msg_path)
+
+        return 0
 
     def execute_module(self, module_id):
         ''' Run the module '''
         print('TODO: execute sequence')
-        # TODO
-
-        # TODO:
-        # move to starting point
-        ##  previous end point for motion
-        ## same starting point for idle
-        # move
-        # end at end point (current end point)
+        self.startup_robot()
+        status_message = self.SequenceHandler.execute_module_including_reseting(module_id)
+        return status_message
 
     def execute_sequence(self, module_id=None):
         ''' Run sequence starting at module_id. If module_id is none.'''
-        print('TODO: execute sequence')
-        print('Per default start at one')
-    
-    def get_current_robot_joint_position(self):
-        pass
+        self.startup_robot()
+        status_message = self.SequenceHandler.execute_sequence(module_id)
+        return status_message
 
-    def move_to_position(self, euler_pose=None):
-        ''' Move to specific euler pose.'''
-        self.set_parameters([
-            Parameter(parameter_name['controller_force'], Parameter.Type.FLOAT64, 0),
-            ])
-        
-        # print('@ros_handler: TODO --- move to position')
+    ################################################
+    ### Get position and states
+    ################################################
+    def get_current_robot_joint_position(self):
+        # TODO - for future...
+        raise NotImplementedError('Not implented')
 
     def get_robot_position(self, pose_type=None, time_max_wait=5, time_sleep=0.1):
         ''' Get current position of the robot. '''
-        print('TODO: return current position as list.')
-
         num_try_max = time_max_wait/time_sleep
-        rate_sleep = node.create_rate(time_sleep)
+        
         it = 0
         while self.msg_robot_pose is None:
             if it > num_try_max:
                 warnings.warn('Maximum iterations reached wihout position')
-                return
+                return ' '
             it += 1
-            rate_sleep.sleep()
-            
-        import pdb; pbd.set_trace()
 
-        orientation = Rotation.from_quat([
-            self.msg_robot_pose.x,
-            self.msg_robot_pose.y,
-            self.msg_robot_pose.z,
-            self.msg_robot_pose.w
-        ])
-        
-        orientation_euler = orientation.as_quat('zyx', degrees=True)
+            rclpy.spin_once(node=self, timeout_sec=time_sleep)
 
-        # DEBUG (!)
-        warnings.warn('@ros_handler: DEBUG POSE')
-        pose_data = {
-            'type': 'eulerPose',
-            'frameId': 'base_link',
-            'position': {
-                'x': self.msg_robot_pose.position.x,
-                'y': self.msg_robot_pose.position.y,
-                'z': self.msg_robot_pose.position.z
-            },
-            'orientation': {
-                'x': orientation_euler.x,
-                'y': orientation_euler.y,
-                'z': orientation_euler.z
-            },
-        }
+        euler_data = self.transform_poseROS_to_eulerPose(self.msg_robot_pose)
         
-        return {'pose': pose_data}
+        return {'pose': euler_data}
     
-    def record_module_database(self, module_id, DataHandler, max_recording=1000):
-        print('@Ros_handler: recording start')
+    def record_module_database(self, module_id, DataHandler, max_recording=1000, time_sleep=0.1):
+        ''' Record Data and Send to Database. '''
         self.data_recording = True
 
         recorded_data = []
@@ -197,33 +258,62 @@ class RosHandler(Node):
                 print('Maximum iterations of recording reached')
                 break
 
-            time.sleep(0.1)
-            recorded_data.append({'x': 0, 'y': 1, 'z': 2})
+            if self.msg_robot_pose is not None:
+                recorded_data.append(copy.deepcopy(self.msg_robot_pose))
+            else:
+                warnings.warn('@ros_handler: recieved none robot position')
+
+            rclpy.spin_once(node=self, timeout_sec=time_sleep)
+            
         self.data_recording = False
             
-        print('@Ros_handler: recording stop')
-        data_list = DataHandler.store_module_database(module_id, my_data=recorded_data)
+        data_list = self.DataHandler.save_to_module_database(module_id, my_data=recorded_data)
         return data_list
 
-    def stop_robot(self):
-        ''' Emergency Stop of the Robot. '''
-        self.robot_is_moving = False
-        # TODO: stop the robot!
+    def get_module_database_as_path(self, module_id):
+        ''' Replay a module based on points in the database. '''
+        # data = 
+        # import pdb; pdb.set_trace()
+        header, module_data = self.DataHandler.load_from_module_database(module_id)
+
+        msg_path = Path()
+        if header == 'pos[x], pos[y], pos[z], quat[w], quat[x], quat[y], quat[z]':
+            # TODO: include time-stamp and
+            pose = PoseStamped()
+            pose.header.frame_id = '/none'
+            # pose.header.stamp = (?)
+            
+            for ii in range(module_data.shape[1]):
+                pose.pose.position.x = module_data[0, ii]
+                pose.pose.position.y = module_data[1, ii]
+                pose.pose.position.z = module_data[2, ii]
+
+                pose.pose.orientation.w = module_data[3, ii]
+                pose.pose.orientation.x = module_data[4, ii]
+                pose.pose.orientation.y = module_data[5, ii]
+                pose.pose.orientation.z = module_data[6, ii]
+                
+                msg_path.poses.append(copy.deepcopy(pose))
+        else:
+            warnings.warn("Unexpected file format.")
+
+        return msg_path
+    
+    ##############################################
+    ###   Scene & Module updating
+    ##############################################
+    def update_module(self, module_id, module_data):
+        # Module ID and data
+        self.SequenceHandler.update_module(module_id, module_data)
 
     def update_scene(self, scene):
         ''' Send data to ROS and initiate code-generation. '''
-        loop_is_closed, ordered_block_list = RosHandler.get_ordered_list(scene)
-
-        print('Successfully ordered the blocks')
-        # TODO: Send to ROS & create code-generation
-        if loop_is_closed:
-            print('Do something')
-        else:
-            print('Loop not closed. No updating')
+        self.SequenceHandler.sequence = scene['blocks']
             
     @staticmethod
     def get_ordered_list(scene):
-        # TODO: do this in module itself - and only send scene when succesfully closed
+        # DEPRECIATED: now integrated in front end, not used anymore...x
+        # TODO: DELTE
         ''' Simplify a scene of links & blocks to an ordered_block_list. ''' 
         link_list = copy.deepcopy(scene['links'])
         block_list = copy.deepcopy(scene['blocks'])
@@ -271,17 +361,17 @@ class RosHandler(Node):
             loop_is_closed = False
 
         return loop_is_closed, ordered_block_list
-    
-    def update_module(self, module_id, module_data):
-        # Module ID and data
-        print('TODO: @Gustav --- update_module')
+        
 
+    ##############################################
+    ###  Callbacks
+    ##############################################
     def callback_stoprecording(self):
         # print('Stop recording')
         self.data_recording = False
 
     def callback_emergency_stop(self):
-        print('EMERGENCY STOP WAS CALLED')
+        warnings.warn('EMERGENCY STOP WAS CALLED')
         self.robot_is_moving = False
 
     def callback_stop_robot(self):
@@ -295,8 +385,6 @@ class RosHandler(Node):
         '''ROS callback '''
         self.msg_ft_sensor = msg
         
-
-
 class ListenerFt(Node):
     def __init__(self, topic="/ft_sensor/netft_data", ):
         ''' ''' 
@@ -305,6 +393,8 @@ class ListenerFt(Node):
     def callback_msg(self, msg):
         ''' Get message '''
         
+
+
 
 
 if (__name__)=="__main__":

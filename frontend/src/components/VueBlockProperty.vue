@@ -233,14 +233,16 @@ export default {
           console.log(error)
         })
     },
-    moveToPosition (position = null) {
-      if (position === null) {
-        position = this.properties.eulerPose
-      }
+    moveToPosition () {
+      // Transfer an euler pose
+      console.log('@VueBlockProperty: property')
+      console.log(this.property.reference.value)
+      console.log('module')
+      console.log(this.module)
       this.setRobotStateMoving()
       this.robotIsCoupledToPose = true
       axios.get(this.$localIP + `/movetoposition`,
-                {'params': {'eulerPose': position}})
+                {'params': {'eulerPose': this.property.reference.value}})
         .then(response => {
           console.log(response.statusText)
         })
@@ -362,23 +364,22 @@ export default {
         })
     },
     save () {
-      console.log('local props')
+      console.log('@VueBlockPropertylocal props')
       console.log(this.properties)
       this.$emit('save', this.properties)
     },
     cancel () {
       console.log('Cancel properties')
-      this.$emit('save', this.properties)
-    },
-    check () {
-      // DEBUG ONLY
-      console.log('check props')
-      console.log(this.properties)
-    },
-    debugTest () {
-      console.log('@VueBlockProperty: Debug Test')
-      // console.log(this.properties)
     }
+    // check () {
+      // DEBUG ONLY
+      // console.log('check props')
+      // console.log(this.properties)
+    // },
+    // debugTest () {
+      // console.log('@VueBlockProperty: Debug Test')
+      // console.log(this.properties)
+    // }
   },
   watch: {
     module () {

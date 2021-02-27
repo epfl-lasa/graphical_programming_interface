@@ -98,24 +98,6 @@ export default {
       type: Object
     }
   },
-  mounted () {
-    document.documentElement.addEventListener('mousemove', this.handleMove, true)
-    document.documentElement.addEventListener('mousedown', this.handleDown, true)
-    document.documentElement.addEventListener('mouseup', this.handleUp, true)
-    document.documentElement.addEventListener('wheel', this.handleWheel, true)
-
-    this.centerX = this.$el.clientWidth / 2
-    this.centerY = this.$el.clientHeight / 2
-
-    this.importBlocksContent()
-    this.importScene()
-  },
-  beforeDestroy () {
-    document.documentElement.removeEventListener('mousemove', this.handleMove, true)
-    document.documentElement.removeEventListener('mousedown', this.handleDown, true)
-    document.documentElement.removeEventListener('mouseup', this.handleUp, true)
-    document.documentElement.removeEventListener('wheel', this.handleWheel, true)
-  },
   created () {
     this.mouseX = 0
     this.mouseY = 0
@@ -136,6 +118,24 @@ export default {
       links: [],
       container: {}
     }
+  },
+  mounted () {
+    document.documentElement.addEventListener('mousemove', this.handleMove, true)
+    document.documentElement.addEventListener('mousedown', this.handleDown, true)
+    document.documentElement.addEventListener('mouseup', this.handleUp, true)
+    document.documentElement.addEventListener('wheel', this.handleWheel, true)
+
+    this.centerX = this.$el.clientWidth / 2
+    this.centerY = this.$el.clientHeight / 2
+
+    this.importBlocksContent()
+    this.importScene()
+  },
+  beforeDestroy () {
+    document.documentElement.removeEventListener('mousemove', this.handleMove, true)
+    document.documentElement.removeEventListener('mousedown', this.handleDown, true)
+    document.documentElement.removeEventListener('mouseup', this.handleUp, true)
+    document.documentElement.removeEventListener('wheel', this.handleWheel, true)
   },
   data () {
     return {
@@ -160,8 +160,9 @@ export default {
       blockMenuY: 0,
       blockSelectionType: null,
       // Check if everything is saved & updated
-      isSavedToFile: true
+      isSavedToFile: true,
       // isUpdatedToProgram: true
+      loopIsClosed: false
     }
   },
   computed: {
@@ -564,6 +565,8 @@ export default {
         y: 0,
         selected: false,
         name: node.name,
+        type: node.type,
+        library: node.library,
         title: node.title || node.name,
         inputs: inputs,
         outputs: outputs,
@@ -578,7 +581,7 @@ export default {
           this.blockDeselect(value)
         }
       })
-      console.log('@VueBlockContainer: deselectAll')
+      console.log('@VueBlockContainer: deselectAll | TODO fix in special case.')
       console.log(this.linkingMode)
 
       this.disableBlockMenu()
@@ -766,6 +769,12 @@ export default {
       if (container.scale) {
         this.scale = container.scale
       }
+      // Send to backend if complete
+
+      this.orderBlocklistAndCheckIfIsLoop()
+      if (this.loopIsClosed) {
+        this.$emit('updateBackendProgram')
+      }
     },
     exportScene () {
       let clonedBlocks = merge([], this.blocks)
@@ -784,13 +793,109 @@ export default {
       }
     },
     updateScene () {
+      // Send to app-vue
       this.$emit('update:scene', this.exportScene())
       // Send scene to backend file
-      this.$emit('updateBackendProgram')
-      console.log('BlocksContainer: Updating Scene')
+      // console.log('BlocksContainer: Updating Scene')
+
+      this.orderBlocklistAndCheckIfIsLoop()
+
+      if (this.loopIsClosed) {
+        this.$emit('updateBackendProgram')
+      }
+    },
+    orderBlocklistAndCheckIfIsLoop () {
+      // Only automatically send block to background when there is a complete loop
+      if (this.links == null || this.links.length === 0) {
+        this.loopIsClosed = false
+        return
+      }
+
+      // Find start bock
+      let itBlockOrigin = 0
+      while (itBlockOrigin < this.blocks.length) {
+        let blockType = this.blocks[itBlockOrigin]['name']
+        if (blockType === 'idle' || blockType === 'start') {
+          // Swap blocks
+          [this.blocks[0], this.blocks[itBlockOrigin]] = [this.blocks[itBlockOrigin], this.blocks[0]]
+          break
+        }
+        itBlockOrigin = itBlockOrigin + 1
+      }
+
+      let itLinkPosition = 0
+      let itLinkSearcher = itLinkPosition
+
+      itBlockOrigin = 0
+      let itBlockTarget = itBlockOrigin + 1
+
+      // console.log('@VueBlockContainer: Start sorting')
+      // let debugItCount = 0
+
+      // Nonzero check
+      while (itLinkSearcher < this.links.length && itBlockOrigin < this.blocks.length) {
+        // Find link which fits to 'originID' block
+        // debugItCount = debugItCount + 1
+        // if (debugItCount > 100) { break }
+        // console.log('Block ID (origin)', this.blocks[itBlockOrigin]['id'])
+        // console.log('Link: ' + this.links[itLinkSearcher]['originID'] + ' -> ' + this.links[itLinkSearcher]['targetID'])
+        if (this.links[itLinkSearcher]['originID'] === this.blocks[itBlockOrigin]['id']) {
+          // Swap Links
+          // console.log('Swap')
+          if (itLinkPosition !== itLinkSearcher) {
+            [this.links[itLinkPosition], this.links[itLinkSearcher]] = [this.links[itLinkSearcher], this.links[itLinkPosition]]
+          }
+          // Find block which has corregt 'targetID'
+          itBlockTarget = itBlockOrigin + 1
+          while (itBlockTarget < this.blocks.length) {
+            // debugItCount = debugItCount + 1
+            // if (debugItCount > 100) { break }
+            if (this.blocks[itBlockTarget]['id'] === this.links[itLinkPosition]['targetID']) {
+              // Swap blocks to order
+              if (itBlockTarget !== itBlockOrigin + 1) {
+                [this.blocks[itBlockOrigin + 1], this.blocks[itBlockTarget]] = [this.blocks[itBlockTarget], this.blocks[itBlockOrigin + 1]]
+              }
+              itBlockOrigin = itBlockOrigin + 1
+              // Go back to getting new link
+              break
+            } else {
+              itBlockTarget = itBlockTarget + 1
+            }
+          }
+          // Increment
+          itLinkPosition = itLinkPosition + 1
+          itLinkSearcher = itLinkPosition
+        } else {
+          // Increment
+          itLinkSearcher = itLinkSearcher + 1
+        }
+      }
+
+      // Check if closed
+      if (this.links.length > itLinkPosition) {
+        console.log('@VueBlocksContainer: Not all links used')
+        this.loopIsClosed = false
+      } else if (this.links[this.links.length - 1]['targetID'] !== this.blocks[0]['id']) {
+        console.log('@VueBlocksContainer: Loop not closed')
+        this.loopIsClosed = false
+      } else {
+        this.loopIsClosed = true
+      }
     }
   },
   watch: {
+    loopIsClosed (newValue) {
+      if (newValue) {
+        console.log('@VueBlocksContinaer: Update scene arrangement.')
+        this.$emit('updateBackendProgram')
+      }
+    },
+    // blocks () {
+      // console.log('@VueBlocksContainer: change in blocks')
+    // },
+    // links () {
+      // console.log('@VueBlocksContainer: change in links')
+    // },
     blocksContent () {
       this.importBlocksContent()
     },

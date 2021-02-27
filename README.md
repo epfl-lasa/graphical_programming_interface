@@ -12,17 +12,7 @@
 - ghostiam / vue-blocks 
 
 # TODO
-> Update fields of block
-> Synchronize back & front-end 
-> Visualize force (?)
-> Send parameters / commands to module
-> Filehandling: Save to file (!), save as, create new,
-> Code-Generation
-> Record Data / Delete Data / Learn Motion (send to file)
-> Get Reference Frames (?) HOW?
 > 
-
-
 
 ## Structure
 ### Frontend
@@ -94,9 +84,18 @@ Build the Dockerimage. In a second window, build and run the backend. In the fir
 FLASK_APP=src/run.py flask run --host 0.0.0.0
 ```
 
-## Run a new docker with id
+## Run a new terminal in existing docker with ID
 ``` bash
-docker exec -it ID_ bash
+docker exec -it ID bash
 ```
 
+## Run 'simulation' controller
+``` bash
+python3 /home/ros2/src/backend/python/node_controller_simulator.py
+```
+
+## Replay rosbag
+``` bash
+ros2 bag play /home/ros2/userdata/ros_recording/ros2_bag/rosbag2_2021_02_25-10_54_58_0.db3
+```
 

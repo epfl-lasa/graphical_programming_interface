@@ -3,7 +3,6 @@ AICA user data handler
 
 (c) AICA SarL
 '''
-
 __author__ = "Lukas Huber"
 __email__ = "lukas@aica.tech"
 
@@ -16,45 +15,78 @@ import warnings
 import yaml
 import json
 
- # Backend handler which interacts with file-system
+import numpy as np
+
 
 class DataHandler():
-    ''' The datahandler manages the file-management and storage. '''
+    ''' The datahandler manages the file-management and storage. 
+    Backend handler which interacts with file-system '''
     def __init__(self, local_path='.'):
-            
         self.data_directory = os.path.join(local_path, '..', 'userdata', 'projects')
         self.module_directory = os.path.join(local_path, 'module_library')
 
-        print('@data_hanlder: Create DataHandler')
         # TODO: make sure this is always properly synchronized..
         self.project_name = 'default'
+
+    #############################
+    #    Module data handling
+    ##############################
+    def save_to_module_database(self, module_id, my_data):
+        ''' Save the data of a module. '''
+        recordings_path = self.get_recordings_path(module_id=module_id)
+
+        str_header = 'pos[x], pos[y], pos[z], quat[w], quat[x], quat[y], quat[z]'
         
-    def load_file(self, module_id, file_name):
-        ''' Load data from  module. '''
-        pass
-    
-    def store_module_database(self, module_id, my_data):
-        ''' Store the data of a module. '''
-        recording_path = self.get_recordings_path(module_id=module_id)
-
+        np_data = np.zeros((7, len(my_data)))
+        # Transfer from Pose to 'json'
+        for ii in range(len(my_data)):
+            np_data[:, ii] = [
+                my_data[ii].position.x,
+                my_data[ii].position.y,
+                my_data[ii].position.z,
+                my_data[ii].orientation.w,
+                my_data[ii].orientation.x,
+                my_data[ii].orientation.y,
+                my_data[ii].orientation.z
+            ]
+        
         date_str = datetime.datetime.now().strftime("%Y%d%m_%H%M%S")
-        my_file_name = 'recording_' + date_str + '.json'
-        file_path = os.path.join(recording_path, my_file_name)
-        print(file_path)
-        # import pdb; pdb.set_trace()
+        my_file_name = 'recording_' + date_str + '.csv'
+        file_path = os.path.join(recordings_path, my_file_name)
 
-        with open(file_path, 'w') as ff:
-            # f.write(scene)
-            # TODO: maybe use numpy for this...
-            json.dump(my_data, ff)
-
+        np.savetxt(file_path, np_data.T, header=str_header, delimiter=',')
+            
         return self.get_module_database_list(module_id)
         # Try to create file_path if it does not exist
 
+    def load_from_module_database(self, module_id, file_name=None):
+        ''' Load from data of a module. '''
+        module_path = self.get_recordings_path(module_id, try_to_create_dir=False)
+        
+        if file_name is None:
+            # By default take the last element
+            local_library_list = os.listdir(module_path)
+            file_name = local_library_list[-1]
+
+        file_path = os.path.join(module_path, file_name)
+        with open(file_path, "r") as file:
+            first_line = file.readline()
+
+        # Remove comment from string
+        while first_line[0] == '#' or first_line[0] == ' ':
+            first_line = first_line[1:]
+        if first_line[-1:] == '\n':
+            first_line = first_line[:-1]
+
+        # Skip header row
+        file_data = np.loadtxt(file_path, skiprows=1, delimiter=',')
+            
+        return first_line, file_data
+
     def delete_module_database(self, module_id, file_name):
         ''' Delete the stored file '''
-        if file_name =='ALL':
-            print("TODO: delete directory")
+        if file_name == 'ALL':
+            print("TODO: delete directory / ")
             return
 
         module_path = self.get_recordings_path(module_id, try_to_create_dir=False)
@@ -63,10 +95,6 @@ class DataHandler():
         os.remove(os.path.join(module_path, file_name))
         
         return self.get_module_database_list(module_id)
-    
-    def replay_module_database(self, module_id):
-        # TODO: replay a specific module
-        pass
 
     def get_module_database_list(self, module_id):
         ''' Get the database from a module.'''
@@ -111,6 +139,9 @@ class DataHandler():
 
         return recordings_path
 
+    #############################################
+    #    Saving, loading & listing of projects
+    #############################################
     def get_relative_filename(self, my_filename, create_dir=False):
         ''' Check correct file ending and return realtive directory name. '''
         if my_filename[-5:] == '.json':
@@ -178,33 +209,33 @@ class DataHandler():
                 file_data[-1]['type'] = 'file'
         return {'localfiles': file_data}
 
-
+    ##############################################
+    #   Initial set up & load environment
+    ##############################################
     def get_libraries_and_modules(self, library_name=None):
         ''' Import libraries and modules from directory file. '''
         module_libraries = {}
-
         # Import all js files
         local_library_list = os.listdir(self.module_directory)
-        print(local_library_list)
-
-        print('@data_handler -- project list')
+        # print('@data_handler -- project list')
+        # print(local_library_list)
         module_content = []
 
         for library in local_library_list:
             if (library_name is not None) and not (library == library_name):
-                # TODO: remove after debugging
-                warnings.warn('Only doing it for basic right now... Debugging')
+                warnings.warn('Only doing it for {} right now... Debugging'.format(library_name))
                 continue
 
             if library[0] == '_':
                 continue
-            lib_dir = os.path.join('module_library', library)
+            
+            lib_dir = os.path.join(self.module_directory, library)
             if not os.path.isdir(lib_dir):
                 continue
+            
             local_module_list = os.listdir(lib_dir)
-
+            
             module_libraries[library] = []
-
             for module in local_module_list:
                 if module[0] == '_':
                     continue
@@ -220,11 +251,13 @@ class DataHandler():
                 data['library'] = library
 
                 module_content.append(data)
+                
         # print('module_libraries', module_libraries)
         # print('module_content', module_content)
         return {'moduleLibraries': module_libraries, 'blockContent': module_content}
 
     def get_scene(self):
+        print('What is the difference between this & load from file')
         print('going home in python')
         libs_and_mods = {}
 
