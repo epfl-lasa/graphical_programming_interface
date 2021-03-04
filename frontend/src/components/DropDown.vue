@@ -4,27 +4,32 @@
   <!-- TODO: separate element -->
   <template v-if="selectionType==='block'">
     <div class="dropdown-element">
-      <p v-on:click="newBlockConnection"> Connect to </p>
+      <p @mousedown="newBlockConnection($event)"
+         @touchstart="newBlockConnection($event)"
+         > Connect to </p>
     </div>
     <div class="dropdown-element">
-      <p v-on:click="generalSettings"> Settings </p>
+      <p @mousedown="generalSettings($event)" @touchstart="generalSettings($event)"> Settings </p>
     </div>
     <!-- <div class="dropdown-element"> -->
-      <!-- <p v-on:click="moveBlock"> Move Block </p> -->
+      <!-- <p v-on:mousedown="moveBlock"> Move Block </p> -->
     <!-- </div> -->
     <div class="dropdown-element">
-      <p v-on:click="removeBlock"> Delete Block </p>
+      <p @mousedown="removeBlock($event)" @touchstart="removeBlock($event)"> Delete Block </p>
     </div>
     <div v-for="(element, key) in menuContent">
-      <p v-on:click="defaultAction(element.action)"> {{element.content}} </p>
+      <p @mousedown="defaultAction($event, element.action)"
+         @touchstart="defaultAction($event,element.action)"> {{element.content}} </p>
     </div>
   </template>
   <template v-else-if="selectionType==='line'">
     <div class="dropdown-element">
-      <p v-on:click="removeLink"> Delete Link </p>
+      <p @mousedown="removeLink($event)"
+         @touchstart="removeLink($event)"
+         > Delete Link </p>
     </div>
     <!-- <div class="dropdown-element"> -->
-      <!-- <p v-on:click="showLineSettings"> Line Settings </p> -->
+      <!-- <p v-on:mousedown="showLineSettings"> Line Settings </p> -->
     <!-- </div> -->
   </template>
 </div>
@@ -40,47 +45,73 @@ export default {
     posY: 0,
     selectionType: null
   },
+  mounted () {
+    window.navigator.vibrate(100)
+  },
   // mounted () {
   // console.log('Mounted Dropdown')
   // console.log(this.$parent.linkingMode)
   // console.log(this.$parent.linking)
   // },
-  mounted () {
-    console.log('@Dropdon: It is up now')
-  },
+  // mounted () {
+    // console.log('@Dropdon: It is up now')
+    // console.log(this.posX, this.posY)
+  // },
   data () {
     return {
     }
   },
   methods: {
-    newBlockConnection () {
+    newBlockConnection (e) {
+      console.log('@DropDown: wanna connect')
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       this.$emit('disableBlockMenu', false)
       // Connect
-      console.log('@BlockDropDown: New block connection.')
+      // console.log('@BlockDropDown: New block connection.')
       this.$emit('linkingStart')
     },
-    generalSettings () {
+    generalSettings (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       // General Settings
       console.log('@BlockDropDown: Show general settings.')
       this.$emit('disableBlockMenu', false)
     },
-    moveBlock () {
+    moveBlock (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       // General Settings
-      console.log('@BlockDropDown: Move block.')
+      // console.log('@BlockDropDown: Move block.')
       this.$emit('disableBlockMenu')
     },
-    removeBlock () {
+    removeBlock (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       this.$emit('disableBlockMenu')
       this.$emit('removeBlock')
     },
-    removeLink () {
+    removeLink (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       this.$emit('disableBlockMenu')
       this.$emit('removeLink')
     },
-    showLineSettings () {
+    showLineSettings (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       console.log('Not implemented yet')
     },
-    defaultAction (arg) {
+    defaultAction (e, arg) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       console.log('@BlockDropDown: Define define action for arg=')
       console.log(arg)
     }
@@ -117,7 +148,7 @@ export default {
     border-style: solid;
     border-color: @color-main-medium;
     border-width: 1px;
-    border-radius: 10px;
+    // border-radius: 10px;
 
     background:@color-main-dark;
     color: @fontcolor-main;

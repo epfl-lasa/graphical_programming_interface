@@ -19,16 +19,16 @@
     </div>
     <br>
     <div id="table-button-container">
-      <div v-if="isRecording"
-        @click="stopRecording" class="aica-button reference-button">
+      <div v-if="isRecording" class="aica-button reference-button"
+        @click="stopRecording($event)" @touchstart="stopRecording($event)">
          <p> Stop </p>
       </div>
-      <div v-else-if="multipleRecordings"
-        @click="startRecording" class="aica-button reference-button">
+      <div v-else-if="multipleRecordings" class="aica-button reference-button"
+        @click="startRecording($event)" @touchstart="startRecording($event)" >
          <p> Record </p>
       </div>
-      <div v-else
-        @click="startRecording" class="aica-button reference-button">
+      <div v-else class="aica-button reference-button"
+        @click="startRecording($event)" @touchstart="startRecording($event)">
          <p> Record </p>
       </div>
 
@@ -76,7 +76,10 @@ export default {
     }
   },
   methods: {
-    startRecording () {
+    startRecording (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       this.isRecording = true
       axios.get(this.$localIP + `/recordmoduledatabase/` + this.module.id,
                 {'params': {}})
@@ -88,7 +91,10 @@ export default {
           console.log('@ModuleDataList: failure while updating backend.')
         })
     },
-    stopRecording () {
+    stopRecording (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       this.isRecording = false
       axios.get(this.$localIP + `/stoprecording`,
                 {'params': {}})
@@ -96,7 +102,10 @@ export default {
           console.log(error)
         })
     },
-    deleteElement () {
+    deleteElement (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       if (!('name' in this.selected)) {
         console.log(this.selected)
         console.log('Skipping delete')

@@ -124,12 +124,13 @@ export default {
     document.documentElement.addEventListener('touchstart', this.handleDown, true)
     document.documentElement.addEventListener('touchend', this.handleUp, true)
 
-    // TODO: preventDefault / stopPropagating
     document.documentElement.addEventListener('mousemove', this.handleMove, true)
     document.documentElement.addEventListener('mousedown', this.handleDown, true)
     document.documentElement.addEventListener('mouseup', this.handleUp, true)
 
     document.documentElement.addEventListener('wheel', this.handleWheel, true)
+    // document.documentElement.addEventListener('gesturechange', this.handleWheel, true)
+
     // TODO: add multi-touch scrolling (?!)
 
     this.centerX = this.$el.clientWidth / 2
@@ -148,6 +149,7 @@ export default {
     document.documentElement.removeEventListener('mouseup', this.handleUp, true)
 
     document.documentElement.removeEventListener('wheel', this.handleWheel, true)
+    // document.documentElement.addEventListener('gesturechange', this.handleWheel, true)
   },
   data () {
     return {
@@ -285,7 +287,8 @@ export default {
     /** @param e {MouseEvent} */
     handleMove (e) {
       if (e.type === 'touchmove') {
-        console.log('@VueBlocksContainer: Do something')
+        e.preventDefault()
+        // console.log('@VueBlocksContainer: Do something')
       }
 
       let mouse = mouseHelper.getMousePosition(this.$el, e)
@@ -316,11 +319,19 @@ export default {
       }
     },
     handleDown (e) {
-      const target = e.target || e.srcElement
-      if ((target === this.$el || target.matches('svg, svg *')) && e.which === 1) {
+      let target
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+        target = e.touches[0].target
+      } else {
+        target = e.target || e.srcElement
+      }
+
+      if ((target === this.$el || target.matches('svg, svg *'))) {
         this.dragging = true
 
         let mouse = mouseHelper.getMousePosition(this.$el, e)
+
         this.mouseX = mouse.x
         this.mouseY = mouse.y
 
@@ -332,18 +343,25 @@ export default {
       }
 
       // Check if any block is clicked
-      let clickElementInd = this.$children.filter(item => item.$el.className === 'vue-block')
-          .find(item => item.$el.contains(target))
-      if (clickElementInd === undefined && this.linkingMode) {
-        this.linkingStopDrawing()
+      if (this.linkingMode) {
+        let clickElementInd = this.$children.filter(item => item.$el.className === 'vue-block')
+            .find(item => item.$el.contains(target))
+        if (clickElementInd === undefined) {
+          this.linkingStopDrawing()
+        }
       }
     },
     handleUp (e) {
+      // let target
       if (e.type === 'touchend') {
-        console.log('@VueBlocksContainer-touchend: Do something')
+        e.preventDefault()
+        // target
       }
 
-      const target = e.target || e.srcElement
+      // console.log('@VueBlocksContainer-touchend: Do something')
+      // } else {
+      // target = e.target || e.srcElement
+      // }
 
       if (this.dragging) {
         this.dragging = false
@@ -353,19 +371,32 @@ export default {
           this.hasDragged = false
         }
       }
-      if (this.$el.contains(target) && (typeof target.className !== 'string' || target.className.indexOf(this.inputSlotClassName) === -1)) {
-        // this.linking = false
-        // this.tempLink = null
-        // this.linkStartData = null
-        console.log('@VueBlocksContainer: debugin without link adapting')
-      }
+
+      // if (this.$el.contains(target) && (typeof target.className !== 'string' || target.className.indexOf(this.inputSlotClassName) === -1)) {
+      // this.linking = false
+      // this.tempLink = null
+      // this.linkStartData = null
+      // console.log('@VueBlocksContainer: debugin without link adapting')
+      // }
     },
     handleWheel (e) {
-      const target = e.target || e.srcElement
+      let target
+      let zoomEvent
+
+      if (e.type === 'gesturechange') {
+        // TODO: implement zoom for touch!!!
+        e.preventDefault()
+        target = e.touches[0].target
+        zoomEvent = e.scale
+      } else {
+        target = e.target || e.srcElement
+        zoomEvent = e.deltaY
+      }
+
       if (this.$el.contains(target)) {
         if (e.preventDefault) e.preventDefault()
+        const deltaScale = Math.pow(1.1, zoomEvent * -0.05)
 
-        let deltaScale = Math.pow(1.1, e.deltaY * -0.01)
         this.scale *= deltaScale
 
         if (this.scale < this.minScale) {
@@ -672,6 +703,7 @@ export default {
       console.log('@Blockscontainer: linkDeselect line')
     },
     blockSelect (block) {
+      console.log('@Container Deselet all')
       block.selected = true
       this.selectedBlock = block
       this.deselectAll(block.id)

@@ -1,20 +1,37 @@
 // Screen Dimension
-@reference-screen-width: 2560;
-@reference-screen-height: 1600;
+@reference-screen-width: 1024px;
+@reference-screen-height: 768px;
+
+@screen-width: 100vw;
+@screen-height: 100vh;
+
+@propwidth: ~"calc(@{screen-width}/@{reference-screen-width})";
+@propheight: ~"calc(@{screen-height}/@{reference-screen-height})";
 
 // Document dimensions
 // Block Dimensions
-@block-width: 160px;
-@block-height: 160px;
+@block-width: 9.0vw;
+@block-height: @block-width;
+@marginBlock: @block-width*0.25;
 
 // Header
-@header-height: 65px;
-@header-padding-sideways: 40px;
+@header-height: 7.5vh;
+@header-padding-sideways: 3.9vh;
 
-@sidebar-width: 520px;
+@sidebar-width: 32.1vw;
 
-@height-icon-small: 48px;
-@height-icon-medium: 32px;
+@height-icon-logo: 3.0vh;
+@height-min-button: 3.6vh;
+@height-icon-small: 4.1vh;
+@height-icon-medium: 6.3vh;
+
+@border-width: 2px;
+
+// Font References
+@fontsize-small: 2.0vh;
+@fontsize-medium: @fontsize-small*14/11;
+@fontsize-large: @fontsize-small*18/11;
+@fontsize-huge: @fontsize-small*20/11;
 
 // Colors
 @color-main-black: #000000;
@@ -31,39 +48,43 @@
 
 @color-border: #E7E7E7;
 
-// Font References
-@fontsize-small: 11pt;
-@fontsize-medium: 14pt;
-@fontsize-largex: 14pt;
-
-//
-
 // @font-main: ''
 // @font-secondary: ''
 
 .aica-icon-medium {
-  height: 32px;
-  width: 32px;
+  cursor: pointer;
+  height: @height-icon-medium;
+  width: @height-icon-medium;
   border-radius: 50%;
-  border-width: 0px;
+  border-width: 0;
+  margin: 0;
   background-color: @color-main-mediumbright;
 }
 
 .aica-icon-small {
+  cursor: pointer;
   height: @height-icon-small;
   width: @height-icon-small;
   border-radius: 50%;
-  border-width: 2px;
+  border-width: @border-width;
   border-color: @color-border;
   background-color: @color-main-mediumbright;
 }
 
+.aica-dropdown-menu {
+  .dropdown-icon {
+
+  }
+  .dropdown-item {
+
+  }
+}
 
 .aica-button {
   cursor: pointer;
-  margin:auto;
+  margin: auto;
 
-  font-size: 14pt;
+  font-size: @fontsize-medium;
 
   // height: 33px;
   width: fit-content;
@@ -77,7 +98,7 @@
 
   background-color: @color-main-mediumbright;
 
-  border-width: 2px;
+  border-width: @border-width;
   border-color: @color-border;
   border-style: solid;
 
@@ -106,4 +127,15 @@
 
     color: @color-main-dark;
   }
+}
+
+.aica-dropdown {
+}
+
+
+.aica-blocks {
+
+}
+
+.aica-table {
 }

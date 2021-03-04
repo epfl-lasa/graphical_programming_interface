@@ -25,7 +25,7 @@ x<template>
         <b-navbar-item v-on:click="createNew()" href="#">
           Create New
         </b-navbar-item>
-        <b-navbar-item v-on:click="saveBlocks()" href="#">
+        <b-navbar-item v-on:click="saveBlocks()"xo href="#">
           Save to File
         </b-navbar-item>
         <b-navbar-item v-on:click="loadBlocks()" href="#">

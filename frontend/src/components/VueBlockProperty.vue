@@ -2,10 +2,13 @@
 <div class="side-menu">
   <div class="side-menu-header">
     <h1> {{ module.title }} </h1>
-    <div v-if="robotIsMoving" @click="stopRobot" class="aica-button danger" id="run-module">
+    <div v-if="robotIsMoving" class="aica-button danger" id="run-module"
+         @click="stopRobot($event)" @touchstart="stopRobot($event)"
+         >
       <p> Stop Moving </p>
     </div>
-    <div v-else @click="executeModule" class="aica-button" id="run-module">
+    <div v-else class="aica-button" id="run-module"
+         @click="executeModule($event)" @touchstart="executeModule($event)">
       <p> Run Module </p>
     </div>
   </div>
@@ -26,22 +29,25 @@
         <h3> Position [mm]</h3>
         <template v-for="(dir, key) in p.value.position">
           <label>{{key}}:</label>
-          <input class="position-input" type="text" v-model="p.value.position[key]">
+          <input class="position-input" type="number" v-model="p.value.position[key]">
         </template>
         <br> <br>
 
         <h3> Orientation [deg]</h3>
         <template v-for="(dir, key) in p.value.orientation">
           <label>{{key}}:</label>
-          <input class="position-input" type="text" v-model="p.value.orientation[key]">
+          <input class="position-input" type="number" v-model="p.value.orientation[key]">
         </template>
         <br> <br>
 
         <div class="reference-button-container">
-          <div v-if="robotIsMoving" @click="stopRobot" class="aica-button danger reference-button">
+          <div v-if="robotIsMoving" class="aica-button danger reference-button"
+               @click="stopRobot($event)" @touchstart="stopRobot($event)"
+               >
             <p> Stop Robot </p>
           </div>
-          <div v-else @click="moveToPosition" class="aica-button" id="move-reference reference-button">
+          <div v-else class="aica-button" id="move-reference reference-button"
+               @click="moveToPosition($event)" @touchstart="moveToPosition($event)">
             <p> Move Robot </br> to Reference </p>
           </div>
 
@@ -98,10 +104,14 @@
     </div>
 
     <div id="save-button-container">
-      <div @click="stopRobot" class="aica-button reference-button">
+      <div class="aica-button reference-button"
+           @click="save($event)" @touchstart="save($event)"
+           >
          <p> Save </p>
       </div>
-      <div @click="setToRobotPosition" class="aica-button critical reference-button">
+      <div class="aica-button critical reference-button"
+           @click="cancel($event)" @touchstart="cancel($event)"
+           >
         <p> Cancel</p>
        </div>
     </div>
@@ -226,15 +236,18 @@ export default {
     setRobotStateMoving () {
       this.$emit('setRobotStateMoving')
     },
-    stopRobot () {
+    stopRobot (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       // console.log('Stop Robot')
       this.$emit('stopRobot')
     },
-    executeModule () {
-      console.log('@VueBlockProperty: Execute')
+    executeModule (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       this.setRobotStateMoving()
-      // console.log('module')
-      console.log(this.module)
       axios.get(this.$localIP + `/executemodule/` + this.module.id)
         .then(response => {
           console.log(response.statusText)
@@ -243,12 +256,11 @@ export default {
           console.log(error)
         })
     },
-    moveToPosition () {
+    moveToPosition (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       // Transfer an euler pose
-      console.log('@VueBlockProperty: property')
-      console.log(this.property.reference.value)
-      console.log('module')
-      console.log(this.module)
       this.setRobotStateMoving()
       this.robotIsCoupledToPose = true
       axios.get(this.$localIP + `/movetoposition`,
@@ -260,16 +272,13 @@ export default {
           console.log(error)
         })
     },
-    setToRobotPosition () {
-      console.log('@VueBlockProperty: setToRobotPosition')
-      // this.startRobot()
-      // this.robotIsCoupledToPose = false
+    setToRobotPosition (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+
       axios.get(this.$localIP + `/getrobotposition`)
         .then(response => {
-          // console.log(response.statusText)
-          console.log(response.data.pose)
-          // this.properties.eulerPose =
-          console.log(this.properties.reference)
           this.properties.reference.value.frameId = response.data.pose.frameId
           this.properties.reference.value.position = response.data.pose.position
           this.properties.reference.value.orientation = response.data.pose.orientation
@@ -373,12 +382,18 @@ export default {
           return prop
         })
     },
-    save () {
+    save (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       console.log('@VueBlockPropertylocal props')
       console.log(this.properties)
       this.$emit('save', this.properties)
     },
-    cancel () {
+    cancel (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
       console.log('Cancel properties')
     }
     // check () {

@@ -3,18 +3,22 @@
   <SideMenuHeader
     ref="libraryHeader"
     class="side-menu-header"
+    @hideLibrary="hideLibrary"
     />
   <div class="side-menu-body">
     <div class="grid-container body" >
       <!-- <h1> Library : {{ loadedLibrary }} </h1> -->
       <div class="library" v-for="mod in module_list">
-        <div class="icon-module" v-on:click="addModule(mod.type)">
+        <div class="icon-module"
+             @click="addModule($event, mod.type)"
+             @touchstart="addModule($event, mod.type)"
+             >
           <div class="icon-container">
             <img v-bind:src="require('./../assets/icons_library/'+mod.iconpath)"
-               v-bind:alt=mod.name>
+                 v-bind:alt=mod.name>
           </div>
+          <h2 class="icon-name"> {{mod.title}} </h2>
 		    </div>
-        <h2 class="icon-name"> {{mod.title}} </h2>
       </div>
     </div>
   </div>
@@ -61,31 +65,27 @@ export default {
     }
   },
   methods: {
-    addModule (module) {
-      console.log('@VueModuleLibrary: Want to add a module <<' + module + '>>')
+    addModule (e, module) {
+      if (e.type === 'touchend') {
+        e.preventDefault()
+      }
+      // console.log('@VueModuleLibrary: Want to add a module <<' + module + '>>')
       this.$parent.addModule(module)
       // Why does emit not work; (how to make it work..)
       // this.$emit('addModule', module)
+    },
+    hideLibrary () {
+      this.$emit('hideLibrary')
     },
     save () {
       this.$emit('save', this.properties)
     }
   }
-  // watch: {
-  // }
 }
 </script>
 
 <style lang="less" scoped>
 @import './../assets/styles/main.less';
-
-// .grid-item {
-// background-color: rgba(255, 255, 255, 0.8);
-// border: 1px solid rgba(0, 0, 0, 0.8);
-// padding: 20px;
-// font-size: 30px;
-// text-align: center;
-// }
 
 .module-library {
     text-align: center;
@@ -107,9 +107,8 @@ export default {
 
 .icon-module {
     // text-align: center;
-    .icon-module{
-        background: @color-main-mediumbright;
-    }
+    cursor: pointer;
+    background: @color-main-mediumbright;
 
     .icon-container{
         background: @color-main-medium;
@@ -118,8 +117,9 @@ export default {
     }
 
     .icon-name {
-        display: inline;
-        font-size: 30px;
+        // display: inline;
+        font-size: @fontsize-small;
+        margin-top: 1px;
     }
 }
 </style>

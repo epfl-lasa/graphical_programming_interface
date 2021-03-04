@@ -1,8 +1,8 @@
 <!--
 TODO:
 > Divide sensible into links, block, & container
+  -->
 
--->
 <template>
 <div class="vue-block" :class="{selected: selected}" :style="style"
      @touchstart="handleDown($event)"
@@ -70,40 +70,21 @@ export default {
     this.lastMouseX = 0
     this.lastMouseY = 0
 
+    this.firstMouseX = 0
+    this.firstMouseY = 0
+
     // Linking & Dragging of specific block
     // this.linking = false
     this.dragging = false
   },
-  mounted () {
-    // TODO: an event listener is added for each block (?!) -- MAYBE move to 'drawing-window-class'
-    document.documentElement.addEventListener('mousemove', this.handleMove, true)
-    document.documentElement.addEventListener('mouseup', this.handleUp, true)
-    // document.documentElement.addEventListener('mousedown', this.handleDown, true)
-
-    document.documentElement.addEventListener('touchemove', this.handleMove, true)
-    document.documentElement.addEventListener('touchend', this.handleUp, true)
-
-    // document.documentElement.addEventListener('touchmove', this.testTouchUp, true)
-    // document.documentElement.addEventListener('touchup', this.testTouchDown, true)
-  },
   beforeDestroy () {
-    document.documentElement.removeEventListener('mousemove', this.handleMove, true)
-    document.documentElement.removeEventListener('mouseup', this.handleUp, true)
-    // document.documentElement.removeEventListener('mousedown', this.handleDown, true)
-
-    document.documentElement.removeEventListener('touchmove', this.handleMove, true)
-    document.documentElement.removeEventListener('touchend', this.handleUp, true)
-
-    // document.documentElement.removeEventListener('touchmove', this.testTouchUp, true)
-    // document.documentElement.removeEventListener('touchup', this.testTouchDown, true)
-
-    // document.documentElement.removeEventListener('touchmove', this.handleMove, true)
-    // document.documentElement.removeEventListener('touchup', this.handleUp, true)
+    this.removeHandles()
   },
   data () {
     return {
       width: this.options.width,
       hasDragged: false,
+      hasOnlyMoveLittleSinceClick: false,
 
       // Different press states
       presstimer: null,
@@ -113,18 +94,44 @@ export default {
     }
   },
   methods: {
+    initializeHandles () {
+      document.documentElement.addEventListener('mousemove', this.handleMove, true)
+      document.documentElement.addEventListener('mouseup', this.handleUp, true)
+      // document.documentElement.addEventListener('mousedown', this.handleDown, true)
+
+      document.documentElement.addEventListener('touchmove', this.handleMove, true)
+      document.documentElement.addEventListener('touchend', this.handleUp, true)
+    },
+    removeHandles () {
+      document.documentElement.removeEventListener('mousemove', this.handleMove, true)
+      document.documentElement.removeEventListener('mouseup', this.handleUp, true)
+
+      document.documentElement.removeEventListener('touchmove', this.handleMove, true)
+      document.documentElement.removeEventListener('touchend', this.handleUp, true)
+    },
     handleMove (e) {
       if (e.type === 'touchmove') {
         e.preventDefault()
+        this.mouseX = e.touches[0].clientX
+        this.mouseY = e.touches[0].clientY
+      } else {
+        this.mouseX = e.pageX || e.clientX + document.documentElement.scrollLeft
+        this.mouseY = e.pageY || e.clientY + document.documentElement.scrollTop
+      }
+
+      // Add a minimum movement margin for 'touch events'
+      if (e.type === 'touchmove' && this.hasOnlyMoveLittleSinceClick) {
+        let diffXTot = this.mouseX - this.firstMouseX
+        let diffYTot = this.mouseY - this.firstMouseY
+        let refDist = (e.srcElement.width / 4.0)
+        if (diffXTot * diffXTot + diffYTot * diffYTot < refDist * refDist) {
+          return
+        }
+        this.hasOnlyMoveLittleSinceClick = false
       }
 
       this.cancelLongPress()
 
-      this.mouseX = e.pageX || e.clientX + document.documentElement.scrollLeft
-      this.mouseY = e.pageY || e.clientY + document.documentElement.scrollTop
-
-      // console.log('Dragging')
-      // console.log(this.dragging)
       if (this.dragging && !this.linkingMode) {
         let diffX = this.mouseX - this.lastMouseX
         let diffY = this.mouseY - this.lastMouseY
@@ -137,38 +144,36 @@ export default {
         this.hasDragged = true
 
         this.$emit('disableBlockMenu')
+      } else {
+        // Remove if ever true / or the whole condition after debugging
+        console.log('@VueBlock: Testing if condition ever false. Remove NOW.')
       }
     },
     handleDown (e) {
       if (e.type === 'touchstart') {
-        // Which one is necessary? Which one is good...
         e.preventDefault()
-        e.stopPropagation()
       }
-      // console.log('VueBlock -- gogogo (-1)')
-      // console.log(this.linkingMode)
-      console.log('@VueBlock: Handle Down')
-
-      // if (typeof e ) {
       if (e.type === 'touchstart') {
-        // console.log('@VueBlock:', e)
-        console.log(e)
-        // TODO: make touches more precise / better fitting.
         this.mouseX = e.touches[0].clientX
         this.mouseY = e.touches[0].clientY
       } else { // Else mouse event
         this.mouseX = e.pageX || e.clientX + document.documentElement.scrollLeft
         this.mouseY = e.pageY || e.clientY + document.documentElement.scrollTop
-        this.absoluteMouseX = e.pageX
-        this.absoluteMouseY = e.pageY
       }
+
+      this.initializeHandles()
 
       this.lastMouseX = this.mouseX
       this.lastMouseY = this.mouseY
 
+      this.firstMouseX = this.mouseX
+      this.firstMouseY = this.mouseY
+      this.hasOnlyMoveLittleSinceClick = true
+
       const target = e.target || e.srcElement
 
       if (this.$el.contains(target)) {
+        // It always contains target...
         if (this.linkingMode) {
           console.log('@VueBock: Want to link')
           this.$emit('linkingStop')
@@ -190,9 +195,8 @@ export default {
       this.dragging = true
 
       this.showAppDropwdown = true
-
-      // this.$emit('showBlockMenu', this.blockData, this.mouseX, this.mouseY)
-      this.$emit('showBlockMenu', this.blockData, this.absoluteMouseX, this.absoluteMouseY)
+      this.$emit('showBlockMenu', this.blockData, this.mouseX, this.mouseY)
+      // this.$emit('showBlockMenu', this.blockData, this., this.absolutemouseY)
     },
     cancelLongPress () {
       if (this.presstimer !== null) {
@@ -208,6 +212,7 @@ export default {
       }
       // console.log('@VueBlock: handleUp')
       this.cancelLongPress()
+      this.removeHandles()
 
       if (this.dragging) {
         this.dragging = false
@@ -291,167 +296,138 @@ export default {
 <style lang="less" scoped>
 @import './../assets/styles/main.less';
 
-@blockBorder: 0px;
-
-@ioPaddingInner: 2px 0;
-@ioHeight: 20px;
-@ioFontSize: 15px;
-
-@circleBorder: 2px;
-@circleSize: 10px;
-@circleMargin: 0px; // left/right
-
-@circleNewColor: #00FF00;
-@circleRemoveColor: #FF0000;
-@circleConnectedColor: #FFFF00;
-
-// New variables
-@fontsizeDescription: 11pt;
-@marginBlock: 20px;
-
 .vue-block{
+    cursor: move;
+
     background:@color-main-dark;
-    // background:@fontcolor-main;
     position: absolute;
-    box-sizing: border-box;
-    width: (2*@marginBlock + @block-width);
-    height: (2*@marginBlock + @block-height);
+
+    width: ~"calc(2*@{marginBlock} + @{block-width})";
+    height: ~"calc(2*@{marginBlock} + @{block-height})";
     z-index: 1;
     opacity: 1.0;
-    cursor: move;
+
+    .icon-container {
+        background:@color-main-medium;
+        width:@block-width;
+        height:@block-height;
+
+        // Put at center of parent
+        position: relative;
+        left: @marginBlock;
+        top: @marginBlock;
+
+        &.selected {
+            // border: @blockBorder solid black;
+            // z-index: 2;
+            box-shadow: 0px 0px 20px 4px @color-main-bright;
+        }
+    }
+
+    .icon-description {
+        font-size: @fontsize-small;
+        color: @fontcolor-main;
+        // text-align: center;
+        position: relative;
+        top: @marginBlock;
+        left:@marginBlock;
+    }
 }
 
-.icon-container {
-    background:@color-main-medium;
-    width:@block-width;
-    height:@block-height;
 
-    // Put at center of paretn
-    position: relative;
-    left: @marginBlock;
-    top: @marginBlock;
+// .vue-block {
+//     > header {
+//         background: #bfbfbf;
+//         text-align: center;
 
-    &.selected {
-        // border: @blockBorder solid black;
-        // z-index: 2;
-        box-shadow: 0px 0px 20px 4px @color-main-bright;
-    }
-}
+//         > .delete {
+//             color: red;
+//             cursor: pointer;
+//             float: right;
+//             position: absolute;
+//             right: 5px;
+//         }
+//     }
 
-.icon-description {
-    font-size: @fontsizeDescription;
-    color: @fontcolor-main;
-    text-align: center;
-    position: relative;
-    top: @marginBlock;
-    // bottom: 1px;
-}
+//     .inputs, .outputs {
+//         padding: @ioPaddingInner;
 
+//         display: block;
+//         width: 50%;
 
-.vue-block {
-    // border: @blockBorder solid black;
-    // background-image: url(./../assets/images/idle.jpeg);
-    // block-size: 110px;
-    // width: 92px;
-    // height: 92px;
+//         > * {
+//             width: 100%;
+//         }
+//     }
 
-    // &.selected {
-        // border: @blockBorder solid black;
-        // z-index: 2;
-        // box-shadow: 0px 0px 20px 4px @color-main-bright;
-    // }
-    > header {
-        background: #bfbfbf;
-        text-align: center;
+//     .circle {
+//         box-sizing: border-box;
+//         margin-top: @ioHeight / 2 - @circleSize / 2;
 
-        > .delete {
-            color: red;
-            cursor: pointer;
-            float: right;
-            position: absolute;
-            right: 5px;
-        }
-    }
+//         width: @circleSize;
+//         height: @circleSize;
 
-    .inputs, .outputs {
-        padding: @ioPaddingInner;
+//         border: @circleBorder solid rgba(0, 0, 0, 0.5);
+//         border-radius: 100%;
 
-        display: block;
-        width: 50%;
+//         cursor: crosshair;
+//         &.active {
+//             background: @circleConnectedColor;
+//         }
+//     }
 
-        > * {
-            width: 100%;
-        }
-    }
+//     .inputs {
+//         float: left;
+//         text-align: left;
 
-    .circle {
-        box-sizing: border-box;
-        margin-top: @ioHeight / 2 - @circleSize / 2;
+//         margin-left: -(@circleSize/2 + @blockBorder);
+//     }
 
-        width: @circleSize;
-        height: @circleSize;
+//     .input, .output {
+//         height: @ioHeight;
+//         overflow: hidden;
+//         font-size: @ioFontSize;
 
-        border: @circleBorder solid rgba(0, 0, 0, 0.5);
-        border-radius: 100%;
+//         &:last-child {
+//         }
+//     }
 
-        cursor: crosshair;
-        &.active {
-            background: @circleConnectedColor;
-        }
-    }
+//     .input {
+//         float: left;
 
-    .inputs {
-        float: left;
-        text-align: left;
+//         .circle {
+//             float: left;
+//             margin-right: @circleMargin;
 
-        margin-left: -(@circleSize/2 + @blockBorder);
-    }
+//             &:hover {
+//                 background: @circleNewColor;
 
-    .input, .output {
-        height: @ioHeight;
-        overflow: hidden;
-        font-size: @ioFontSize;
+//                 &.active {
+//                     background: @circleRemoveColor;
+//                 }
+//             }
+//         }
+//     }
 
-        &:last-child {
-        }
-    }
+//     .outputs {
+//         float: right;
+//         text-align: right;
 
-    .input {
-        float: left;
+//         margin-right: -(@circleSize/2 + @blockBorder);
+//     }
 
-        .circle {
-            float: left;
-            margin-right: @circleMargin;
+//     .output {
+//       float: right;
 
-            &:hover {
-                background: @circleNewColor;
+//       .circle {
+//         float: right;
+//         margin-left: @circleMargin;
 
-                &.active {
-                    background: @circleRemoveColor;
-                }
-            }
-        }
-    }
-
-    .outputs {
-        float: right;
-        text-align: right;
-
-        margin-right: -(@circleSize/2 + @blockBorder);
-    }
-
-    .output {
-      float: right;
-
-      .circle {
-        float: right;
-        margin-left: @circleMargin;
-
-        // &:hover {
-          // background: @circleNewColor;
-        // }
-      }
-    }
-}
+//         // &:hover {
+//           // background: @circleNewColor;
+//         // }
+//       }
+//     }
+// }
 
 </style>

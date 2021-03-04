@@ -6,8 +6,15 @@ import {getOffsetRect} from './dom'
  * @return {{x: number, y: number}}
  */
 export function getMousePosition (element, event) {
-  let mouseX = event.pageX || event.clientX + document.documentElement.scrollLeft
-  let mouseY = event.pageY || event.clientY + document.documentElement.scrollTop
+  let mouseX
+  let mouseY
+  if (event.type === 'touchstart' || event.type === 'touchmove') {
+    mouseX = event.touches[0].clientX
+    mouseY = event.touches[0].clientY
+  } else {
+    mouseX = event.pageX || event.clientX + document.documentElement.scrollLeft
+    mouseY = event.pageY || event.clientY + document.documentElement.scrollTop
+  }
 
   let offset = getOffsetRect(element)
   let x = mouseX - offset.left

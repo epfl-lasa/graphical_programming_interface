@@ -8,7 +8,9 @@
     <g class="link"
       v-for="p in straightPaths"
        @mousedown="lineMouseDown($event, p, p.id)"
+       @touchstart="lineMouseDown($event, p, p.id)"
        @mouseup="lineMouseUp($event, p)"
+       @touchend="lineMouseUp($event, p)"
        >
       <path v-if="outline" :d="p.data" :style="p.outlineStyle" class="line outline"></path>
       <path :d="p.data" :style="p.style" class="line"></path>
@@ -16,7 +18,9 @@
     <g class="arrow"
        v-for="a in straightArrows"
        @mousedown="lineMouseDown($event, a, a.id)"
+       @touchstart="lineMouseDown($event, a, a.id)"
        @mouseup="lineMouseUp($event, a)"
+       @touchend="lineMouseDown($event, a, a.id)"
        >
       <path class="arrow"
             d="M -1 -1 L 0 1 L 1 -1 z"
@@ -58,6 +62,9 @@ export default {
   },
   methods: {
     lineMouseDown (e, line, lineID) {
+      if (e.type === 'touchdown') {
+        e.preventDefault()
+      }
       if (lineID === undefined) {
         // Temp line
         console.log('Undefined line')
@@ -72,7 +79,9 @@ export default {
       }
 
       this.$emit('updateSelectedLine', lineID)
-      this.presstimer = setTimeout(this.lineMouseDownLong, 300, e)
+      // this.presstimer = setTimeout(this.lineMouseDownLong, 300, e)
+      // Zero press time. Everypress is a long-press.
+      this.presstimer = setTimeout(this.lineMouseDownLong, 0, e)
     },
     lineMouseDownLong (e) {
       let mouseX
@@ -85,13 +94,16 @@ export default {
         mouseX = e.pageX
         mouseY = e.pageY
       }
-      console.log('@LinkCreator: hLong press YES')
+      // console.log('@LinkCreator: hLong press YES')
       self.longpress = true
       this.showAppDropwdown = true
 
       this.$emit('showDropdownMenu', mouseX, mouseY, 'line')
     },
     lineMouseUp (e) {
+      if (e.type === 'touchend') {
+        e.preventDefault()
+      }
       // console.log('@LinkCreator: Mouse Up on line')
       this.cancelLongPress()
     },
@@ -238,6 +250,7 @@ svg {
 }
 
 .block-linker {
+    cursor: pointer;
     .line {
         stroke: @color-main-mediumbright;
         /* stroke: @fontcolor-main; */

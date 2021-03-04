@@ -1,15 +1,29 @@
 <template>
-  <div id="app">
-    <Header
-      v-if="false"
-      ref="header"
-      class="header"
-      :drawMode="isInDrawingMode"
-      :modules="modules"
-      :robotIsMoving="robotIsMoving"
-      @setRobotStateMoving="setRobotStateMoving"
-      @stopRobot="stopRobot"
-      />
+<div id="app">
+  <FloatingHeaderComponents
+    ref="floatingHeaderComponents"
+    :showRightIcon="selectedBlocks || loadedLibrary"
+    :drawMode="isInDrawingMode"
+    :modules="modules"
+    :robotIsMoving="robotIsMoving"
+    @setRobotStateMoving="setRobotStateMoving"
+    @stopRobot="stopRobot"
+    @showLibrary="loadedLibrary = true"
+    />
+
+  <!-- :showRightIcon="selectedBlocks || loadedLibrary" -->
+  <!-- class="header" -->
+
+    <!-- <Header -->
+    <!--   v-if="false" -->
+    <!--   ref="header" -->
+    <!--   class="header" -->
+    <!--   :drawMode="isInDrawingMode" -->
+    <!--   :modules="modules" -->
+    <!--   :robotIsMoving="robotIsMoving" -->
+    <!--   @setRobotStateMoving="setRobotStateMoving" -->
+    <!--   @stopRobot="stopRobot" -->
+    <!--   /> -->
 
     <template v-if="true">
     <!-- <template v-if="(appMode==='main' || appMode==='programming')"> -->
@@ -46,6 +60,7 @@
         <VueModuleLibrary
           ref="module-library"
           class="module-library"
+          @hideLibrary="loadedLibrary = false"
           :modules="modules"
           :blockContent="blocks"
           :loadedLibrary="loadedLibrary"/>
@@ -73,7 +88,8 @@ import VueBlocksContainer from './components/VueBlocksContainer'
 import VueBlockProperty from './components/VueBlockProperty'
 import domHelper from './helpers/dom'
 
-import Header from './components/Header'
+// import Header from './components/Header'
+import FloatingHeaderComponents from './components/FloatingHeaderComponents'
 import LoadSave from './components/LoadSave'
 import VueModuleLibrary from './components/VueModuleLibrary'
 
@@ -84,13 +100,14 @@ import axios from 'axios' // Needed to pass. Only temporarily?
 export default {
   name: 'App',
   components: {
-    Header,
+    FloatingHeaderComponents,
     LoadSave,
     VueBlocksContainer,
     VueBlockProperty,
     VueModuleLibrary
   },
   mounted () {
+    // alert('Your screen resolution is: ' + screen.width + 'x' + screen.height)
     // axios.get(this.$localIP + `/startup/`, {'params': {}})
     // .then(response => {
     // console.log('@App: mounted successfull.')
@@ -449,14 +466,17 @@ body {
 }
 
 h1 {
-    font-size: 30px;
+    font-size: @fontsize-large;
 }
 
 h2 {
-    font-size: 20px;
+    font-size: @fontsize-medium;
     // color: @fontcolor-main;
 }
 
+h2 {
+    font-size: @fontsize-small;
+}
 
 #app {
     // top: @header-height;
@@ -484,6 +504,7 @@ h2 {
         height: @header-height;
 
         padding-top: @header-height*0.2;
+        padding-bottom: @header-height*0.1;
         // padding-bottom: auto;
         padding-left: @header-padding-sideways;
         padding-right: @header-padding-sideways;
@@ -497,8 +518,10 @@ h2 {
         background-color: @color-main-mediumbright;
         top: @header-height;
         height: ~"calc(100% - @{header-height})";
-        padding:30px;
-        padding-top: 10px;
+        padding-left: @header-padding-sideways;
+        padding-right: @header-padding-sideways;
+        padding-top: @header-height*0.1;
+        padding-bottom: @header-height*0.3;
     }
 }
 
