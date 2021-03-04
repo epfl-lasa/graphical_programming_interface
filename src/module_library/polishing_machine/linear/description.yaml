@@ -5,7 +5,7 @@ title: Linear
 description: Linear Module
 
 family: linear
-iconpath: linear.jpeg
+iconpath: linear_motion.svg
 
 fields:
 - attr: property

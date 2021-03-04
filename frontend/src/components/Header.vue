@@ -1,4 +1,4 @@
-<template>
+x<template>
 <header class="header">
   <b-navbar
     type="dark" variant="dark" class="is-dark navigation-bar-top">
@@ -35,6 +35,9 @@
     </template>
 
     <template #end>
+      <!-- <b-navbar-item v-on:click="close_window()" href="#"> -->
+          <!-- Close All -->
+      <!-- </b-navbar-item> -->
       <b-navbar-item tag="div" v-if="false">
         <label> <small> Mode:</small> </label>
         <div class="button toggle">
@@ -173,16 +176,25 @@ export default {
     quit () {
       console.log('Implement quit.')
       // this.$parent.loadModuleLibrary(library)
+    },
+    close_window () {
+      if (confirm('Close Window?')) {
+        close()
+      }
     }
   }
 }
 </script>
 
 
-<style scoped>
+<style lang="less" scoped>
+@import './../assets/styles/main.less';
+
 .header {
     font-size: 30px;
     font-color: white;
+    height: @header-height;
+
 }
 
 .navigation-bar-top {

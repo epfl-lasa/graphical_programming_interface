@@ -16,7 +16,9 @@ Vue.prototype.$relativeSrcDir = `./../../src/frontend/`
 Vue.prototype.$relativeNodeDir = `./../../frontend/`
 
 // Create IP as global Variable
-Vue.prototype.$localIP = `http://localhost:5000`
+// Vue.prototype.$localIP = `http://localhost:5000`
+Vue.prototype.$localIP = `http://192.168.1.102:5000`
+
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */

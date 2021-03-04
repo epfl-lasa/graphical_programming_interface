@@ -1,4 +1,5 @@
-<!--
+<template>
+  <!--
 Nomenclature Introduction
 
 # Application
@@ -21,14 +22,12 @@ Links two different modules
 # Line
 Line is the visual element which is created from a link between modules
   -->
-
-<template>
-<div class="vue-container" id="main-element-container">
-
+<!-- <div class="vue-container" id="main-element-container"> -->
+<div class="blocks-container" id="main-element-container">
   <!-- TODO: Iterate over links, too! -->
   <VueLink :lines="lines"
            :linkingMode = "linkingMode"
-           @showDropdownkMenu="showDropdownkMenu"
+           @showDropdownMenu="showDropdownMenu"
            @disableDropdownMenu="disableDropdownkMenu"
            @updateSelectedLine="updateSelectedLine"
            @removeLink="removeLink"
@@ -38,12 +37,13 @@ Line is the visual element which is created from a link between modules
             :key="block.id"
             :linkingMode="linkingMode"
             v-bind.sync="block"
+            :blockData="block"
             :options="optionsForChild"
             @update="updateScene"
             @linkingStart="linkingStart(block, $event)"
             @linkingStop="linkingStop(block, $event)"
             @linkingBreak="linkingBreak(block, $event)"
-            @showBlockMenu="showBlockMenu(block, $event)"
+            @showBlockMenu="showBlockMenu"
             @disableBlockMenu="disableBlockMenu()"
             @select="blockSelect(block)"
             @delete="blockDelete(block)"
@@ -120,10 +120,17 @@ export default {
     }
   },
   mounted () {
+    document.documentElement.addEventListener('touchmove', this.handleMove, true)
+    document.documentElement.addEventListener('touchstart', this.handleDown, true)
+    document.documentElement.addEventListener('touchend', this.handleUp, true)
+
+    // TODO: preventDefault / stopPropagating
     document.documentElement.addEventListener('mousemove', this.handleMove, true)
     document.documentElement.addEventListener('mousedown', this.handleDown, true)
     document.documentElement.addEventListener('mouseup', this.handleUp, true)
+
     document.documentElement.addEventListener('wheel', this.handleWheel, true)
+    // TODO: add multi-touch scrolling (?!)
 
     this.centerX = this.$el.clientWidth / 2
     this.centerY = this.$el.clientHeight / 2
@@ -132,9 +139,14 @@ export default {
     this.importScene()
   },
   beforeDestroy () {
+    document.documentElement.removeEventListener('touchmove', this.handleMove, true)
+    document.documentElement.removeEventListener('touchstart', this.handleDown, true)
+    document.documentElement.removeEventListener('touchend', this.handleUp, true)
+
     document.documentElement.removeEventListener('mousemove', this.handleMove, true)
     document.documentElement.removeEventListener('mousedown', this.handleDown, true)
     document.documentElement.removeEventListener('mouseup', this.handleUp, true)
+
     document.documentElement.removeEventListener('wheel', this.handleWheel, true)
   },
   data () {
@@ -237,6 +249,7 @@ export default {
           y1: y1,
           x2: x2,
           y2: y2,
+          isTemp: false,
           style: {
             stroke: '#32D9CB',
             // stroke: '#F85',
@@ -253,6 +266,7 @@ export default {
       }
 
       if (this.tempLink) {
+        // this.tempLink.isTemp = false
         this.tempLink.style = {
           stroke: '#8f8f8f',
           strokeWidth: 4 * this.scale,
@@ -270,6 +284,10 @@ export default {
     // Events
     /** @param e {MouseEvent} */
     handleMove (e) {
+      if (e.type === 'touchmove') {
+        console.log('@VueBlocksContainer: Do something')
+      }
+
       let mouse = mouseHelper.getMousePosition(this.$el, e)
       this.mouseX = mouse.x
       this.mouseY = mouse.y
@@ -321,6 +339,10 @@ export default {
       }
     },
     handleUp (e) {
+      if (e.type === 'touchend') {
+        console.log('@VueBlocksContainer-touchend: Do something')
+      }
+
       const target = e.target || e.srcElement
 
       if (this.dragging) {
@@ -589,14 +611,18 @@ export default {
     // --------------------------------------------
     // DropDownMenue Setup
     // --------------------------------------------
-    showDropdownkMenu (e, elementType) {
+    showDropdownMenu (posX, posY, elementType) {
+      if (elementType !== 'line') {
+        console.log('Warning - unknown element type.')
+      }
       this.blockMenuVisible = true
 
-      var containerElem = document.getElementById('main-element-container')
-
+      // var containerElem = document.getElementById('main-element-container')
       // Relative position within div
-      this.blockMenuX = e.clientX - containerElem.offsetLeft
-      this.blockMenuY = e.clientY - containerElem.offsetTop
+      // this.blockMenuX = e.clientX - containerElem.offsetLeft
+      // this.blockMenuY = e.clientY - containerElem.offsetTop
+      this.blockMenuX = posX
+      this.blockMenuY = posY
 
       this.blockSelectionType = elementType
     },
@@ -615,7 +641,7 @@ export default {
       this.blockMenuContent = []
       this.blockMenuVisible = false
     },
-    showBlockMenu (element, e, elementType = 'block') {
+    showBlockMenu (element, posX, posY, elementType = 'block') {
       element.selected = true
 
       if (elementType === 'block') {
@@ -629,11 +655,12 @@ export default {
       this.blockMenuContent = []
       this.blockMenuVisible = true
 
-      var containerElem = document.getElementById('main-element-container')
-
       // Relative position within div
-      this.blockMenuX = e.clientX - containerElem.offsetLeft
-      this.blockMenuY = e.clientY - containerElem.offsetTop
+      // var containerElem = document.getElementById('main-element-container')
+      // this.blockMenuX = posX - containerElem.offsetLeft
+      // this.blockMenuY = posY - containerElem.offsetTop
+      this.blockMenuX = posX
+      this.blockMenuY = posY
 
       this.blockSelectionType = elementType
     },
@@ -911,13 +938,23 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.vue-container {
-    position: relative;
+@import './../assets/styles/main.less';
+
+.blocks-container {
     overflow: hidden;
     box-sizing: border-box;
-}
+    background-color: @color-main-dark;
 
-.vue-container{
-    background-color:#0b214a;
+    // width: 150%;
+    // height: ~"calc(100% - @header-height)";
+    position: static;
+    // top: @header-height;
+    height: 100%;
+    // height: ~"calc(100% - @{header-height})";
+    // width: 100%; // TODO adapt width in realtime based on menues
+    // height: ~"calc(100% - @header-height)";
+
+    margin: 0;
+    // max-width: none;
 }
 </style>

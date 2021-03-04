@@ -4,7 +4,7 @@ title: Idle
 description: Idle Module
 
 family: movement
-iconpath: idle.jpeg
+iconpath: idle_pause.svg
 
 information: ''
 library: basic

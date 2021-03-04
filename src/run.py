@@ -37,6 +37,11 @@ app = Flask(__name__,
             static_folder="./dist/static",
             template_folder="./dist")
 
+# app.run(host="192.168.1.102:PORT#")
+# app = Flask(__name__,
+#             static_folder="./../dist/static",
+#             template_folder="./../dist")
+
 # Everything allowed for api (reduced security)
 # cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 # cors = CORS(app, resources={r"/": {"origins": "*"}})

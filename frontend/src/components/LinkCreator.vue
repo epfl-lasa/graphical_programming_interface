@@ -1,22 +1,29 @@
 <template>
-  <svg width="100%" height="100%">
-    <!-- <g v-for="p in renderedPathes" > -->
-      <!-- <g v-for="(p, index) in straightPaths" -->
-    <g v-for="p in straightPaths"
+  <!-- <g v-for="p in renderedPathes" > -->
+  <!-- <g v-for="(p, index) in straightPaths" -->
+  <!-- TODO: add touch events -->
+  <!-- TODO: set temp-class -->
+  <!-- TODO: make one loop for all! -->
+  <svg width="100%" height="100%" class="block-linker">
+    <g class="link"
+      v-for="p in straightPaths"
        @mousedown="lineMouseDown($event, p, p.id)"
        @mouseup="lineMouseUp($event, p)"
        >
-      <path v-if="outline" :d="p.data" :style="p.outlineStyle"></path>
-      <path :d="p.data" :style="p.style"></path>
+      <path v-if="outline" :d="p.data" :style="p.outlineStyle" class="line outline"></path>
+      <path :d="p.data" :style="p.style" class="line"></path>
     </g>
-    <g>
-      <path v-for="a in straightArrows"
+    <g class="arrow"
+       v-for="a in straightArrows"
+       @mousedown="lineMouseDown($event, a, a.id)"
+       @mouseup="lineMouseUp($event, a)"
+       >
+      <path class="arrow"
             d="M -1 -1 L 0 1 L 1 -1 z"
             :style="a.style"
             :transform="a.transform"
-            @mousedown="lineMouseDown($event, a, a.id)"
-            @mouseup="lineMouseUp($event, a)"
             ></path>
+      <!-- TODO: add touch events -->
     </g>
   </svg>
 </template>
@@ -68,10 +75,21 @@ export default {
       this.presstimer = setTimeout(this.lineMouseDownLong, 300, e)
     },
     lineMouseDownLong (e) {
+      let mouseX
+      let mouseY
+
+      if (e.type === 'touchstart') {
+        mouseX = e.touches[0].clientX
+        mouseY = e.touches[0].clientY
+      } else { // Else mouse event
+        mouseX = e.pageX
+        mouseY = e.pageY
+      }
       console.log('@LinkCreator: hLong press YES')
       self.longpress = true
       this.showAppDropwdown = true
-      this.$emit('showDropdownkMenu', e, 'line')
+
+      this.$emit('showDropdownMenu', mouseX, mouseY, 'line')
     },
     lineMouseUp (e) {
       // console.log('@LinkCreator: Mouse Up on line')
@@ -131,7 +149,8 @@ export default {
         paths.push({
           id: l.id,
           data: `M ${l.x1}, ${l.y1}, ${l.x2}, ${l.y2}`,
-          style: l.style,
+          // style: l.style,
+          style: {},
           outlineStyle: l.outlineStyle
         })
       })
@@ -154,9 +173,9 @@ export default {
           id: l.id,
           transform: `translate(${pos.x}, ${pos.y}) rotate(${degrees})`,
           style: {
-            stroke: l.style.stroke,
-            strokeWidth: l.style.strokeWidth * 4,
-            fill: l.style.stroke
+            // stroke: l.style.stroke,
+            // strokeWidth: l.style.strokeWidth * 4,
+            // fill: l.style.stroke
           }
         })
       })
@@ -211,6 +230,30 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+@import './../assets/styles/main.less';
 
+svg {
+    fill: 'none';
+}
+
+.block-linker {
+    .line {
+        stroke: @color-main-mediumbright;
+        /* stroke: @fontcolor-main; */
+        stroke-width: 6px;
+        stroke-opacity: 1.0,
+    }
+
+    .arrow {
+        stroke: @color-main-mediumbright;
+        /* stroke: @fontcolor-main; */
+        stroke-width: 25px;
+        stroke-opacity: 1.0,
+    }
+}
+
+.temp {
+    stroke-opacity: 0.6,
+}
 </style>

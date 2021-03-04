@@ -50,7 +50,7 @@ class RosHandler(Node):
 
     def __init__(self, DataHandler=None):
         super().__init__('ros_main_handler')
-        # Spin in a separate thread
+       # Spin in a separate thread
         # self.thread = threading.Thread(target=rclpy.spin, args=(self, ), daemon=True)
         # self.thread.start()
         

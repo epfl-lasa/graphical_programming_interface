@@ -5,7 +5,7 @@ title: Gripper
 description: Gripper Open/Close Module
 
 family: gripper
-iconpath: gripper.jpeg
+iconpath: picking_placing.svg
 
 fields:
 - attr: property

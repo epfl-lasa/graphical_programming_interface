@@ -7,6 +7,8 @@ title: Learn Motion
 description: Learn Motion from Demonstration
 family: intelligent
 
+iconpath: learning_of_motion_with_force.svg
+
 fields:
 - attr: property
   label: Reference

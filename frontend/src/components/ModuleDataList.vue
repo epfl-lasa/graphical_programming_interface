@@ -1,9 +1,10 @@
 <template>
   <div class="data-window">
-    <!-- <h1> {{title}} </h1> -->
+    <h2> Recorded Data </h2>
     <!-- <p>Test id: {{module.id }} </p> -->
     <div class="file-table-content">
       <b-table
+        class="data-table"
         :data="database"
         :selected.sync="selected"
         focusable
@@ -14,27 +15,28 @@
         <b-table-column field="datemodified" label="Created" width="40" v-slot="props">
           {{ props.row.datemodified }}
         </b-table-column>
-        <!-- <b-table-column field="datemodified" label="Data Points" width="40" v-slot="props"> -->
-          <!-- {{ props.row.datemodified }} -->
-        <!-- </b-table-column> -->
-        <p> Table </p>
-          <!-- <b-table-column field="type" label="Type" width="40" v-slot="props"> -->
-          <!-- {{ props.row.type }} -->
-        <!-- </b-table-column> -->
         </b-table>
     </div>
     <br>
-    <template>
-      <b-button v-if="isRecording"
-                v-on:click="stopRecording"> Stop </b-button>
-      <b-button v-else-if="multipleRecordings"
-                v-on:click="startRecording"> Record </b-button>
-      <b-button v-else
-                v-on:click="startRecording"> Record New </b-button>
+    <div id="table-button-container">
+      <div v-if="isRecording"
+        @click="stopRecording" class="aica-button reference-button">
+         <p> Stop </p>
+      </div>
+      <div v-else-if="multipleRecordings"
+        @click="startRecording" class="aica-button reference-button">
+         <p> Record </p>
+      </div>
+      <div v-else
+        @click="startRecording" class="aica-button reference-button">
+         <p> Record </p>
+      </div>
 
-      <b-button v-if="multipleRecordings" v-on:click="deleteElement">
-        Delete Element </b-button>
-    </template>
+      <div @click="deleteElement" class="aica-button critical reference-button">
+        <p> Delete Element</p>
+       </div>
+    </div>
+
   </div>
 </template>
 
@@ -56,9 +58,9 @@ export default {
     }
   },
   mounted () {
-    console.log('@ModuleDataList: Get Database')
-    console.log(this.module.id)
-    console.log(this.module)
+    // console.log('@ModuleDataList: Get Database')
+    // console.log(this.module.id)
+    // console.log(this.module)
     this.getDatabase()
   },
   data () {
@@ -140,20 +142,28 @@ export default {
 </script>
 
 
-<style scoped>
-.data-window {
+<style scoped lang="less">
+@import './../assets/styles/main.less';
+
+#table-button-container {
+    padding-left: ;
+    padding-right: ;
+    display: grid;
+    grid-template-columns: auto auto;
+}
+/* .data-window { */
     /* position: absolute; */
     /* top: 15%; */
     /* right: 10%; */
     /* width: 80%; */
     /* height: 80%; */
     /* padding: 20px; */
-    background-color: #d0d0d0;
+    /* background-color: #d0d0d0; */
 
     /* z-index: 3; */
     /* border: 5px solid #0c0c0c; */
     /* border-radius: 10px; */
-}
+/* } */
 
 
 .file-table-content {

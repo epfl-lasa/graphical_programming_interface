@@ -1,0 +1,109 @@
+// Screen Dimension
+@reference-screen-width: 2560;
+@reference-screen-height: 1600;
+
+// Document dimensions
+// Block Dimensions
+@block-width: 160px;
+@block-height: 160px;
+
+// Header
+@header-height: 65px;
+@header-padding-sideways: 40px;
+
+@sidebar-width: 520px;
+
+@height-icon-small: 48px;
+@height-icon-medium: 32px;
+
+// Colors
+@color-main-black: #000000;
+@color-main-dark: #1F1F1F;
+@color-main-medium: #262626;
+@color-main-mediumbright: #323232;
+@color-main-bright: #E7E7E7;
+
+@color-ok: #4CBF6E;
+@color-warning: #B7B7B7;
+@color-danger: #FA573A;
+
+@fontcolor-main: #E7E7E7;
+
+@color-border: #E7E7E7;
+
+// Font References
+@fontsize-small: 11pt;
+@fontsize-medium: 14pt;
+@fontsize-largex: 14pt;
+
+//
+
+// @font-main: ''
+// @font-secondary: ''
+
+.aica-icon-medium {
+  height: 32px;
+  width: 32px;
+  border-radius: 50%;
+  border-width: 0px;
+  background-color: @color-main-mediumbright;
+}
+
+.aica-icon-small {
+  height: @height-icon-small;
+  width: @height-icon-small;
+  border-radius: 50%;
+  border-width: 2px;
+  border-color: @color-border;
+  background-color: @color-main-mediumbright;
+}
+
+
+.aica-button {
+  cursor: pointer;
+  margin:auto;
+
+  font-size: 14pt;
+
+  // height: 33px;
+  width: fit-content;
+
+  padding-left: $font-size*0.8;
+  padding-right: $font-size*0.8;
+  padding-top: $font-size*0.05;
+  padding-bottom: $font-size*0.1;
+
+  border-radius: $font-size*(1.15);
+
+  background-color: @color-main-mediumbright;
+
+  border-width: 2px;
+  border-color: @color-border;
+  border-style: solid;
+
+  p {
+    text-align: center;
+  }
+
+  &.hover {
+    background-color: @color-main-bright;
+    font-color: @color-main-dark;
+  }
+
+  &.clicked{
+  }
+
+  &.critical {
+    background-color: @color-main-bright;
+    border-color: @color-main-dark;
+
+    color: @color-main-dark;
+  }
+
+  &.danger {
+    background-color: @color-danger;
+    border-color: @color-main-dark;
+
+    color: @color-main-dark;
+  }
+}

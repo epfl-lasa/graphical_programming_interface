@@ -77,6 +77,15 @@ cd frontend
 npm run dev
 ```
 
+# IP / Localhost setup
+To make sure that the app is accessible from an external device, the frontend matches the IP of your device.
+
+``` bash
+cd frontend/src/main.js
+```
+For local development only, you can set it to 'localhost'
+
+
 
 ## Run using Docker
 Build the Dockerimage. In a second window, build and run the backend. In the first window, run the Dockerimage and run the following code

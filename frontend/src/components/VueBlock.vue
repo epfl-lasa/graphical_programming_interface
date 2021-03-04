@@ -5,41 +5,19 @@ TODO:
 -->
 <template>
 <div class="vue-block" :class="{selected: selected}" :style="style"
+     @touchstart="handleDown($event)"
      @mousedown="handleDown($event)"
      >
-
-    <header :style="headerStyle">
-      {{title}}
-      <!-- <a class="delete" @click="deleteBlock">x</a> -->
-    </header>
-    <template v-if="false">
-    <!-- <div class="inputs"> -->
-    <!--   <div class="input" v-for="(slot, index) in inputs"> -->
-    <!--     <div class="circle inputSlot" :class="{active: slot.active}" -->
-    <!--          @mouseup="slotMouseUp($event, index)" -->
-    <!--          @mousedown="slotMouseUp($event, index)" -->
-    <!--          ></div> -->
-    <!--     {{slot.label}} -->
-    <!--   </div> -->
-    <!-- </div> -->
-    <!-- <div class="outputs"> -->
-    <!--   <div class="output" v-for="(slot, index) in outputs"> -->
-    <!--     <div class="circle" :class="{active: slot.active}" -->
-    <!--          @mousedown="slotMouseDown($event, index)"></div> -->
-    <!--     {{slot.label}} -->
-    <!--   </div> -->
-        <!-- </div> -->
-    </template>
+  <!-- <img v-bind:src="require('./' + iconPathTotal)" /> -->
+  <div class='icon-container' :class="{selected: selected}">
+  <!-- <div :class="'icon-container ' + selected"> -->
+    <img v-bind:src="require('./../' + 'assets/icons_library/' + iconpath)" />
+  </div>
+  <h2 class='icon-description'> {{title}} </h2>
   </div>
 </template>
 
 <script>
-// function sleep (ms) {
-// return new Promise((resolve) => {
-// setTimeout(resolve, ms)
-// })
-// }
-
 export default {
   name: 'VueBlock',
   props: {
@@ -66,6 +44,7 @@ export default {
     // type: String,
     // default: ''
     // },
+    blockData: Object,
 
     inputs: Array,
     outputs: Array,
@@ -74,7 +53,10 @@ export default {
       type: String,
       default: 'idle.jpeg'
     },
-
+    iconFolderPath: {
+      type: String,
+      default: 'assets/images/'
+    },
     options: {
       type: Object
     },
@@ -95,13 +77,28 @@ export default {
   mounted () {
     // TODO: an event listener is added for each block (?!) -- MAYBE move to 'drawing-window-class'
     document.documentElement.addEventListener('mousemove', this.handleMove, true)
-    // document.documentElement.addEventListener('mousedown', this.handleDown, true)
     document.documentElement.addEventListener('mouseup', this.handleUp, true)
+    // document.documentElement.addEventListener('mousedown', this.handleDown, true)
+
+    document.documentElement.addEventListener('touchemove', this.handleMove, true)
+    document.documentElement.addEventListener('touchend', this.handleUp, true)
+
+    // document.documentElement.addEventListener('touchmove', this.testTouchUp, true)
+    // document.documentElement.addEventListener('touchup', this.testTouchDown, true)
   },
   beforeDestroy () {
     document.documentElement.removeEventListener('mousemove', this.handleMove, true)
-    // document.documentElement.removeEventListener('mousedown', this.handleDown, true)
     document.documentElement.removeEventListener('mouseup', this.handleUp, true)
+    // document.documentElement.removeEventListener('mousedown', this.handleDown, true)
+
+    document.documentElement.removeEventListener('touchmove', this.handleMove, true)
+    document.documentElement.removeEventListener('touchend', this.handleUp, true)
+
+    // document.documentElement.removeEventListener('touchmove', this.testTouchUp, true)
+    // document.documentElement.removeEventListener('touchup', this.testTouchDown, true)
+
+    // document.documentElement.removeEventListener('touchmove', this.handleMove, true)
+    // document.documentElement.removeEventListener('touchup', this.handleUp, true)
   },
   data () {
     return {
@@ -112,13 +109,15 @@ export default {
       presstimer: null,
       longpress: false,
 
-      // showAppDropwdown: false,
-      // showBlockMenu: true,
       connecting: false
     }
   },
   methods: {
     handleMove (e) {
+      if (e.type === 'touchmove') {
+        e.preventDefault()
+      }
+
       this.cancelLongPress()
 
       this.mouseX = e.pageX || e.clientX + document.documentElement.scrollLeft
@@ -141,18 +140,35 @@ export default {
       }
     },
     handleDown (e) {
+      if (e.type === 'touchstart') {
+        // Which one is necessary? Which one is good...
+        e.preventDefault()
+        e.stopPropagation()
+      }
       // console.log('VueBlock -- gogogo (-1)')
       // console.log(this.linkingMode)
+      console.log('@VueBlock: Handle Down')
 
-      this.mouseX = e.pageX || e.clientX + document.documentElement.scrollLeft
-      this.mouseY = e.pageY || e.clientY + document.documentElement.scrollTop
+      // if (typeof e ) {
+      if (e.type === 'touchstart') {
+        // console.log('@VueBlock:', e)
+        console.log(e)
+        // TODO: make touches more precise / better fitting.
+        this.mouseX = e.touches[0].clientX
+        this.mouseY = e.touches[0].clientY
+      } else { // Else mouse event
+        this.mouseX = e.pageX || e.clientX + document.documentElement.scrollLeft
+        this.mouseY = e.pageY || e.clientY + document.documentElement.scrollTop
+        this.absoluteMouseX = e.pageX
+        this.absoluteMouseY = e.pageY
+      }
 
       this.lastMouseX = this.mouseX
       this.lastMouseY = this.mouseY
 
       const target = e.target || e.srcElement
 
-      if (this.$el.contains(target) && e.which === 1) {
+      if (this.$el.contains(target)) {
         if (this.linkingMode) {
           console.log('@VueBock: Want to link')
           this.$emit('linkingStop')
@@ -175,7 +191,8 @@ export default {
 
       this.showAppDropwdown = true
 
-      this.$emit('showBlockMenu', e)
+      // this.$emit('showBlockMenu', this.blockData, this.mouseX, this.mouseY)
+      this.$emit('showBlockMenu', this.blockData, this.absoluteMouseX, this.absoluteMouseY)
     },
     cancelLongPress () {
       if (this.presstimer !== null) {
@@ -185,7 +202,10 @@ export default {
         this.longpress = false
       }
     },
-    handleUp () {
+    handleUp (e) {
+      if (e.type === 'touchend') {
+        e.preventDefault()
+      }
       // console.log('@VueBlock: handleUp')
       this.cancelLongPress()
 
@@ -213,6 +233,8 @@ export default {
       this.$emit('linkingBreak', index)
       if (e.preventDefault) e.preventDefault()
     },
+    // End Depreciated
+    //
     save () {
       this.$emit('update')
     },
@@ -225,6 +247,18 @@ export default {
 
       this.$emit('update:x', left)
       this.$emit('update:y', top)
+    },
+    testTouchStart (e) {
+      console.log(e)
+      console.log('@VueBlock: Touchsuccess')
+    },
+    testTouchMove (e) {
+      console.log(e)
+      console.log('@VueBlock: Touchsuccess')
+    },
+    testTouchUp (e) {
+      console.log(e)
+      console.log('@VueBlock: Touchsuccess')
     }
   },
   computed: {
@@ -232,19 +266,19 @@ export default {
       return {
         top: this.options.center.y + this.y * this.options.scale + 'px',
         left: this.options.center.x + this.x * this.options.scale + 'px',
-        width: this.width + 'px',
-        backgroundImage: 'url(' + require('./../assets/images/' + this.iconpath) + ')',
-        backgroundSize: 'contain',
-        backgroundRepeat: 'no-repeat',
-        transform: 'scale(' + (this.options.scale + '') + ')',
         transformOrigin: 'top left'
       }
     },
-    headerStyle () {
-      return {
-        height: this.options.titleHeight + 'px'
-      }
+    iconPathTotal () {
+      // TODO: how can the path be autogenerated(?!) / given as a variable...
+      console.log('Path')
+      return './../assets/images/idle.jpeg'
     }
+    // headerStyle () {
+      // return {
+        // height: this.options.titleHeight + 'px'
+      // }
+    // }
   },
   watch: {
     iconpath () {
@@ -255,6 +289,8 @@ export default {
 </script>
 
 <style lang="less" scoped>
+@import './../assets/styles/main.less';
+
 @blockBorder: 0px;
 
 @ioPaddingInner: 2px 0;
@@ -269,25 +305,61 @@ export default {
 @circleRemoveColor: #FF0000;
 @circleConnectedColor: #FFFF00;
 
+// New variables
+@fontsizeDescription: 11pt;
+@marginBlock: 20px;
 
-.vue-block {
+.vue-block{
+    background:@color-main-dark;
+    // background:@fontcolor-main;
     position: absolute;
     box-sizing: border-box;
-    border: @blockBorder solid black;
-    background: white;
-    // background-image: url(./../assets/images/idle.jpeg);
+    width: (2*@marginBlock + @block-width);
+    height: (2*@marginBlock + @block-height);
     z-index: 1;
-    opacity: 0.9;
+    opacity: 1.0;
     cursor: move;
-    // block-size: 110px;
-    width: 55px;
-    height: 110px;
+}
+
+.icon-container {
+    background:@color-main-medium;
+    width:@block-width;
+    height:@block-height;
+
+    // Put at center of paretn
+    position: relative;
+    left: @marginBlock;
+    top: @marginBlock;
 
     &.selected {
-        border: @blockBorder solid black;
-        z-index: 2;
+        // border: @blockBorder solid black;
+        // z-index: 2;
+        box-shadow: 0px 0px 20px 4px @color-main-bright;
     }
+}
 
+.icon-description {
+    font-size: @fontsizeDescription;
+    color: @fontcolor-main;
+    text-align: center;
+    position: relative;
+    top: @marginBlock;
+    // bottom: 1px;
+}
+
+
+.vue-block {
+    // border: @blockBorder solid black;
+    // background-image: url(./../assets/images/idle.jpeg);
+    // block-size: 110px;
+    // width: 92px;
+    // height: 92px;
+
+    // &.selected {
+        // border: @blockBorder solid black;
+        // z-index: 2;
+        // box-shadow: 0px 0px 20px 4px @color-main-bright;
+    // }
     > header {
         background: #bfbfbf;
         text-align: center;
@@ -375,15 +447,11 @@ export default {
         float: right;
         margin-left: @circleMargin;
 
-        &:hover {
-          background: @circleNewColor;
-        }
+        // &:hover {
+          // background: @circleNewColor;
+        // }
       }
     }
-}
-
-.highlighted-block {
-    box-shadow: 0 4px 8px 0 rgba(1, 1, 1, 1.0), 0 6px 20px 0 rgba(1.0, 1.0, 1.0, 0.0);
 }
 
 </style>

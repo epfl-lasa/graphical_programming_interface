@@ -1,102 +1,112 @@
 <template>
-<div class="property-panel">
-  <h1> {{ module.title }} </h1>
-  <b-button v-if="robotIsMoving" v-on:click="stopRobot" type="is-primary"> Stop Robot </b-button>
-  <b-button v-else v-on:click="executeModule" type="is-primary"> Run Module </b-button>
-
-  <!-- <b-button v-on:click="debugTest" type="is-primary"> Test </b-button> -->
-  <!-- <p>Test id: {{module.id }} </p> -->
-  <!-- <h5> [ Module {{ module.name }} ] </h5> -->
-  <div class="property" v-for="p in properties">
-    <div class="property-box" v-if="p.type==='eulerPose'">
-      <h3> {{ p.label }} </h3>
-      <div v-if="false">
-        <label> Frame: </label>
-          <!-- split-variant="outline-dark" -->
-        <b-dropdown variant="dark" id="dropdown-1" v-bind:text="referenceFrames[p.value.frameId]" class="m-md-2">
-          <template v-for="(frame, key) in referenceFrames">
-            <b-dropdown-item v-on:click="p.value.frameId = key" href="#"> {{frame}} </b-dropdown-item>
-          </template>
-      </b-dropdown>
-      </div>
-      <h6> Position [mm]</h6>
-      <template v-for="(dir, key) in p.value.position">
-        <label>{{key}}:</label>
-        <input class="position-input" type="text" v-model="p.value.position[key]">
-      </template>
-      <br> <br>
-
-      <h6> Orientation [deg]</h6>
-      <template v-for="(dir, key) in p.value.orientation">
-        <label>{{key}}:</label>
-        <input class="position-input" type="text" v-model="p.value.orientation[key]">
-      </template>
-      <br> <br>
-
-      <b-button v-if="robotIsMoving" v-on:click="stopRobot" type="is-primary">
-        Stop Robot
-      </b-button>
-      <b-button v-else v-on:click="moveToPosition" type="is-primary">
-        Move Robot </br> to Reference
-      </b-button>
-
-      <!-- <b-button v-if="robotIsCoupledToPose" v-on:click="stopRobot" type="is-primary"> -->
-        <!-- Uncouple Robot -->
-      <!-- </b-button> -->
-      <b-button v-if="!(robotIsMoving)" v-on:click="setToRobotPosition" type="is-primary">
-        Set to </br> Robot Position
-      </b-button>
+<div class="side-menu">
+  <div class="side-menu-header">
+    <h1> {{ module.title }} </h1>
+    <div v-if="robotIsMoving" @click="stopRobot" class="aica-button danger" id="run-module">
+      <p> Stop Moving </p>
     </div>
-
-    <div class="property-box" v-else-if="p.type==='pos3' || p.type==='vec3'">
-      <h6> {{p.label}} </h6>
-      <template v-for="(dir, key) in p.value">
-        <label>{{key}}:</label>
-        <input class="position-input" type="text" v-model="p.value[key]">
-      </template>
-    </div>
-
-    <div class="property-box" v-else-if="p.type==='slider'">
-      <label> {{ p.label }} </label>
-      <input class="slider-input" type="text" v-model="p.value">
-
-      <b-field class="slider-field">
-        <b-slider rounded
-                  :tooltip="false"
-                  :min="p.settings.min"
-                  :max="p.settings.max"
-                  :step="p.settings.step"
-                  v-model="p.value">
-          <template v-for="val in getSliderTicks(p.settings)">
-              <b-slider-tick :value="val" :key="val">
-                {{ val.toFixed(p.settings.floatDigits) }}
-                <!-- {{ val }} -->
-              </b-slider-tick>
-          </template>
-         </b-slider>
-      </b-field>
-    </div>
-
-    <div class="property-box" v-else-if="p.type==='database'">
-      <ModuleDataList
-        :module="module"
-        :robotIsMoving="robotIsMoving"
-        :multipleRecordings="false"
-        @setRobotStateMoving="setRobotStateMoving"
-        @stopRobot="stopRobot"
-        />
-    </div>
-
-    <div class="property-box" v-else>
-      <h4 :for="p.name">{{p.label||p.name}}:</h4>
-      <input type="text" v-model="p.value">
+    <div v-else @click="executeModule" class="aica-button" id="run-module">
+      <p> Run Module </p>
     </div>
   </div>
-  <!-- </br> -->
 
-  <b-button v-on:click="save" type="is-primary"> Save </b-button>
-  <b-button v-on:click="cancel" type="is-danger"> Cancel </b-button>
-  <!-- <button class="save-button" @click.prevent="save">Save</button> -->
+  <div class="property-panel side-menu-body">
+     <div class="property" v-for="p in properties">
+      <div class="property-box" v-if="p.type==='eulerPose'">
+        <h2> {{ p.label }} </h2>
+        <div v-if="false">
+          <label> Frame: </label>
+            <!-- split-variant="outline-dark" -->
+          <b-dropdown variant="dark" id="dropdown-1" v-bind:text="referenceFrames[p.value.frameId]" class="m-md-2">
+            <template v-for="(frame, key) in referenceFrames">
+              <b-dropdown-item v-on:click="p.value.frameId = key" href="#"> {{frame}} </b-dropdown-item>
+            </template>
+        </b-dropdown>
+        </div>
+        <h3> Position [mm]</h3>
+        <template v-for="(dir, key) in p.value.position">
+          <label>{{key}}:</label>
+          <input class="position-input" type="text" v-model="p.value.position[key]">
+        </template>
+        <br> <br>
+
+        <h3> Orientation [deg]</h3>
+        <template v-for="(dir, key) in p.value.orientation">
+          <label>{{key}}:</label>
+          <input class="position-input" type="text" v-model="p.value.orientation[key]">
+        </template>
+        <br> <br>
+
+        <div class="reference-button-container">
+          <div v-if="robotIsMoving" @click="stopRobot" class="aica-button danger reference-button">
+            <p> Stop Robot </p>
+          </div>
+          <div v-else @click="moveToPosition" class="aica-button" id="move-reference reference-button">
+            <p> Move Robot </br> to Reference </p>
+          </div>
+
+          <div v-if="!(robotIsMoving)" @click="setToRobotPosition" class="aica-button reference-button">
+            <p> Set to </br> Robot Position </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="property-box" v-else-if="p.type==='pos3' || p.type==='vec3'">
+        <h3> {{p.label}} </h3>
+        <template v-for="(dir, key) in p.value">
+          <label>{{key}}:</label>
+          <input class="position-input" type="text" v-model="p.value[key]">
+        </template>
+      </div>
+
+      <div class="property-box" v-else-if="p.type==='slider'">
+        <label> {{ p.label }} </label>
+        <input class="slider-input" type="text" v-model="p.value">
+
+        <b-field class="slider-field">
+          <b-slider rounded
+                    :tooltip="false"
+                    :min="p.settings.min"
+                    :max="p.settings.max"
+                    :step="p.settings.step"
+                    v-model="p.value">
+            <template v-for="val in getSliderTicks(p.settings)">
+                <b-slider-tick :value="val" :key="val">
+                  {{ val.toFixed(p.settings.floatDigits) }}
+                  <!-- {{ val }} -->
+                </b-slider-tick>
+            </template>
+           </b-slider>
+        </b-field>
+      </div>
+
+      <div class="property-box" v-else-if="p.type==='database'">
+        <ModuleDataList
+          :module="module"
+          :robotIsMoving="robotIsMoving"
+          :multipleRecordings="false"
+          @setRobotStateMoving="setRobotStateMoving"
+          @stopRobot="stopRobot"
+          />
+      </div>
+
+      <div class="property-box" v-else>
+        <h4 :for="p.name">{{p.label||p.name}}:</h4>
+        <input type="text" v-model="p.value">
+      </div>
+    </div>
+
+    <div id="save-button-container">
+      <div @click="stopRobot" class="aica-button reference-button">
+         <p> Save </p>
+      </div>
+      <div @click="setToRobotPosition" class="aica-button critical reference-button">
+        <p> Cancel</p>
+       </div>
+    </div>
+
+  </div>
 </div>
 </template>
 
@@ -221,7 +231,7 @@ export default {
       this.$emit('stopRobot')
     },
     executeModule () {
-      // console.log('Execute')
+      console.log('@VueBlockProperty: Execute')
       this.setRobotStateMoving()
       // console.log('module')
       console.log(this.module)
@@ -408,62 +418,45 @@ export default {
 </script>
 
 <style lang="less" scoped>
-h1 {
-    color: black;
-}
+@import './../assets/styles/main.less';
 
-h2 {
-    color: black;
-}
-
-.property-panel {
+#run-module {
     position: absolute;
-    right: 0;
-    top: 60px;
+    top: @header-height*0.3;
+    right: @header-padding-sideways;
+}
 
-    width: 300px;
-    // min-height: 200px;
-    // min-height: 200px;
-    box-sizing: border-box;
-    padding: 8px;
-p
-    background: #87adc4;
-    // border: 5px solid #000000;
-    border: 2px solid	#FFFFFF;
-    border-radius: 15px;
+.reference-button-container{
+    display: grid;
+    grid-template-columns: auto auto;
+    // flex-direction: row;
+    // justify-content: center;
 
-    .property {
-        background:  #4c7c9a ;
-        border: 2px solid	#000000;
-        border-radius: 5px;
+    .reference-button{
 
-        padding: 5px;
-        margin-top: 5px;
     }
 }
 
-.property-box {
-    // text-color:
+.property-panel {
+    .property {
+        border-bottom: 1px solid @color-border;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
 }
 
-.save-button {
-    margin-top: 10px;
-    // left: 50%;
-    // left: 100px;
-    font-size: 20px;
-    border-radius: 4px;
-    margin-left: 40%;
-    bottom: 10px;
+#save-button-container {
+    position: absolute;
+    right: @sidebar-width*0.08;
+    bottom: $right*1.5;
 
-    // margin-left: 0;
-    // margin-right: 0;
-    // position: absolute;
-    // left: 50%;
-    // -ms-transform: translateX(-50%);
-    // transform: translateX(-50%)
-    // -ms-transform: translate(-50%, -50%);
-    // transform: translate(-50%, -50%);
+    // padding: 20px;
+
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-column-gap: $right;
 }
+
 
 .dropdown-1 {
     position: relative;

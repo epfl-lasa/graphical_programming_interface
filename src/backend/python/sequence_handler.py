@@ -91,7 +91,6 @@ class SequenceHandler(Node):
         self.movement_execution_in_progress = True
         self._MainRosHandler.publisher_trajectory.publish(msg)
 
-
     # @staticmethod
     # dep get_module_reference(self, self.sequence_it):
         

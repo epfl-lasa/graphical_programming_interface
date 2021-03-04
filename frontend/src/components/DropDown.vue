@@ -1,5 +1,5 @@
 <template>
-<div id="dropdown-list"
+<div class="dropdown-list"
      :style="dropDownStyle">
   <!-- TODO: separate element -->
   <template v-if="selectionType==='block'">
@@ -45,6 +45,9 @@ export default {
   // console.log(this.$parent.linkingMode)
   // console.log(this.$parent.linking)
   // },
+  mounted () {
+    console.log('@Dropdon: It is up now')
+  },
   data () {
     return {
     }
@@ -98,29 +101,25 @@ export default {
 
 
 <style lang="less" scoped>
+@import './../assets/styles/main.less';
+
+.dropdown-list {
+    position: fixed;
+    z-index: 2;
+}
 
 .dropdown-element {
     margin: 5px;
     padding: 10px 15px;
 
-    border-radius: 10px;
-
     font-size: 20px;
 
-    border-color: black;
-    background:#303030;
-    color: #cccccc;
+    border-style: solid;
+    border-color: @color-main-medium;
+    border-width: 1px;
+    border-radius: 10px;
 
-}
-
-#dropdown-list {
-    // position: absolute;
-    // position: static;
-    // position: absolute;
-    position: absolute;
-    border: black;
-    color: grey;
-
-    z-index: 2;
+    background:@color-main-dark;
+    color: @fontcolor-main;
 }
 </style>

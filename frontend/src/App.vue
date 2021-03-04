@@ -1,13 +1,7 @@
 <template>
-  <!-- <div v-if="IS_DEBUGGING"> -->
-  <!--   <LoadSave -->
-  <!--     ref="loadsave" -->
-  <!--     class="loadsave" -->
-  <!--     /> -->
-  <!--   <\!-- :localFiles="localFiles" -\-> -->
-  <!-- </div> -->
   <div id="app">
     <Header
+      v-if="false"
       ref="header"
       class="header"
       :drawMode="isInDrawingMode"
@@ -19,17 +13,22 @@
 
     <template v-if="true">
     <!-- <template v-if="(appMode==='main' || appMode==='programming')"> -->
-      <!-- TODO: create drawing sub-app ? -->
+        <!-- TODO: create drawing sub-app ? -->
+
+        <!-- WHY DID FOLLOWING TWO NOT WORK AS PART OF VueBlocksContainer -->
+        <!-- TODO: investigate... -->
+        <!-- @contextmenu.native="showContextMenu" -->
+        <!-- @click.native="closeContextMenu" -->
+
+        <!-- ref="container" -->
       <VueBlocksContainer
-        @contextmenu.native="showContextMenu"
-        @click.native="closeContextMenu"
         ref="container"
         :blocksContent="blocks"
         :scene.sync="scene"
         @blockSelect="selectBlock"
         @blockDeselect="deselectBlock"
-        class="container"
         @updateBackendProgram="updateBackendProgram"/>
+      <!-- class="container" -->
 
       <template v-if="selectedBlock">
         <VueBlockProperty
@@ -54,8 +53,6 @@
       </template>
     </template>
 
-      <!-- <template v-if="false"> -->
-    <!-- <template v-if="true"> -->
     <template v-if="loadSaveMode">
       <LoadSave
         ref="loadsave"
@@ -106,7 +103,7 @@ export default {
     // For Debugging & Development
     this.loadLibraries()
     // this.loadScene('default')
-    this.loadScene('three_object_check')
+    this.loadScene('default')
     this.loadedLibrary = 'polishing_machine'
 
     setTimeout(() => {
@@ -210,7 +207,7 @@ export default {
       axios.get(goal,
                 {'params': {'scene': this.scene}})
         .then(response => {
-          console.log(response.statusText)
+          console.log('@App:' + response.statusText)
         })
         .catch(error => {
           console.log('@app: Error when updating backend.')
@@ -359,6 +356,7 @@ export default {
       this.contextMenu.mouseX = e.x
       this.contextMenu.mouseY = e.y
 
+      console.log('@App: context menu')
       this.$nextTick(function () {
         this.setMenu(e.y, e.x)
         this.$refs.contextMenu.focus()
@@ -374,7 +372,9 @@ export default {
     setMenu (top, left) {
       // TODO remove from main app since list not existant anymore
       let border = 5
+      console.log('@App: setMenu')
       let contextMenuEl = this.$refs.contextMenu
+      console.log('contextMenuEl', contextMenuEl)
       let containerElRect = this.$refs.container.$el.getBoundingClientRect()
       let largestWidth = containerElRect.right - contextMenuEl.offsetWidth - border
       let largestHeight = containerElRect.bottom - contextMenuEl.offsetHeight - border
@@ -428,42 +428,91 @@ export default {
 </style>
 
 <style lang="less">
-  html, body {
+@import './assets/styles/main.less';
+
+html, body {
     margin: 0;
     padding: 0;
-  }
+    color: @fontcolor-main;
+}
 
-  html {
+html {
     width: 100vw;
     height: 100vh;
-  }
+}
 
-  body {
+body {
     width: 100%;
     height: 100%;
-    background-color: #0e1624;
-  }
+    background-color: @color-main-black;
+    color: fontcolor-main;
+}
 
-  h1 {
-      fontsize: 20px;
-  }
+h1 {
+    font-size: 30px;
+}
 
-  #app {
-      // width: 100%;
-      // height: 100%;
-      width: ~"calc(100% - 00px)";
-      height: ~"calc(100% - 60px)";
-  }
+h2 {
+    font-size: 20px;
+    // color: @fontcolor-main;
+}
 
-  .container {
-      width: 100%;
-      // height: 95%;
-      height: ~"calc(100% - 50px)";
-  }
 
-  #contextMenu {
-    // TODO remove from main app
-      position: absolute;
+#app {
+    // top: @header-height;
+    width: 100%;
+    height: 100%;
+}
+
+.side-menu {
+    // opacity: 1.0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-width: 0;
+    height: 100%;
+    z-index: 4;
+
+    right: 0;
+    width: @sidebar-width;
+    padding: 0;
+    border: 0;
+    // box-sizing: border-box;
+
+    .side-menu-header {
+        background: @color-main-medium;
+        height: @header-height;
+
+        padding-top: @header-height*0.2;
+        // padding-bottom: auto;
+        padding-left: @header-padding-sideways;
+        padding-right: @header-padding-sideways;
+
+        // text-align: left;
+        // display: flex;
+        // flex-direction: row;
+    }
+
+    .side-menu-body {
+        background-color: @color-main-mediumbright;
+        top: @header-height;
+        height: ~"calc(100% - @{header-height})";
+        padding:30px;
+        padding-top: 10px;
+    }
+}
+
+// .container {
+    // Warning: now container class anymore...
+    // max-width: none;
+    // width: 100%;
+    // height: 100%;n
+    // height: ~"calc(100% - 65px)";
+    // padding: none;
+// }
+
+#contextMenu {
+    position: absolute;
     z-index: 1000;
     background: white;
     border: 1px solid black;
@@ -471,16 +520,23 @@ export default {
     margin: 0;
 
     li {
-      &.label{ s
-        color: gray;
-        font-size: 90%;
-      }
-      list-style: none;
+        &.label{
+            color: gray;
+            font-size: 90%;
+        }
+        list-style: none;
     }
 
     &:focus {
-      outline: none;
+        outline: none;
     }
-  }
+}
 
+.button {
+    &.danger{
+    }
+
+    &.focus{
+    }
+}
 </style>
