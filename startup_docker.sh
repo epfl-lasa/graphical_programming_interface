@@ -18,7 +18,7 @@ tmux send-keys "cd frontend; npm run dev" C-m
 # tmux split-window -h -t $session
 tmux split-window -t $session:2 -n 'editor'
 # tmux new-window -t $session:2 -n 'editor'
-tmux send-keys "emacs run.py &" C-m
+# tmux send-keys "emacs run.py &" C-m
 
 # TODO: in one window?
 # tmux split-window -h

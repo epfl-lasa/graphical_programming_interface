@@ -16,6 +16,7 @@
     "bootstrap-vue": "^2.21.2",
     "buefy": "^0.9.4",
     "deepmerge": "^4.2.2",
+    "plotly.js-dist": "^1.58.4",
     "sass": "^1.32.0",
     "sass-loader": "^7.3.1",
     "vue": "^2.6.12",

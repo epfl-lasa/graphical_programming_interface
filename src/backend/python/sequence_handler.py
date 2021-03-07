@@ -18,12 +18,14 @@ from std_msgs.msg import String
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
 
+# TO DEFINE
+PathAction = 0 
 
 class SequenceHandler(Node):
     def __init__(self, MainRosHandler, sequence=[],
                  max_sequence_loops=-1 ):
         super().__init__('sequence_handler')
-
+        
         self._MainRosHandler = MainRosHandler
 
         # Sequence Rememberer & Current State in the sequence
@@ -206,6 +208,12 @@ class SequenceHandler(Node):
 
         print('Done looping')
         return 0
+
+    def execute_callback(self, goal_handle):
+        self.get_logger().info('Executing goal...')
+        result = PathAction.Result()
+        return result
+
 
     def callback_loop_succesfull(self, msg):
         ''' Returns true if module is exectued. '''

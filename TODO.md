@@ -1,35 +1,29 @@
 # Extensive Todo List for Possible Projects
 
+# Fixes
+> Number input on touch pad (!?)
+
+> Table choosing on touchpad (?)
+
+> Don't update when blocks are only 'moved' & update block only
+Status: postponed
+
+
 # Features
-> Replay Data
-Status: testing
-- IMPORTANT: when moving to initial point, this should happen without force!
+> AI / Learning algorithms
 
-> Run Module
-Status: implemented
-
-> Sequence Replay:
-Check exact sequence.x
-
-> Record Data & display
-Status: Todo
+> Visualize Robot
 
 > Include time in recording?
 Status: postponed
 
-> Frontend menu etc.
+> Status: maybe (?)
 
-> Status: maybe
-
-> Put default position for 
+> Submodules (!)
 
 > Global check if everything is saved.
 
-> Highlight selected block
-
-> Visualize force (?)
-
-> Code-Generation
+> Code-Generation / Python based
 status: postponed / how or why should this be done
 
 > Learn Motion (send to file)
@@ -38,23 +32,20 @@ status: investigatio for best use
 > Get Reference Frames (?) HOW?
 status: not urgent
 
+> Hide show Menus
+
+> Tabs for properties
+
+> Tabs for position previous next
+
+> Use IMU to move
+
+> Connect to Robots (Add new robots)
+
+> Matrix-based position (how to implement)
 
 
-# Update
-> Front-end with design (!)
-Status: Urgent
-
-> Check closing of loop in front-end
-Status: Now
-
+# Update / Improvement
 > Improved storage structure!
 Status: postponed
 
-> 
-
-# Bug fixes
-> Unselect Module (directly at startup)?
-Status: postponed
-
-> Don't update when blocks are only 'moved'
-Status: postponed

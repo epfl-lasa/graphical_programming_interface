@@ -1,0 +1,35 @@
+/* comibine less & css as one variable..*/
+
+/* HINT: Get / set variables */
+/* getComputedStyle(document.documentElement) */
+/* .getPropertyValue('--my-variable-name'); // #999999 */
+/* document.documentElement.style */
+/* .setProperty('--my-variable-name', 'pink'); */
+:root {
+  /* Colorscheme */
+  --color-main-black: #000000;
+  --color-main-dark: #1F1F1F;
+  --color-main-medium: #262626;
+  --color-main-mediumbright: #323232;
+  --color-main-bright: #E7E7E7;
+
+  --color-ok: #4CBF6E;
+  --color-warning: #B7B7B7;
+  --color-danger: #FA573A;
+
+  --fontcolor-main: #E7E7E7;
+
+  --color-border: #E7E7E7;
+
+  /* Dimensions */
+  --color-highlight1-bright: #006cf5;
+  --color-highlight1-dark: #0045f5;
+  --color-highlight2-bright: #00cc4f;
+  --color-highlight2-dark: ##00a950;
+  --color-highlight3-bright: ##ff4e2f;
+  --color-highlight3-dark: #ff230d;
+}
+
+:root {
+
+}

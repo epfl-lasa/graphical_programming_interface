@@ -116,6 +116,25 @@ def getcurrentrobotposition():
 # ----------------------------------------
 #   Record Data for a specific Module
 # ----------------------------------------
+
+@app.route('/startforcerecording')
+def startforcerecording():
+    status = RosMainHandler.start_force_recording()
+    return '0: success'
+
+@app.route('/stopforcerecording')
+def stopforcerecording():
+    status = RosMainHandler.stop_force_recording()
+    return '0: success'
+
+@app.route('/updateforcedata')
+def updateforcedata():
+    data_dict = RosMainHandler.update_force_data()
+    return data_dict
+
+# ----------------------------------------
+#   Record Data for a specific Module
+# ----------------------------------------
 @app.route('/recordmoduledatabase/<int:my_id>')
 def recordmoduledatabase(my_id):
     # print('@run: Start recording')

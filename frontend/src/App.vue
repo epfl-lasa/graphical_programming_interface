@@ -2,7 +2,7 @@
 <div id="app">
   <FloatingHeaderComponents
     ref="floatingHeaderComponents"
-    :showRightIcon="selectedBlocks || loadedLibrary"
+    :showRightIcon="selectedBlock || loadedLibrary"
     :drawMode="isInDrawingMode"
     :modules="modules"
     :robotIsMoving="robotIsMoving"
@@ -11,30 +11,12 @@
     @showLibrary="loadedLibrary = true"
     />
 
-  <!-- :showRightIcon="selectedBlocks || loadedLibrary" -->
-  <!-- class="header" -->
-
-    <!-- <Header -->
-    <!--   v-if="false" -->
-    <!--   ref="header" -->
-    <!--   class="header" -->
-    <!--   :drawMode="isInDrawingMode" -->
-    <!--   :modules="modules" -->
-    <!--   :robotIsMoving="robotIsMoving" -->
-    <!--   @setRobotStateMoving="setRobotStateMoving" -->
-    <!--   @stopRobot="stopRobot" -->
-    <!--   /> -->
+  <DataVisualizaton v-if="true"
+    ref="dataVisualizationTab"
+    :desiredProperties="null"
+    />
 
     <template v-if="true">
-    <!-- <template v-if="(appMode==='main' || appMode==='programming')"> -->
-        <!-- TODO: create drawing sub-app ? -->
-
-        <!-- WHY DID FOLLOWING TWO NOT WORK AS PART OF VueBlocksContainer -->
-        <!-- TODO: investigate... -->
-        <!-- @contextmenu.native="showContextMenu" -->
-        <!-- @click.native="closeContextMenu" -->
-
-        <!-- ref="container" -->
       <VueBlocksContainer
         ref="container"
         :blocksContent="blocks"
@@ -42,7 +24,6 @@
         @blockSelect="selectBlock"
         @blockDeselect="deselectBlock"
         @updateBackendProgram="updateBackendProgram"/>
-      <!-- class="container" -->
 
       <template v-if="selectedBlock">
         <VueBlockProperty
@@ -93,6 +74,8 @@ import FloatingHeaderComponents from './components/FloatingHeaderComponents'
 import LoadSave from './components/LoadSave'
 import VueModuleLibrary from './components/VueModuleLibrary'
 
+import DataVisualizaton from './components/DataVisualization'
+
 import axios from 'axios' // Needed to pass. Only temporarily?
 
 // import {blocks, links} from '../../backend/userdata/default_data.json'
@@ -104,9 +87,18 @@ export default {
     LoadSave,
     VueBlocksContainer,
     VueBlockProperty,
-    VueModuleLibrary
+    VueModuleLibrary,
+    DataVisualizaton
   },
   mounted () {
+    // TODO: Create base instant
+    // export const HTTP = axios.create({
+      // baseURL: `http://jsonplaceholder.typicode.com/`,
+      // headers: {
+        // Authorization: 'Bearer {token}'
+      // }
+    // })
+
     // alert('Your screen resolution is: ' + screen.width + 'x' + screen.height)
     // axios.get(this.$localIP + `/startup/`, {'params': {}})
     // .then(response => {
@@ -446,6 +438,8 @@ export default {
 
 <style lang="less">
 @import './assets/styles/main.less';
+@import './assets/styles/main.css';
+
 
 html, body {
     margin: 0;

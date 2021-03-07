@@ -86,7 +86,6 @@ cd frontend/src/main.js
 For local development only, you can set it to 'localhost'
 
 
-
 ## Run using Docker
 Build the Dockerimage. In a second window, build and run the backend. In the first window, run the Dockerimage and run the following code
 ``` 

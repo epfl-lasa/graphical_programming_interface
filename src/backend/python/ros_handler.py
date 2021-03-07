@@ -10,7 +10,6 @@ import os
 import sys
 import copy
 import warnings
-import time
 import threading
 
 import yaml
@@ -28,9 +27,11 @@ from nav_msgs.msg import Path
 from geometry_msgs.msg import WrenchStamped, Pose, PoseStamped
 
 from rclpy.parameter import Parameter
+# from rclpy.action import ActionClient
 
 # Personal library
 from sequence_handler import SequenceHandler
+from force_listener import ForceListener
 
 # Initialize(?)
 rclpy.init()
@@ -77,10 +78,15 @@ class RosHandler(Node):
             
         # self.publisher_controller = self.create_publisher(String, self.controller_topic, 10)
         # self.publisher_trajectory = self.create_publisher(String, self.controller_topic, 10)
+
+        # Force Listener Noe [initialize only later]
+        self.force_listener = None
         
         # Do stuff
         self.emergency_stop_activated = False
         self.data_recording = True
+
+        self.start_time = self.get_clock().now().to_msg()
 
         self.DataHandler = DataHandler
 
@@ -107,7 +113,7 @@ class RosHandler(Node):
 
     @robot_is_moving.setter
     def robot_is_moving(self, value):
-        # import pdb; pdb.set_trace()
+
         if value:
             self.publisher_stop.publish(Bool(data=False))
         else:
@@ -223,6 +229,29 @@ class RosHandler(Node):
         return status_message
 
     ################################################
+    ### Force Recordingh
+    ################################################
+    def start_force_recording(self):
+        ''' Activate or initialize force listener. '''
+        if self.force_listener is None:
+            self.force_listener = ForceListener(start_time=self.start_time)
+
+        self.force_listener.activate()
+        return 0
+
+    def stop_force_recording(self):
+        ''' Deactivate force recording, but dont delete node yet.'''
+        self.force_listener.deactivate()
+        return 0
+
+    def update_force_data(self):
+        ''' Send data back'''
+        if self.force_listener is None:
+            self.start_force_recording()
+            
+        return self.force_listener.get_updated_data()
+
+    ################################################
     ### Get position and states
     ################################################
     def get_current_robot_joint_position(self):
@@ -239,11 +268,9 @@ class RosHandler(Node):
                 warnings.warn('Maximum iterations reached wihout position')
                 return ' '
             it += 1
-
             rclpy.spin_once(node=self, timeout_sec=time_sleep)
 
         euler_data = self.transform_poseROS_to_eulerPose(self.msg_robot_pose)
-        
         return {'pose': euler_data}
     
     def record_module_database(self, module_id, DataHandler, max_recording=1000, time_sleep=0.1):
@@ -384,16 +411,6 @@ class RosHandler(Node):
     def callback_ft_sensor(self, msg):
         '''ROS callback '''
         self.msg_ft_sensor = msg
-        
-class ListenerFt(Node):
-    def __init__(self, topic="/ft_sensor/netft_data", ):
-        ''' ''' 
-        self.topic = topic
-
-    def callback_msg(self, msg):
-        ''' Get message '''
-        
-
 
 
 
