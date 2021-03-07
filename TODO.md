@@ -13,6 +13,7 @@ Status: postponed
 > AI / Learning algorithms
 
 > Visualize Robot
+Status: postponed
 
 > Include time in recording?
 Status: postponed

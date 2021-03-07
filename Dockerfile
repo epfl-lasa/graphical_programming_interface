@@ -1,4 +1,4 @@
- ARG ROS_VERSION=foxy
+ARG ROS_VERSION=foxy
 
 FROM ros2_ws:${ROS_VERSION}
 
@@ -23,11 +23,27 @@ COPY --chown=${USER} ./src ./src
 # WORKDIR ${HOME}/frontend
 # RUN npm install
 
+# Build specific directories
+RUN mkdir -p ${HOME}/ros2_ws/src/modulo_msgs
+WORKDIR ${HOME}/ros2_ws/src/modulo_msgs
+RUN git init \
+    && git remote add -f origin https://github.com/epfl-lasa/modulo.git \
+    && git config core.sparsecheckout true \
+    && echo source/packages/modulo_msgs/ >> .git/info/sparse-checkout 
+RUN git pull origin feature/use_controller_libraries
+        
+# ROS workspace update & install
+# Build ROS working direcotry
+# RUN mkdir -p ${HOME}/ros2_ws/src
+WORKDIR ${HOME}/ros2_ws/
+RUN rosdep update
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash; colcon build --symlink-install"
+
+# Setup python environment & share it
 WORKDIR ${HOME}/src/backend
 RUN pip3 install -r requirements.txt
 SHELL ["/bin/bash", "--login", "-c"]
-
-
 
 # Clean image
 RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*

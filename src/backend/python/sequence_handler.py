@@ -18,12 +18,19 @@ from std_msgs.msg import String
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
 
-# TO DEFINE
-PathAction = 0 
+# TODO: replace with actual action
+import sys
+import os
+
+path_to_action = os.path.join(
+    "src", "backend", "ros", "modulo", "source", "packages", "modulo_msgs", "action")
+if not path_to_action in sys.path:
+    sys.path.append(path_to_action)
+    
 
 class SequenceHandler(Node):
     def __init__(self, MainRosHandler, sequence=[],
-                 max_sequence_loops=-1 ):
+                 max_sequence_loops=-1):
         super().__init__('sequence_handler')
         
         self._MainRosHandler = MainRosHandler
