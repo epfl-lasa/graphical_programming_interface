@@ -31,6 +31,7 @@ from data_handler import DataHandler
 DataLocalHandler = DataHandler(dir_path)
 
 from ros_handler import RosHandler
+RosHandler.initialize_ros()
 RosMainHandler = RosHandler(DataHandler=DataLocalHandler)
 
 app = Flask(__name__,
@@ -91,12 +92,15 @@ def movetoposition(*args, **kwargs):
     # Start / end position
     status = RosMainHandler.move_to_position(euler_pose=euler_pose)
 
+    print('TODO: Unset robot moving in front-end')
     return '0: Success'
 
 @app.route('/executemodule/<int:module_id>')
 def executemodule(module_id):
-    # Start / end position
+    ''' Start / end position. '''
     status = RosMainHandler.execute_module(module_id=module_id)
+    
+    print('TODO: Unset robot moving in front-end')
     return '0: Success'
 
 @app.route('/executesequence')

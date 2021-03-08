@@ -4,9 +4,10 @@ import datetime
 # ROS2 utils
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionServer
 
 # ROS messages
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Float32
 from nav_msgs.msg import Path
 from geometry_msgs.msg import WrenchStamped, Pose, PoseStamped
 
@@ -15,8 +16,8 @@ from rclpy.parameter import Parameter
 # Personal library
 from sequence_handler import SequenceHandler
 
-# Initialize(?)
-rclpy.init()
+# Custom action & messages
+from modulo_msgs.action import FollowPath
 
 
 class ControllerNodeSimulator(Node):
@@ -37,6 +38,11 @@ class ControllerNodeSimulator(Node):
         self.publisher_success = self.create_publisher(
             Bool, self.topic_names['controller_success'], 2)
 
+        self._action_server = ActionServer(self,
+                                         FollowPath,
+                                         'follow_path',
+                                         self.callback_execute_action)
+
         self.robot_is_moving = False
 
         print('Start spinning')
@@ -44,6 +50,7 @@ class ControllerNodeSimulator(Node):
         
     def __del__(self):
         rclpy.shutdown()
+        print('\n\n Stop spinning\n\n')
 
     @staticmethod
     def get_date_str():
@@ -65,6 +72,9 @@ class ControllerNodeSimulator(Node):
         # else:
             # print('
 
+    ##########################################
+    ### Callbacks
+    ##########################################
     def callback_trajectory(self, msg):
         print('@ {}'.format(self.get_date_str()))
         print('@Controller Recieved msg_type <{}> of length {}'.format(type(msg), len(msg.poses)))
@@ -81,7 +91,31 @@ class ControllerNodeSimulator(Node):
             print('@Controller: sending stopped inbetween')
             self.publisher_success.publish(Bool(data=False))
 
+
+    def callback_execute_action(self, goal_handle, max_it=3):
+        ''' No result being returned. '''
+        path = goal_handle.request.path
+        print('Requested path execution: path')
+        self.get_logger().info('Exectuing goal...')
+        feedback_msg = FollowPath.Feedback()
+        # feedback_msg.percentage_of_completion = Float32(data=0.0)
+        feedback_msg.percentage_of_completion = float(0.0)
         
+        for ii in range(max_it):
+            print('Loop loop at {}%'.format(round(100.0*ii/max_it, 0)))
+            time.sleep(0.5)
+            feedback_msg.percentage_of_completion = float(1.0*(ii+1)/max_it)
+
+            goal_handle.publish_feedback(feedback_msg)
+
+        goal_handle.succeed()
+
+        print('About to send result')
+        # Return empty result
+        result = FollowPath.Result()
+        return result
 
 if (__name__) == "__main__":
+    # Initialize(?)
+    rclpy.init()
     node = ControllerNodeSimulator()

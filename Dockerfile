@@ -24,24 +24,27 @@ COPY --chown=${USER} ./src ./src
 # RUN npm install
 
 # Build specific directories
-RUN mkdir -p ${HOME}/ros2_ws/src/modulo_msgs
-WORKDIR ${HOME}/ros2_ws/src/modulo_msgs
+RUN mkdir -p ${HOME}/ros2_ws/src/modulo
+WORKDIR ${HOME}/ros2_ws/src/modulo
+RUN chown ${USER}:${USER} .
 RUN git init \
     && git remote add -f origin https://github.com/epfl-lasa/modulo.git \
     && git config core.sparsecheckout true \
-    && echo source/packages/modulo_msgs/ >> .git/info/sparse-checkout 
-RUN git pull origin feature/use_controller_libraries
+    && echo source/packages/modulo_msgs/ >> .git/info/sparse-checkout \
+    && git pull origin feature/use_controller_libraries
         
 # ROS workspace update & install
 # Build ROS working direcotry
 # RUN mkdir -p ${HOME}/ros2_ws/src
 WORKDIR ${HOME}/ros2_ws/
+RUN chown ${USER}:${USER} .
 RUN rosdep update
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash; colcon build --symlink-install"
 
 # Setup python environment & share it
 WORKDIR ${HOME}/src/backend
+RUN chown ${USER}:${USER} .
 RUN pip3 install -r requirements.txt
 SHELL ["/bin/bash", "--login", "-c"]
 

@@ -18,15 +18,7 @@ from std_msgs.msg import String
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
 
-# TODO: replace with actual action
-import sys
-import os
-
-path_to_action = os.path.join(
-    "src", "backend", "ros", "modulo", "source", "packages", "modulo_msgs", "action")
-if not path_to_action in sys.path:
-    sys.path.append(path_to_action)
-    
+from modulo_msgs.action import FollowPath
 
 class SequenceHandler(Node):
     def __init__(self, MainRosHandler, sequence=[],
@@ -39,14 +31,11 @@ class SequenceHandler(Node):
         self.sequence = sequence
         self._sequence_it = 0
 
-        # Check if controller is busy (or not)
-        self.movement_execution_in_progress = False
-
         self.max_sequence_loops = max_sequence_loops
 
-        self.subscription_successfull_execution = self.create_subscription(
-            Bool, self._MainRosHandler.topic_names['controller_success'],
-            self.callback_loop_succesfull, 2)
+        # self.subscription_successfull_execution = self.create_subscription(
+            # Bool, self._MainRosHandler.topic_names['controller_success'],
+            # self.callback_loop_succesfull, 2)
 
         # TIMERS / Create here or in script(?)
         # self.create_timer(timer_period, self.timer_callback)
@@ -63,13 +52,13 @@ class SequenceHandler(Node):
 
     @property
     def movement_execution_in_progress(self):
-        if not self.robot_is_moving:
-            return False
-        return self._movement_execution_in_progress
+        # if not self.robot_is_moving:
+            # return False
+        return self._MainRosHandler.movement_execution_in_progress
         
-    @movement_execution_in_progress.setter
-    def movement_execution_in_progress(self, value):
-        self._movement_execution_in_progress = value
+    # @movement_execution_in_progress.setter
+    # def movement_execution_in_progress(self, value):
+        # self._movement_execution_in_progress = value
         
     @property
     def sequence(self):
@@ -96,9 +85,17 @@ class SequenceHandler(Node):
     def get_euler_pose(seq):
         return seq['values']['property']['reference']['value']
 
-    def publish_trajectory(self, msg):
-        self.movement_execution_in_progress = True
-        self._MainRosHandler.publisher_trajectory.publish(msg)
+    def publish_trajectory(self, msg, force=0, time_sleep=0.02):
+        while self.movement_execution_in_progress:
+            # rclpy.spin_once(node=self, timeout_sec=time_sleep)
+            rclpy.spin_once(node=self._MainRosHandler, timeout_sec=time_sleep)
+
+        if force is not None:
+            self._MainRosHandler.set_force_parameter(force)
+            
+        # self.movement_execution_in_progress = True
+        # self._MainRosHandler.publisher_trajectory.publish(msg)
+        self._MainRosHandler.send_action_path(msg)
 
     # @staticmethod
     # dep get_module_reference(self, self.sequence_it):
@@ -159,31 +156,34 @@ class SequenceHandler(Node):
         if 'force' in self.sequence[sequence_it]['values']['property']:
             desired_force = self.sequence[sequence_it]['values']['property']['force']['value']
             
-        # Only send data once previous task is complete
-        
-        while self.movement_execution_in_progress:
-            # print('@sequence_handler: Waiting for completion')
-            rclpy.spin_once(node=self, timeout_sec=time_sleep)
-
         # Publish / send data
-        self._MainRosHandler.set_force_parameter(desired_force)
-        self.publish_trajectory(msg_path)
+        self.publish_trajectory(msg_path, force=desired_force)
 
-        print('Succesfull execution')
         return 0
         
     def execute_module_including_reseting(self, module_id=None):
         ''' Exectue a module without resetting '''
-        print('Succesfull execution')
-        
         if len(self.sequence) == 0:
             return
         
         if module_id is not None:
+            print('No module sequence found')
+            warnings.warn('No module sequence found')
             self.sequence_it = self.get_position_of_module_id(module_id)
 
         # Move to previous reference position
-        self.publish_trajectory(self.get_euler_pose(self.sequence[self.sequence_it - 1]))
+        pose = PoseStamped()
+        pose.header.frame_id = 'none'
+        # pose.header.stamp = (?)
+        pose.pose = self._MainRosHandler.transform_eulerPose_to_poseROS(
+            self.get_euler_pose(self.sequence[self.sequence_it-1]))
+        msg_path = Path()
+        msg_path.poses.append(pose)
+        print('Doing traj now')
+        self.publish_trajectory(msg_path, force=0)
+        print('Trajectory is done.')
+        
+        # Execute module
         self.execute_module(self.sequence_it)
 
         print('Succesfull execution')
@@ -218,16 +218,15 @@ class SequenceHandler(Node):
 
     def execute_callback(self, goal_handle):
         self.get_logger().info('Executing goal...')
-        result = PathAction.Result()
+        result = FollowPath.Result()
         return result
 
+    # def callback_loop_succesfull(self, msg):
+        # ''' Returns true if module is exectued. '''
+        # self.sequence_it += 1
 
-    def callback_loop_succesfull(self, msg):
-        ''' Returns true if module is exectued. '''
-        self.sequence_it += 1
+        # self.movement_execution_in_progress = False
 
-        self.movement_execution_in_progress = False
-
-        if msg.data is False:
-            warnings.warn('Problem during movement execution.')
+        # if msg.data is False:
+            # warnings.warn('Problem during movement execution.')
         # self.sub_module_completed = True

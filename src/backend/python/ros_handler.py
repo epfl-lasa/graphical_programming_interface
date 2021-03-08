@@ -15,11 +15,13 @@ import threading
 import yaml
 
 # Math / orientation tools
+# import numpy as np
 from scipy.spatial.transform import Rotation
 
 # ROS2 utils
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
 
 # ROS messages
 from std_msgs.msg import Bool
@@ -27,15 +29,14 @@ from nav_msgs.msg import Path
 from geometry_msgs.msg import WrenchStamped, Pose, PoseStamped
 
 from rclpy.parameter import Parameter
-# from rclpy.action import ActionClient
 
 # Personal library
 from sequence_handler import SequenceHandler
 from force_listener import ForceListener
 
-# Initialize(?)
-rclpy.init()
-   
+# Custom action & messages
+from modulo_msgs.action import FollowPath
+
 class RosHandler(Node):
     ''' The datahandler manages the ROS and sending it to the frontend. '''
     topic_names = {
@@ -45,23 +46,32 @@ class RosHandler(Node):
         'ft_sensor': '/ft_sensor/netft_data',
         'robot_pose': '/iiwa/CartesianPosition',
     }
+    
     parameter_name = {
         'controller_force': '/linear_controller/force',
     }
 
+    action_name = {
+        'action_path': '/path/action',
+    }
+
+    @staticmethod
+    def initialize_ros():
+        # Initialize(?)
+        rclpy.init()
+
     def __init__(self, DataHandler=None):
         super().__init__('ros_main_handler')
-       # Spin in a separate thread
+        # Spin in a separate thread
         # self.thread = threading.Thread(target=rclpy.spin, args=(self, ), daemon=True)
         # self.thread.start()
         
-        # Initialize the sequence handler
-        self.SequenceHandler = SequenceHandler(MainRosHandler=self)
         
         # Publisher
         self.publisher_trajectory = self.create_publisher(
             Path, self.topic_names['controller_command'], 2)
-            
+
+        print('got publisher')
         self.publisher_stop = self.create_publisher(
             Bool, self.topic_names['controller_stop'], 2)
 
@@ -75,9 +85,16 @@ class RosHandler(Node):
 
         self.subscription_ft_sensor = self.create_subscription(
             WrenchStamped, self.topic_names['ft_sensor'], self.callback_ft_sensor, 5)
+
+        self._action_client_path = ActionClient(self, FollowPath, 'follow_path')
+
+        # Initialize the sequence handler
+        self.SequenceHandler = SequenceHandler(MainRosHandler=self)
             
         # self.publisher_controller = self.create_publisher(String, self.controller_topic, 10)
         # self.publisher_trajectory = self.create_publisher(String, self.controller_topic, 10)
+
+        self.movement_execution_in_progress = False
 
         # Force Listener Noe [initialize only later]
         self.force_listener = None
@@ -113,7 +130,6 @@ class RosHandler(Node):
 
     @robot_is_moving.setter
     def robot_is_moving(self, value):
-
         if value:
             self.publisher_stop.publish(Bool(data=False))
         else:
@@ -200,6 +216,7 @@ class RosHandler(Node):
     def move_to_position(self, euler_pose):
         ''' Move to specific euler pose.'''
         self.set_force_parameter(0)
+        print('Start moving')
         
         pose = PoseStamped()
         pose.header.frame_id = 'none'
@@ -209,23 +226,72 @@ class RosHandler(Node):
         # Create Path
         msg_path = Path()
         msg_path.poses.append(pose)
-
+        
         self.startup_robot()
-        self.publisher_trajectory.publish(msg_path)
+        # self.publisher_trajectory.publish(msg_path)
+        self.send_action_path(msg_path)
 
+        while(self.movement_execution_in_progress):
+            rclpy.spin_once(node=self, timeout_sec=0.1)
+            
         return 0
+
+    def send_action_path(self, msg_path):
+        self.movement_execution_in_progress = True
+        msg_goal = FollowPath.Goal()
+        msg_goal.path = msg_path
+        
+        self._action_client_path.wait_for_server()
+        self._send_goal_future = self._action_client_path.send_goal_async(
+            msg_goal, feedback_callback=self.callback_path_feedback)
+        self._send_goal_future.add_done_callback(self.callback_goal_response)
+
+    def callback_goal_response(self, future):
+        '''ROS action-callback '''
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().info('Goal rejected.')
+            return
+        
+        self.get_logger().info('Goal accepted.')
+
+        print('finished', goal_handle.status)
+        self._get_result_future = goal_handle.get_result_async()
+        self._get_result_future.add_done_callback(self.callback_goal_result)
+    
+    def callback_goal_result(self, future):
+        '''ROS action-callback '''
+        self.get_logger().info('Goal reached.')
+        self.movement_execution_in_progress = False
+        print('Movement execution')
+        # rclpy.shutdown()
+
+    def callback_path_feedback(self, feedback_msg):
+        '''ROS action-callback '''
+        # No result expected
+        feedback = feedback_msg.feedback
+        self.get_logger().info('Path execution finished: {0}%'.format(
+            round(feedback.percentage_of_completion*100.0, 0)))
 
     def execute_module(self, module_id):
         ''' Run the module '''
         print('TODO: execute sequence')
         self.startup_robot()
         status_message = self.SequenceHandler.execute_module_including_reseting(module_id)
+
+        while(self.movement_execution_in_progress):
+            rclpy.spin_once(node=self, timeout_sec=0.1)
+
         return status_message
 
     def execute_sequence(self, module_id=None):
         ''' Run sequence starting at module_id. If module_id is none.'''
         self.startup_robot()
         status_message = self.SequenceHandler.execute_sequence(module_id)
+
+        while(self.movement_execution_in_progress):
+            rclpy.spin_once(node=self, timeout_sec=0.1)
+        
         return status_message
 
     ################################################
@@ -411,7 +477,6 @@ class RosHandler(Node):
     def callback_ft_sensor(self, msg):
         '''ROS callback '''
         self.msg_ft_sensor = msg
-
 
 
 if (__name__)=="__main__":
