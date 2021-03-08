@@ -1,18 +1,40 @@
 <template>
-<div>
-  <div class="property-panel property-field">
-    <p>
-      <a id="force-graph"></a>
-    </p>
+<div class="side-menu">
+  <div v-if="isActive" class="side-menu-header">
+    <h1> Force Visualization </h1>
+    <img id="buttonCloseLibraries" class="aica-icon-small"
+         src='./../assets/icons/keyboard_arrow_left-white-18dp.svg'
+         @click="hideMenu($event)"
+         @touchstart="hideMenu($event)"
+         >
+    <!-- <div v-if="robotIsMoving" class="aica-button danger" id="run-module" -->
+         <!-- @click="stopRobot($event)" @touchstart="stopRobot($event)" -->
+         <!-- > -->
+      <!-- <p> Stop Moving </p> -->
+    <!-- </div> -->
   </div>
-  <div>
-    <div v-if="backendIsGeneratingData"  class="aica-button"
-         @click="stopForceRecording($event)" @touchstart="stopForceRecording($event)" >
-      <p> Stop Updating </p>
+  <div v-else class="side-menu-header inactive">
+      <img id="buttonCloseLibraries" class="aica-icon-small"
+         src='./../assets/icons/keyboard_arrow_right-white-18dp.svg'
+         @click="showMenu($event)"
+         @touchstart="showMenu($event)"
+         >
+  </div>
+  <div v-if="isActive" class="property-panel side-menu-body">
+    <div class="property-panel property-field">
+      <p>
+        <a id="force-graph"></a>
+      </p>
     </div>
-    <div v-else  class="aica-button" id="button-closing"
-         @click="startForceRecording($event)" @touchstart="startForceRecording($event)">
-      <p> Visualize Force </p>
+    <div>
+      <div v-if="backendIsGeneratingData"  class="aica-button"
+           @click="stopForceRecording($event)" @touchstart="stopForceRecording($event)" >
+        <p> Stop Updating </p>
+      </div>
+      <div v-else  class="aica-button" id="button-closing"
+           @click="startForceRecording($event)" @touchstart="startForceRecording($event)">
+        <p> Visualize Force </p>
+      </div>
     </div>
   </div>
 </div>
@@ -32,9 +54,14 @@ export default {
   // DataVisualization
   // },
   mounted () {
-    this.preparePlot()
-    // this.$emit('update:title', this.title)
-    this.$emit('updateTitle')
+    // TODO: reload when new module is changed
+    if (this.isActive) {
+      this.preparePlot()
+    }
+    // let aa = this.colorDark
+    // console.log(aa)
+    // this.startDataFetching()
+    // this.updateLoopOfData()
   },
   beforeUnmount () {
     console.log('Unmount')
@@ -61,6 +88,7 @@ export default {
       //
       referenceValueY: 10,
       valueRange: [0, 50]
+
     }
   },
   computed: {
@@ -205,8 +233,28 @@ export default {
       }
 
       Plotly.newPlot(this.forceGraph, [refLine, sensorData], layout, {displayModeBar: false})
+    },
+    showMenu (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.isActive = true
+      this.preparePlot()
+    },
+    hideMenu (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.isActive = false
     }
   }
+  // watch: {
+    // isActive (newValue) {
+      // if (newValue) {
+        // this.preparePlot()
+      // }
+    // }
+  // }
 }
 </script>
 
@@ -216,6 +264,18 @@ export default {
 // .modebar{
 // display: none !important;
 // }
+#button-closing {
+    position: absolute;
+    right: 0px;
+}
+
+.side-menu-header .inactive {
+    background: transparent;
+}
+
+.side-menu{
+    left: 0;
+}
 
 #force-graph {
     padding-top: @screen-height*0.10;
@@ -225,5 +285,33 @@ export default {
 
 .aica-button {
     margin-top: @sidebar-width*0.1;
+}
+
+
+
+#run-module {
+    position: absolute;
+    top: @header-height*0.3;
+    right: @header-padding-sideways;
+}
+
+.reference-button-container{
+    display: grid;
+    grid-template-columns: auto auto;
+
+    .reference-button{
+    }
+}
+
+.property-panel {
+    .property-field {
+        border-bottom: 1px solid @color-border;
+        padding-bottom: 10px;
+    }
+    .property {
+        border-bottom: 1px solid @color-border;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
 }
 </style>

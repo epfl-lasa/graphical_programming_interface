@@ -12,7 +12,6 @@
       <p> Run Module </p>
     </div>
   </div>
-
   <div class="property-panel side-menu-body">
      <div class="property" v-for="p in properties">
       <div class="property-box" v-if="p.type==='eulerPose'">
@@ -251,6 +250,8 @@ export default {
       axios.get(this.$localIP + `/executemodule/` + this.module.id)
         .then(response => {
           console.log(response.statusText)
+          // Finished robot movement - reset to not moving.
+          this.$emit('stopRobot')
         })
         .catch(error => {
           console.log(error)
@@ -267,6 +268,8 @@ export default {
                 {'params': {'eulerPose': this.property.reference.value}})
         .then(response => {
           console.log(response.statusText)
+          // Finished robot movement - reset to not moving.
+          this.$emit('stopRobot')
         })
         .catch(error => {
           console.log(error)

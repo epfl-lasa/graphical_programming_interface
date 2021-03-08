@@ -1,13 +1,16 @@
 # Extensive Todo List for Possible Projects
 
-# Fixes
+URGENT:
+> (goal) position of arrow
+> 
+
 > Number input on touch pad (!?)
 
 > Table choosing on touchpad (?)
 
+# Fixes
 > Don't update when blocks are only 'moved' & update block only
 Status: postponed
-
 
 # Features
 > AI / Learning algorithms

@@ -11,8 +11,8 @@
     @showLibrary="loadedLibrary = true"
     />
 
-  <DataVisualizaton v-if="true"
-    ref="dataVisualizationTab"
+  <SideMenu v-if="true"
+    ref="sideMenuContainer"
     :desiredProperties="null"
     />
 
@@ -74,7 +74,7 @@ import FloatingHeaderComponents from './components/FloatingHeaderComponents'
 import LoadSave from './components/LoadSave'
 import VueModuleLibrary from './components/VueModuleLibrary'
 
-import DataVisualizaton from './components/DataVisualization'
+import SideMenu from './components/SideMenu'
 
 import axios from 'axios' // Needed to pass. Only temporarily?
 
@@ -88,7 +88,7 @@ export default {
     VueBlocksContainer,
     VueBlockProperty,
     VueModuleLibrary,
-    DataVisualizaton
+    SideMenu
   },
   mounted () {
     // TODO: Create base instant
@@ -502,6 +502,9 @@ h2 {
         // padding-bottom: auto;
         padding-left: @header-padding-sideways;
         padding-right: @header-padding-sideways;
+
+        display: flex;
+        // justify-content: l;
 
         // text-align: left;
         // display: flex;

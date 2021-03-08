@@ -3,9 +3,10 @@
   <SideMenuHeader
     ref="libraryHeader"
     class="side-menu-header"
+    :isActive.sync="isActive"
     @hideLibrary="hideLibrary"
     />
-  <div class="side-menu-body">
+  <div v-if="isActive" class="side-menu-body">
     <div class="grid-container body" >
       <!-- <h1> Library : {{ loadedLibrary }} </h1> -->
       <div class="library" v-for="mod in module_list">
@@ -43,7 +44,7 @@ export default {
   },
   data: function () {
     return {
-      foo: null
+      isActive: false
     }
   },
   computed: {
