@@ -2,11 +2,12 @@
 
 URGENT:
 > (goal) position of arrow
-> 
 
 > Number input on touch pad (!?)
 
 > Table choosing on touchpad (?)
+
+> Only one path / trajectory
 
 # Fixes
 > Don't update when blocks are only 'moved' & update block only

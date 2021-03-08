@@ -48,6 +48,7 @@ Line is the visual element which is created from a link between modules
             @select="blockSelect(block)"
             @delete="blockDelete(block)"
             @linkingStopDrawing = "linkingStopDrawing"
+            @deselectAll = "deselectAll"
             />
 
   <DropDown v-if="blockMenuVisible"
@@ -60,6 +61,7 @@ Line is the visual element which is created from a link between modules
             @removeBlock="blockDelete"
             @linkingStart="linkingStart()"
             @removeLink="removeLink"
+            @generalSettings="blockSelect(selectedBlock)"
             />
 </div>
 </template>
@@ -96,7 +98,10 @@ export default {
     },
     options: {
       type: Object
-    }
+    },
+    // Block currently activated/run by robot
+    currentlyPlayingId: null,
+    robotIsMoving: false
   },
   created () {
     this.mouseX = 0
@@ -571,8 +576,6 @@ export default {
         y = (y - this.centerY) / this.scale
       }
 
-      console.log('@VueBlocksContainer: Add block')
-
       block.x = x
       block.y = y
       this.blocks.push(block)
@@ -617,6 +620,7 @@ export default {
         x: 0,
         y: 0,
         selected: false,
+        currentlyPlaying: false,
         name: node.name,
         type: node.type,
         library: node.library,
@@ -668,7 +672,6 @@ export default {
       this.selectedBlock = block
     },
     disableBlockMenu () {
-      console.log('@VueBlockContainer: Deselect block')
       this.blockMenuContent = []
       this.blockMenuVisible = false
     },
@@ -676,7 +679,6 @@ export default {
       element.selected = true
 
       if (elementType === 'block') {
-        console.log('@VueBlockContainer: show block menu')
         this.selectedBlock = element
       } else if (elementType === 'line') {
         console.log('@VueBlockContainer: line is not really passed')
@@ -687,9 +689,6 @@ export default {
       this.blockMenuVisible = true
 
       // Relative position within div
-      // var containerElem = document.getElementById('main-element-container')
-      // this.blockMenuX = posX - containerElem.offsetLeft
-      // this.blockMenuY = posY - containerElem.offsetTop
       this.blockMenuX = posX
       this.blockMenuY = posY
 
@@ -855,8 +854,6 @@ export default {
       // Send to app-vue
       this.$emit('update:scene', this.exportScene())
       // Send scene to backend file
-      // console.log('BlocksContainer: Updating Scene')
-
       this.orderBlocklistAndCheckIfIsLoop()
 
       if (this.loopIsClosed) {
@@ -888,27 +885,17 @@ export default {
       itBlockOrigin = 0
       let itBlockTarget = itBlockOrigin + 1
 
-      // console.log('@VueBlockContainer: Start sorting')
-      // let debugItCount = 0
-
       // Nonzero check
       while (itLinkSearcher < this.links.length && itBlockOrigin < this.blocks.length) {
         // Find link which fits to 'originID' block
-        // debugItCount = debugItCount + 1
-        // if (debugItCount > 100) { break }
-        // console.log('Block ID (origin)', this.blocks[itBlockOrigin]['id'])
-        // console.log('Link: ' + this.links[itLinkSearcher]['originID'] + ' -> ' + this.links[itLinkSearcher]['targetID'])
         if (this.links[itLinkSearcher]['originID'] === this.blocks[itBlockOrigin]['id']) {
           // Swap Links
-          // console.log('Swap')
           if (itLinkPosition !== itLinkSearcher) {
             [this.links[itLinkPosition], this.links[itLinkSearcher]] = [this.links[itLinkSearcher], this.links[itLinkPosition]]
           }
           // Find block which has corregt 'targetID'
           itBlockTarget = itBlockOrigin + 1
           while (itBlockTarget < this.blocks.length) {
-            // debugItCount = debugItCount + 1
-            // if (debugItCount > 100) { break }
             if (this.blocks[itBlockTarget]['id'] === this.links[itLinkPosition]['targetID']) {
               // Swap blocks to order
               if (itBlockTarget !== itBlockOrigin + 1) {
@@ -949,22 +936,39 @@ export default {
         this.$emit('updateBackendProgram')
       }
     },
-    // blocks () {
-      // console.log('@VueBlocksContainer: change in blocks')
-    // },
-    // links () {
-      // console.log('@VueBlocksContainer: change in links')
-    // },
     blocksContent () {
       this.importBlocksContent()
     },
     scene () {
       this.importScene()
+    },
+    currentlyPlayingId (newValue) {
+      this.deselectAll()
+      this.blocks.forEach(element => {
+        if (element.id === newValue) {
+          element.currentlyPlaying = true
+        } else {
+          element.currentlyPlaying = false
+        }
+      })
+    },
+    startSequenceLoop (newValue) {
+      this.deselectAll()
+    },
+    robotIsMoving (newValue) {
+      if (newValue) {
+        // Make sure scene is updated
+        if (this.loopIsClosed) {
+          this.$emit('updateBackendProgram')
+        } else {
+          console.log('@VueBlocksContainer: warning non-loop execution')
+        }
+      } else {
+        this.blocks.forEach(element => {
+          element.currentlyPlaying = false
+        })
+      }
     }
-    // tempLink () {
-      // console.log('@VueBlocksContainer Change temp link')
-      // console.log(this.tempLink)
-    // }
   }
 }
 </script>
@@ -976,17 +980,14 @@ export default {
     overflow: hidden;
     box-sizing: border-box;
     background-color: @color-main-dark;
-
-    // width: 150%;
-    // height: ~"calc(100% - @header-height)";
     position: static;
-    // top: @header-height;
     height: 100%;
-    // height: ~"calc(100% - @{header-height})";
-    // width: 100%; // TODO adapt width in realtime based on menues
-    // height: ~"calc(100% - @header-height)";
 
     margin: 0;
-    // max-width: none;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
 }
 </style>

@@ -294,6 +294,9 @@ class RosHandler(Node):
         
         return status_message
 
+    def get_active_module_id(self):
+        return self.SequenceHandler.get_current_module_id()
+
     ################################################
     ### Force Recordingh
     ################################################

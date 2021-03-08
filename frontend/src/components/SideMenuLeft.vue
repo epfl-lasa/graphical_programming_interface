@@ -1,5 +1,5 @@
 <template>
-<div>
+<div class="root-container">
   <div v-if="isActive" class="side-menu">
     <div  class="side-menu-header">
       <h1> {{title}} </h1>
@@ -20,7 +20,8 @@
         />
     </div>
   </div>
-  <div v-else class="side-menu-header inactive" id="inactiveHeader">
+  <!-- <div> -->
+  <div v-else class="side-menu-button-container">
     <img class="aica-icon-small"
          src='./../assets/icons/keyboard_arrow_right-white-18dp.svg'
          @click="showMenu($event)"
@@ -35,11 +36,12 @@
 import DataVisualization from './DataVisualization'
 
 export default {
-  name: 'SideMenu',
+  name: 'SideMenuLeft',
   components: {
     DataVisualization
   },
   mounted () {
+    console.log('@SideMnueLeft: Mounted')
   },
   beforeUnmount () {
     console.log('Unmount')
@@ -112,12 +114,13 @@ export default {
 // right: 0px;
 // }
 
+
 .side-menu-header {
     justify-content: left;
 }
 
 #inactiveHeader {
-// .side-menu-header .inactive {
+    // .side-menu-header .inactive {
     background: transparent;
 }
 
@@ -165,5 +168,12 @@ export default {
         padding-top: 20px;
         padding-bottom: 20px;
     }
+}
+
+.side-menu-button-container {
+    position: absolute;
+    top: @header-height*0.2;
+    left: @header-padding-sideways;
+    z-index: 5;
 }
 </style>

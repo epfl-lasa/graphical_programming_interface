@@ -54,8 +54,8 @@ export default {
   // console.log(this.$parent.linking)
   // },
   // mounted () {
-    // console.log('@Dropdon: It is up now')
-    // console.log(this.posX, this.posY)
+  // console.log('@Dropdon: It is up now')
+  // console.log(this.posX, this.posY)
   // },
   data () {
     return {
@@ -77,7 +77,7 @@ export default {
         e.preventDefault()
       }
       // General Settings
-      console.log('@BlockDropDown: Show general settings.')
+      this.$emit('generalSettings')
       this.$emit('disableBlockMenu', false)
     },
     moveBlock (e) {

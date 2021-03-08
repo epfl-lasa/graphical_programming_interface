@@ -1,15 +1,18 @@
 <!--
-TODO:
-> Divide sensible into links, block, & container
+TODO:>
+ Divide sensible into links, block, & container
   -->
 
 <template>
-<div class="vue-block" :class="{selected: selected}" :style="style"
+<div class="vue-block"  :style="style"
+     :class="{selected: selected, currentlyPlaying: currentlyPlaying}"
      @touchstart="handleDown($event)"
      @mousedown="handleDown($event)"
      >
   <!-- <img v-bind:src="require('./' + iconPathTotal)" /> -->
-  <div class='icon-container' :class="{selected: selected}">
+  <div class='icon-container'
+       :class="{selected: selected, currentlyPlaying: currentlyPlaying}"
+       >
   <!-- <div :class="'icon-container ' + selected"> -->
     <img v-bind:src="require('./../' + 'assets/icons_library/' + iconpath)" />
   </div>
@@ -36,6 +39,7 @@ export default {
       }
     },
     selected: Boolean,
+    currentlyPlaying: Boolean,
     title: {
       type: String,
       default: 'Title'
@@ -97,7 +101,6 @@ export default {
     initializeHandles () {
       document.documentElement.addEventListener('mousemove', this.handleMove, true)
       document.documentElement.addEventListener('mouseup', this.handleUp, true)
-      // document.documentElement.addEventListener('mousedown', this.handleDown, true)
 
       document.documentElement.addEventListener('touchmove', this.handleMove, true)
       document.documentElement.addEventListener('touchend', this.handleUp, true)
@@ -160,6 +163,7 @@ export default {
         this.mouseX = e.pageX || e.clientX + document.documentElement.scrollLeft
         this.mouseY = e.pageY || e.clientY + document.documentElement.scrollTop
       }
+      this.$emit('deselectAll')
 
       this.initializeHandles()
 
@@ -168,6 +172,7 @@ export default {
 
       this.firstMouseX = this.mouseX
       this.firstMouseY = this.mouseY
+
       this.hasOnlyMoveLittleSinceClick = true
 
       const target = e.target || e.srcElement
@@ -183,7 +188,7 @@ export default {
 
         // Check for long-click
         this.presstimer = setTimeout(this.handleLongPress, 300, e)
-        this.$emit('select')
+        // this.$emit('select')
 
         if (e.preventDefault) e.preventDefault()
       } else if (this.linkingMode) {
@@ -211,6 +216,10 @@ export default {
         e.preventDefault()
       }
       // console.log('@VueBlock: handleUp')
+      if (!this.longpress && !this.dragging) {
+        this.$emit('select')
+      }
+
       this.cancelLongPress()
       this.removeHandles()
 
@@ -318,9 +327,12 @@ export default {
         top: @marginBlock;
 
         &.selected {
-            // border: @blockBorder solid black;
-            // z-index: 2;
-            box-shadow: 0px 0px 20px 4px @color-main-bright;
+            box-shadow: 0px 0px 20px 4px var(--color-main-bright);
+            // box-shadow: 0px 0px 20px 4px var(--color-highlight1-bright);
+        }
+
+        &.currentlyPlaying {
+            box-shadow: 0px 0px 20px 4px var(--color-highlight1-bright);
         }
     }
 
@@ -333,101 +345,4 @@ export default {
         left:@marginBlock;
     }
 }
-
-
-// .vue-block {
-//     > header {
-//         background: #bfbfbf;
-//         text-align: center;
-
-//         > .delete {
-//             color: red;
-//             cursor: pointer;
-//             float: right;
-//             position: absolute;
-//             right: 5px;
-//         }
-//     }
-
-//     .inputs, .outputs {
-//         padding: @ioPaddingInner;
-
-//         display: block;
-//         width: 50%;
-
-//         > * {
-//             width: 100%;
-//         }
-//     }
-
-//     .circle {
-//         box-sizing: border-box;
-//         margin-top: @ioHeight / 2 - @circleSize / 2;
-
-//         width: @circleSize;
-//         height: @circleSize;
-
-//         border: @circleBorder solid rgba(0, 0, 0, 0.5);
-//         border-radius: 100%;
-
-//         cursor: crosshair;
-//         &.active {
-//             background: @circleConnectedColor;
-//         }
-//     }
-
-//     .inputs {
-//         float: left;
-//         text-align: left;
-
-//         margin-left: -(@circleSize/2 + @blockBorder);
-//     }
-
-//     .input, .output {
-//         height: @ioHeight;
-//         overflow: hidden;
-//         font-size: @ioFontSize;
-
-//         &:last-child {
-//         }
-//     }
-
-//     .input {
-//         float: left;
-
-//         .circle {
-//             float: left;
-//             margin-right: @circleMargin;
-
-//             &:hover {
-//                 background: @circleNewColor;
-
-//                 &.active {
-//                     background: @circleRemoveColor;
-//                 }
-//             }
-//         }
-//     }
-
-//     .outputs {
-//         float: right;
-//         text-align: right;
-
-//         margin-right: -(@circleSize/2 + @blockBorder);
-//     }
-
-//     .output {
-//       float: right;
-
-//       .circle {
-//         float: right;
-//         margin-left: @circleMargin;
-
-//         // &:hover {
-//           // background: @circleNewColor;
-//         // }
-//       }
-//     }
-// }
-
 </style>

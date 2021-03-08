@@ -111,6 +111,11 @@ def executesequence():
     print('@run.py: Finished executing sequence')
     return '0: Success'
 
+@app.route('/getactivemoduleid')
+def getactivemoduleid():
+    module_id = RosMainHandler.get_active_module_id()
+    return {'moduleId': module_id}
+    
 @app.route('/getrobotposition')
 def getcurrentrobotposition():
     ''' Get current position of the robot. '''

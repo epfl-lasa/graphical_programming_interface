@@ -6,58 +6,58 @@
     :drawMode="isInDrawingMode"
     :modules="modules"
     :robotIsMoving="robotIsMoving"
+    @runSequence="runSequence"
     @setRobotStateMoving="setRobotStateMoving"
     @stopRobot="stopRobot"
     @showLibrary="loadedLibrary = true"
     />
 
-  <SideMenu v-if="true"
+  <SideMenuLeft
     ref="sideMenuContainer"
     :desiredProperties="null"
     />
 
-    <template v-if="true">
-      <VueBlocksContainer
-        ref="container"
-        :blocksContent="blocks"
-        :scene.sync="scene"
-        @blockSelect="selectBlock"
-        @blockDeselect="deselectBlock"
-        @updateBackendProgram="updateBackendProgram"/>
+  <SideMenuRight
+    ref="moduleLibrary"
+    :modules="modules"
+    :blockContent="blocks"
+    :loadedLibrary="loadedLibrary"
+    @addModule="addModule"
+    />
 
-      <template v-if="selectedBlock">
-        <VueBlockProperty
-          :module="selectedModule"
-          :property="selectedBlockProperty"
-          :robotIsMoving="robotIsMoving"
-          ref="property"
-          @save="saveProperty"
-          @setRobotStateMoving="setRobotStateMoving"
-          @stopRobot="stopRobot"
-          />
-      </template>
+  <VueBlocksContainer
+    ref="container"
+    :blocksContent="blocks"
+    :scene.sync="scene"
+    :currentlyPlayingId="currentlyPlayingId"
+    :startSequenceLoop="startSequenceLoop"
+    :robotIsMoving="robotIsMoving"
+    @blockSelect="selectBlock"
+    @blockDeselect="deselectBlock"
+    @updateBackendProgram="updateBackendProgram"/>
 
-      <template v-else-if="loadedLibrary">
-        <VueModuleLibrary
-          ref="module-library"
-          class="module-library"
-          @hideLibrary="loadedLibrary = false"
-          :modules="modules"
-          :blockContent="blocks"
-          :loadedLibrary="loadedLibrary"/>
+  <template v-if="selectedBlock">
+    <VueBlockProperty
+      :module="selectedModule"
+      :property="selectedBlockProperty"
+      :robotIsMoving="robotIsMoving"
+      ref="property"
+      @save="saveProperty"
+      @setRobotStateMoving="setRobotStateMoving"
+      @stopRobot="stopRobot"
+      />
+  </template>
 
-      </template>
-    </template>
 
-    <template v-if="loadSaveMode">
-      <LoadSave
-        ref="loadsave"
-        class="loadsave"
-        :localFiles="localFiles"
-        :appMode="appMode"
-        />
-        <p> Load-Safe </p>
-    </template>
+  <template v-if="loadSaveMode">
+    <LoadSave
+      ref="loadsave"
+      class="loadsave"
+      :localFiles="localFiles"
+      :appMode="appMode"
+      />
+  </template>
+
   </div>
 </template>
 
@@ -74,11 +74,13 @@ import FloatingHeaderComponents from './components/FloatingHeaderComponents'
 import LoadSave from './components/LoadSave'
 import VueModuleLibrary from './components/VueModuleLibrary'
 
-import SideMenu from './components/SideMenu'
+import SideMenuLeft from './components/SideMenuLeft'
+import SideMenuRight from './components/SideMenuRight'
 
 import axios from 'axios' // Needed to pass. Only temporarily?
 
 // import {blocks, links} from '../../backend/userdata/default_data.json'
+const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 
 export default {
   name: 'App',
@@ -88,17 +90,10 @@ export default {
     VueBlocksContainer,
     VueBlockProperty,
     VueModuleLibrary,
-    SideMenu
+    SideMenuLeft,
+    SideMenuRight
   },
   mounted () {
-    // TODO: Create base instant
-    // export const HTTP = axios.create({
-      // baseURL: `http://jsonplaceholder.typicode.com/`,
-      // headers: {
-        // Authorization: 'Bearer {token}'
-      // }
-    // })
-
     // alert('Your screen resolution is: ' + screen.width + 'x' + screen.height)
     // axios.get(this.$localIP + `/startup/`, {'params': {}})
     // .then(response => {
@@ -115,9 +110,9 @@ export default {
     this.loadScene('default')
     this.loadedLibrary = 'polishing_machine'
 
-    setTimeout(() => {
-      this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
-    }, 500)
+    // setTimeout(() => {
+      // this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
+    // }, 500)
     // When loading finished, press default
     // this.projectName = axios.get(this.$localIP + `/getprojectName`)
   },
@@ -138,6 +133,10 @@ export default {
           scale: 1
         }
       },
+      // Active block/module which is currently running
+      currentlyPlayingId: null,
+      startSequenceLoop: false,
+      // Block selected on the interface
       selectedBlock: null,
       selectedType: 'delay',
       useContextMenu: true,
@@ -186,6 +185,32 @@ export default {
   },
   methods: {
     // Robot main movement handler
+    runSequence () {
+      this.setRobotStateMoving()
+      axios.get(this.$localIP + `/executesequence`)
+        .then(response => {
+          console.log(response.statusText)
+        })
+        .catch(error => {
+          console.log(error)
+        })
+      this.loopAndUpdateActiveModule()
+    },
+    async loopAndUpdateActiveModule (deltaTime = 200) {
+      this.startSequenceLoop = true
+      // wait
+      while (this.robotIsMoving) {
+        axios.get(this.$localIP + `/getactivemoduleid`)
+          .then(response => {
+            this.currentlyPlayingId = response.data.moduleId
+          })
+          .catch(error => {
+            console.log(error)
+          })
+        await sleep(deltaTime)
+      }
+      this.startSequenceLoop = false
+    },
     setRobotStateMoving () {
       this.robotIsMoving = true
     },
@@ -203,8 +228,6 @@ export default {
         .then(response => {
           this.modules = response.data.moduleLibraries
           this.blocks = response.data.blockContent
-          // console.log('@App.: Loaded')
-          // console.log(this.modules)
         })
         .catch(error => {
           console.log(error)
@@ -310,28 +333,12 @@ export default {
       this.$refs.container.addNewBlock(this.selectedType)
     },
     addModule (module) {
-      console.log('@App: Add module <<' + module + '>>')
       this.$refs.container.addNewBlock(module)
     },
     loadModuleLibrary (library) {
       // Load library and icon-paths
       if (this.loadedLibrary !== library) {
         this.loadedLibrary = library
-        // axios.get(this.$localIP + `/loadiconpathsanddescription/` + library)
-        //   .then(response => {
-        //     console.log(response.statusText)
-        //     this.scene = response.data.scene
-        //     if (this.blocks.length === 0) {
-        //       this.blocks = response.data.blockContent
-        //       console.log('@App: Load block library')
-        //     } else {
-        //       console.log('@App: Use default block library')
-        //     }
-        //     console.log('Load succesfull from file <<' + filename + '>>')
-        //   })
-        //   .catch(error => {
-        //     console.log(error)
-        //   })
       }
     },
     saveProperty (val) {

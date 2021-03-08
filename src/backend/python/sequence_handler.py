@@ -99,6 +99,9 @@ class SequenceHandler(Node):
 
     # @staticmethod
     # dep get_module_reference(self, self.sequence_it):
+
+    def get_current_module_id(self):
+        return self.sequence[self.sequence_it]['id']
         
     def get_position_of_module_id(self, module_id):
         ''' Find position of module with the specific id.'''
@@ -127,10 +130,11 @@ class SequenceHandler(Node):
             msg_path.poses.append(pose)
 
         elif self.sequence[sequence_it]['type'] == 'gripper':
-            print('Gripper')
-            rclpy.spin_once(node=self, timeout_sec=0.5)
+            print('Moduel: Gripper')
+            # rclpy.spin_once(node=self, timeout_sec=1.0)
             # print('Gripper: {}'.format(self.sequence[sequence_it]['values']['property']['gripper'])
-            return 0
+            # Publish empty path
+            msg_path = Path() 
         
         elif (self.sequence[sequence_it]['type'] == 'linear'
               or self.sequence[sequence_it]['type'] == 'constant_force'):

@@ -17,6 +17,7 @@ from rclpy.node import Node
 # ROS messages
 from geometry_msgs.msg import WrenchStamped
 
+
 class ForceListener(Node):
     def __init__(self, topic="/ft_sensor/netft_data", start_time=0, delta_time_max=5):
         ''' Force recording'''
@@ -38,6 +39,8 @@ class ForceListener(Node):
             WrenchStamped, self.topic, self.callback_msg, 5)
 
         self.last_update = None
+
+        self.new_force = None
 
     def reset_data(self):
         ''' Set graph data to zero. '''
@@ -67,9 +70,16 @@ class ForceListener(Node):
     def get_updated_data(self):
         ''' Send data back. '''
         self.last_update_request = time.time()
+
+        data_dict = {}
+        if self.new_force is not None:
+            data_dict['force'] = self.new_force
+            self.new_force = None
         
         if len(self.time_data) == 0:
-            return {'time': [], 'data': []}
+            data_dict['time'] = []
+            data_dict['data'] = []
+            return data_dict
         
         while self.time_data[0] < self.time_data[-1] - self.delta_time_max:
             del self.time_data[0]
@@ -77,7 +87,10 @@ class ForceListener(Node):
             
         # Project time to [-delta_time_max, 0]
         time_data = [(tt - self.time_data[-1]) for tt in self.time_data]
-        return {'time': time_data, 'data': self.force_data}
+        
+        data_dict['time'] = time_data
+        data_dict['data'] = self.force_data
+        return data_dict
 
     def callback_msg(self, msg, min_delta_time=0.01):
         ''' Get message '''
@@ -86,3 +99,5 @@ class ForceListener(Node):
         
         self.time_data.append(time_in_sec)
         self.force_data.append(np.linalg.norm(force))
+
+    # TODO: property-listener for force

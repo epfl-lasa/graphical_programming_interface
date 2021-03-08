@@ -1,39 +1,27 @@
 <template>
-<div id="vuemodulelibrary" class="module-library side-menu">
-  <SideMenuHeader
-    ref="libraryHeader"
-    class="side-menu-header"
-    :isActive.sync="isActive"
-    @hideLibrary="hideLibrary"
-    />
-  <div v-if="isActive" class="side-menu-body">
-    <div class="grid-container body" >
-      <!-- <h1> Library : {{ loadedLibrary }} </h1> -->
-      <div class="library" v-for="mod in module_list">
-        <div class="icon-module"
-             @click="addModule($event, mod.type)"
-             @touchstart="addModule($event, mod.type)"
-             >
-          <div class="icon-container">
-            <img v-bind:src="require('./../assets/icons_library/'+mod.iconpath)"
-                 v-bind:alt=mod.name>
-          </div>
-          <h2 class="icon-name"> {{mod.title}} </h2>
-		    </div>
-      </div>
+<div id="vuemodulelibrary" class="module-library">
+  <div class="grid-container body" >
+    <div class="library" v-for="mod in module_list">
+      <div class="icon-module"
+           @click="addModule($event, mod.type)"
+           @touchstart="addModule($event, mod.type)"
+           >
+        <div class="icon-container">
+          <img v-bind:src="require('./../assets/icons_library/'+mod.iconpath)"
+               v-bind:alt=mod.name>
+        </div>
+        <h2 class="icon-name"> {{mod.title}} </h2>
+		  </div>
     </div>
   </div>
 </div>
 </template>
 
 <script>
-import SideMenuHeader from './SideMenuHeader'
-
 export default {
   name: 'VueModuleLibrary',
-  components: {
-    SideMenuHeader
-  },
+  // components: {
+  // },
   props: {
     modules: {
       type: Object,
@@ -70,10 +58,7 @@ export default {
       if (e.type === 'touchend') {
         e.preventDefault()
       }
-      // console.log('@VueModuleLibrary: Want to add a module <<' + module + '>>')
-      this.$parent.addModule(module)
-      // Why does emit not work; (how to make it work..)
-      // this.$emit('addModule', module)
+      this.$emit('addModule', module)
     },
     hideLibrary () {
       this.$emit('hideLibrary')

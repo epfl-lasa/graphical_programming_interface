@@ -1,13 +1,6 @@
 <template>
 <header>
   <div class="floating-header">
-    <div v-if="showLeftIcon" id="icon-left">
-         <img src='./../assets/icons/keyboard_arrow_right-white-18dp.svg'
-              @click="showLeftMenu($event)" @touchstart="showLeftMenu($event)"
-              class="aica-icon-small"
-              >
-    </div>
-
     <div class="aica-dropdown-menu" id="drop-down">
       <ul class="dropdown-head aica-dropdown-menu">
         <img src='./../assets/icons/keyboard_arrow_down-white-18dp.svg'
@@ -38,13 +31,6 @@
          @click="executeSequence($event)" @touchstart="executeSequence($event)">
       <p> Run All </p>
     </div>
-
-    <div v-if="showRightIcon" id="icon-right">
-      <!-- <p> show me </p> -->
-      <img src='./../assets/icons/keyboard_arrow_left-white-18dp.svg'
-           @click="showRightMenu($event)" @touchstart="showRightMenu($event)"
-           class="aica-icon-small">
-    </div>
   </div>
 </header>
 </template>
@@ -52,9 +38,6 @@
 
 
 <script>
-import axios from 'axios' // Needed to pass. Only temporarily? -- Import global?
-
-// import axios from 'axios' // Needed to pass. Only temporarily?
 export default {
   name: 'FloatingHeaderComponents',
   data: function () {
@@ -64,15 +47,10 @@ export default {
       dropdownActive: false
     }
   },
-  // created () {
-  // this.$parent.update_libraries()
+  // mounted () {
   // },
-  mounted () {
-
-  },
-  beforeDestroy () {
-
-  },
+  // beforeDestroy () {
+  // },
   props: {
     // Define what lists should be shown
     // Make them connected / computed with showLeft/Right Menu
@@ -153,14 +131,8 @@ export default {
       if (e.type === 'touchstart') {
         e.preventDefault()
       }
-      this.setRobotStateMoving()
-      axios.get(this.$localIP + `/executesequence`)
-        .then(response => {
-          console.log(response.statusText)
-        })
-        .catch(error => {
-          console.log(error)
-        })
+      this.$emit('runSequence')
+      // this.setRobotStateMoving()
     },
     getDrawString (buttonType) {
       var typeString = 'button'
@@ -216,7 +188,7 @@ export default {
       console.log('Implement quit.')
       // this.$parent.loadModuleLibrary(library)
     },
-    close_window () {
+    closeWindow () {
       if (confirm('Close Window?')) {
         close()
       }
@@ -247,6 +219,8 @@ export default {
 .floating-header{
     height: @header-height;
     width: 100%;
+
+    background: transparent;
 
     position: absolute;
     top: 0;
@@ -284,26 +258,20 @@ export default {
     }
 
     #home-logo {
+        z-index: 4;
         width: @height-icon-small;
         height: @height-icon-small;
         left: ~"calc(50% - @{height-icon-small}/2.0)";
 
         cursor: pointer;
+        z-level: 5;
+
     }
 
     #run-sequence {
+        z-index: 4;
         left: ~"calc(50% + @{height-icon-small}/2.0 + @{height-icon-small}*2)";
         top: @height-icon-small * 0.3;
     }
-
-    #icon-left {
-        left: @header-padding-sideways;
-    }
-
-    #icon-right {
-        right: @header-padding-sideways;
-    }
-
-
 }
 </style>
