@@ -1,5 +1,5 @@
 <template>
-  <!--
+<!--
 Nomenclature Introduction
 
 # Application
@@ -74,6 +74,10 @@ import VueBlock from './VueBlock'
 import VueLink from './LinkCreator' // TODO: rename file to linkCreator
 import DropDown from './DropDown'
 
+// function convertPXToVW(px) {
+// return px * (100 / document.documentElement.clientWidth);
+// }
+
 export default {
   name: 'VueBlockContainer',
   components: {
@@ -136,13 +140,23 @@ export default {
     document.documentElement.addEventListener('wheel', this.handleWheel, true)
     // document.documentElement.addEventListener('gesturechange', this.handleWheel, true)
 
-    // TODO: add multi-touch scrolling (?!)
-
     this.centerX = this.$el.clientWidth / 2
     this.centerY = this.$el.clientHeight / 2
 
     this.importBlocksContent()
     this.importScene()
+
+    // Get blocks width & transform into pixel
+    let blockWidthInPixel = getComputedStyle(document.documentElement).getPropertyValue('--block-width')
+    if (blockWidthInPixel.includes('vw')) {
+      blockWidthInPixel = blockWidthInPixel.replace('vw', '')
+      this.blockWidthInPixel = parseFloat(blockWidthInPixel)
+      this.blockWidthInPixel = this.blockWidthInPixel * (document.documentElement.clientWidth / 100)
+      // console.log('@VueBlocksContainer')
+      // console.log(this.blockWidthInPixel)
+    }
+    // Assumption of quadratic
+    this.blockHeightInPixel = this.blockWidthInPixel
   },
   beforeDestroy () {
     document.documentElement.removeEventListener('touchmove', this.handleMove, true)
@@ -181,7 +195,10 @@ export default {
       // Check if everything is saved & updated
       isSavedToFile: true,
       // isUpdatedToProgram: true
-      loopIsClosed: false
+      loopIsClosed: false,
+      //
+      blockWidthInPixel: 0,
+      blockHeightInPixel: 0
     }
   },
   computed: {
@@ -191,9 +208,11 @@ export default {
     },
     optionsForChild () {
       return {
-        width: 110,
-        height: 110,
-        titleHeight: 20,
+        // width: 110,
+        // height: 110,
+        height: this.blockHeightInPixel,
+        width: this.blockWidthInPixel,
+        // height: getComputedStyle(document.documentElement).getPropertyValue('--block-height'),
         scale: this.scale,
         inputSlotClassName: this.inputSlotClassName,
         center: {
@@ -441,7 +460,7 @@ export default {
       if (fromCenter) {
         // Draw the arrows starting from the center
         x += this.optionsForChild.width / 2.0
-        y += this.optionsForChild.width / 2.0
+        y += this.optionsForChild.height / 2.0
       } else {
         y += this.optionsForChild.titleHeight
 
@@ -515,9 +534,6 @@ export default {
       // Stop linking Everywhere
       this.linkStartData = null
       this.tempLink = null
-      // this.blocks.forEach(function (item, index) {
-      // item.linking = false
-      // })
     },
     linkingBreak (targetBlock, slotNumber) {
       if (targetBlock && slotNumber > -1) {

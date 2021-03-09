@@ -1,5 +1,12 @@
 # Extensive Todo List for Possible Projects
 
+URGENT URGENT:
+> TEST (!)
+
+> Touchstart at right screen side (show menu) is currently passive. This does not allow for event.preventDefault() ! Fix it...
+
+
+
 URGENT:
 > (goal) position of arrow
 
@@ -9,9 +16,13 @@ URGENT:
 
 > Only one path / trajectory
 
+> Optimize table on tablet (...)
+
+
 # Fixes
 > Don't update when blocks are only 'moved' & update block only
 Status: postponed
+
 
 # Features
 > AI / Learning algorithms

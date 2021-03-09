@@ -47,8 +47,14 @@ export default {
       dropdownActive: false
     }
   },
-  // mounted () {
-  // },
+  mounted () {
+    // window.addEventListener("keypress", function(event) {
+      // if (!(event.which == 115 && event.ctrlKey) && !(event.which == 19)) return true
+      // alert("Ctrl-S pressed")
+      // event.preventDefault()
+      // return false
+    // })
+  },
   // beforeDestroy () {
   // },
   props: {
@@ -243,12 +249,16 @@ export default {
             cursor: pointer;
 
             font-size: 15pt;
-            padding: @header-height*0.1 @header-height*0.01;
+            padding-top: @header-height*0.1;
+            padding-bottom: @header-height*0.05;
+            padding-left:@header-height*0.3;
+            padding-right:@header-height*0.7;
             border-color: @color-border;
             background-color: @color-main-dark;
             border-style: solid;
             border-color: @color-main-medium;
             border-width: 1px;
+
 
             &.dropdown-head {
                 border-style: none;

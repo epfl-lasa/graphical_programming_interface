@@ -9,16 +9,22 @@ iconpath: picking_placing.svg
 
 fields:
 - attr: property
-  label: Reference
-  name: reference
-  type: eulerPose
-- attr: property
-  label: State
-  name: stiffness
+  label: Action
+  name: action
   type: button
-  property:
-    - Open
-    - Close
+  unit: 
+  settings:
+    values:
+      opening: Opening
+      closing: Closing
+- attr: property
+  label: Force
+  name: force
+  type: slider
+  unit: N
+  settings:
+    min: 0
+    max: 50
 - attr: input
   label: Input
   name: input

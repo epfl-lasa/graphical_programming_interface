@@ -18,25 +18,32 @@
         </b-table>
     </div>
     <br>
-    <div id="table-button-container">
-      <div v-if="isRecording" class="aica-button reference-button"
-        @click="stopRecording($event)" @touchstart="stopRecording($event)">
-         <p> Stop </p>
-      </div>
-      <div v-else-if="multipleRecordings" class="aica-button reference-button"
-        @click="startRecording($event)" @touchstart="startRecording($event)" >
-         <p> Record </p>
-      </div>
-      <div v-else class="aica-button reference-button"
-        @click="startRecording($event)" @touchstart="startRecording($event)">
-         <p> Record </p>
-      </div>
+    <template v-if="true">
+        <div v-if="isRecording" class="aica-button reference-button"
+          @click="stopRecording($event)" @touchstart="stopRecording($event)">
+           <p> Stop </p>
+        </div>
+        <div v-else class="aica-button reference-button"
+          @click="startAndReplaceRecording($event)" @touchstart="startAndReplaceRecording($event)">
+           <p> New Recording </p>
+        </div>
+    </template>
+    <template v-else>
+      <div id="table-button-container">
+        <div v-if="isRecording" class="aica-button reference-button"
+          @click="stopRecording($event)" @touchstart="stopRecording($event)">
+           <p> Stop </p>
+        </div>
+        <div v-else class="aica-button reference-button"
+          @click="startRecording($event)" @touchstart="startRecording($event)">
+           <p> Record </p>
+        </div>
 
-      <div @click="deleteElement" class="aica-button critical reference-button">
-        <p> Delete Element</p>
-       </div>
-    </div>
-
+        <div @click="deleteElement" class="aica-button critical reference-button">
+          <p> Delete Element</p>
+         </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -55,7 +62,8 @@ export default {
     appMode: {
       type: String,
       default: 'load'
-    }
+    },
+    settings: Array
   },
   mounted () {
     // console.log('@ModuleDataList: Get Database')
@@ -75,7 +83,33 @@ export default {
       }
     }
   },
+  computed: {
+    onlyOneRecording () {
+      if ('onlyOneRecording' in this.settings && this.settings.onlyOneRecording) {
+        return true
+      } else {
+        return false
+      }
+    }
+  },
   methods: {
+    startAndReplaceRecording (e) {
+      // New recording [TODO: make a bit smoother... / no glitching in between]
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      console.log(this.database)
+
+      if (this.database.length) {
+        let i
+        for (i = 0; i < this.database.length; i++) {
+          this.selected = this.database[i]
+          this.deleteElement(e)
+        }
+      }
+
+      this.startRecording(e)
+    },
     startRecording (e) {
       if (e.type === 'touchstart') {
         e.preventDefault()

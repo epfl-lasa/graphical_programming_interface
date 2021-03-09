@@ -1,4 +1,4 @@
-information: ''
+information: 'Linear Motion without force.'
 name: linear
 
 title: Linear
@@ -12,10 +12,22 @@ fields:
   label: Reference
   name: reference
   type: eulerPose
+  unit: mm_deg
 - attr: property
-  label: Stiffness
-  name: stiffness
+  label: Speed
+  name: speed
   type: slider
+  unit: m/s
+  settings:
+    min: 0
+    max: 3
+# - attr: property
+#   label: Stiffness
+#   name: stiffness
+#   type: slider
+#   settings:
+#     - min: 0
+#       max: 10
 - attr: input
   label: Input
   name: input

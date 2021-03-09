@@ -8,6 +8,9 @@
            @click="hideMenu($event)"
            @touchstart="hideMenu($event)"
            >
+                 <!-- @touchstart="hideMenu($event)" -->
+
+
       <!-- <div v-if="robotIsMoving" class="aica-button danger" id="run-module" -->
            <!-- @click="stopRobot($event)" @touchstart="stopRobot($event)" -->
            <!-- > -->
@@ -25,8 +28,10 @@
     <img class="aica-icon-small"
          src='./../assets/icons/keyboard_arrow_right-white-18dp.svg'
          @click="showMenu($event)"
-         @touchstart="showMenu($event)"
+         @touchstart="hideMenu($event)"
          >
+             <!-- @touchstart="showMenu($event)" -->
+
   </div>
 </div>
 </template>

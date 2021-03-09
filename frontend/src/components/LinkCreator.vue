@@ -50,7 +50,7 @@ export default {
     tempLinkActive: true
   },
   beforeDestroy () {
-    // The whole container is still kept.
+    // The whole container is still kept
     console.log('Destroy all')
   },
   data () {

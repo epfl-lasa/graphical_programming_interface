@@ -21,15 +21,24 @@
 
   --color-border: #E7E7E7;
 
-  /* Dimensions */
+  /* Special Color */
   --color-highlight1-bright: #006cf5;
   --color-highlight1-dark: #0045f5;
   --color-highlight2-bright: #00cc4f;
   --color-highlight2-dark: ##00a950;
   --color-highlight3-bright: ##ff4e2f;
   --color-highlight3-dark: #ff230d;
+
+  /* Dimensions */
+  --block-width: 9.0vw;
+  /* --block-height: 9.0vw; */
+  --block-height: var(--block-width);
+  --block-container-width: 12.0vw;
+  --block-container-height: 12.0vw;
+  --margin-block: calc((var(--block-container-height) - var(--block-width))/2.0);
 }
 
-:root {
+/* :root { */
+  /* touch-action: none; */
 
-}
+/* } */

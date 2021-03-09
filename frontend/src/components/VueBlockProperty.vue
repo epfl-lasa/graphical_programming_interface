@@ -13,7 +13,7 @@
     </div>
   </div>
   <div class="property-panel side-menu-body">
-     <div class="property" v-for="p in properties">
+     <div class="property" v-for="(p, propKey) in properties">
       <div class="property-box" v-if="p.type==='eulerPose'">
         <h2> {{ p.label }} </h2>
         <div v-if="false">
@@ -35,7 +35,10 @@
         <h3> Orientation [deg]</h3>
         <template v-for="(dir, key) in p.value.orientation">
           <label>{{key}}:</label>
-          <input class="position-input" type="number" v-model="p.value.orientation[key]">
+          <input type="number" pattern="[0-9]*" inputmode="numeric"
+                  class="position-input"
+                 v-model="p.value.orientation[key]">
+          <!-- <input type="number" pattern="[0-9]*" inputmode="numeric"> -->
         </template>
         <br> <br>
 
@@ -67,7 +70,7 @@
 
       <div class="property-box" v-else-if="p.type==='slider'">
         <label> {{ p.label }} </label>
-        <input class="slider-input" type="text" v-model="p.value">
+        <input class="slider-input" type="number" v-model="p.value">
 
         <b-field class="slider-field">
           <b-slider rounded
@@ -90,10 +93,29 @@
         <ModuleDataList
           :module="module"
           :robotIsMoving="robotIsMoving"
-          :multipleRecordings="false"
+          :multipleRecordings="true"
+          :settings=p.settings
           @setRobotStateMoving="setRobotStateMoving"
           @stopRobot="stopRobot"
           />
+      </div>
+
+      <div class="property-box" v-else-if="p.type==='button'">
+        <h4 :for="p.name">{{p.label||p.name}}:</h4>
+        <!-- <input type="text" v-model="p.value"> -->
+        <div class="reference-button-container">
+          <template v-for="(act, key) in p.settings.values">
+            <div class="aica-button property-button"
+                 @click="setValueButton($event, p, key)"
+                 @touchstart="setValueButton($event, p, key)"
+                 :class="{selected: key===p.value}"
+                 >
+              <!-- @click="p.value===key" -->
+              <!-- TODO: check this clicking event... -->
+              <p> {{act}} </p>
+            </div>
+          </template>
+        </div>
       </div>
 
       <div class="property-box" v-else>
@@ -131,7 +153,6 @@ export default {
     ModuleDataList
   },
   mounted () {
-    // TODO: reload when new module is changed
     this.loadModule()
     // No coupling at startup
     this.robotIsCoupledToPose = false
@@ -242,6 +263,16 @@ export default {
       // console.log('Stop Robot')
       this.$emit('stopRobot')
     },
+    setValueButton (e, property, value) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      property.value = value
+      // this.properties[propKey].value = toString(value)
+
+      console.log('@Block Property: Button Value')
+      console.log(this.properties['action'].value)
+    },
     executeModule (e) {
       if (e.type === 'touchstart') {
         e.preventDefault()
@@ -338,6 +369,8 @@ export default {
       } else {
         this.properties = null
       }
+      console.log('@BlockProperties')
+      console.log(this.properties)
       // Create [new] default containers
       Object.values(this.properties)
         .forEach(prop => {
@@ -369,18 +402,23 @@ export default {
                 min: 0,
                 max: 10
               }
-              if (!prop.value) {
-                if (prop.settings.min < 0 && prop.settings.max > 0) {
-                  prop.value = 0
-                } else {
-                  prop.value = prop.settings.min
-                }
+            }
+
+            if (!prop.value) {
+              if (prop.settings.min <= 0 && prop.settings.max >= 0) {
+                prop.value = 0
+              } else {
+                prop.value = prop.settings.min
               }
             }
             // Create steps and slider on creation
             this.getSliderTicks(prop.settings)
 
             // TODO: maybe safe in json / only modify on creation
+          } else if (prop.type === 'button') {
+            if (!prop.value) {
+              prop.value = Object.keys(prop.settings.values)[0]
+            }
           }
           return prop
         })
@@ -404,7 +442,7 @@ export default {
       // console.log('check props')
       // console.log(this.properties)
     // },
-    // debugTest () {
+    // debug Test () {
       // console.log('@VueBlockProperty: Debug Test')
       // console.log(this.properties)
     // }
@@ -444,15 +482,17 @@ export default {
     right: @header-padding-sideways;
 }
 
+.aica-button {
+    &.selected {
+        background-color: var(--color-highlight1-dark);
+    }
+}
+
+
 .reference-button-container{
     display: grid;
     grid-template-columns: auto auto;
-    // flex-direction: row;
-    // justify-content: center;
-
-    .reference-button{
-
-    }
+    // grid-column-gap: $right;
 }
 
 .property-panel {
@@ -467,7 +507,6 @@ export default {
     position: absolute;
     right: @sidebar-width*0.08;
     bottom: $right*1.5;
-
     // padding: 20px;
 
     display: grid;
@@ -475,11 +514,18 @@ export default {
     grid-column-gap: $right;
 }
 
+.two-button-container {
+    // padding: 20px;
+    // display: grid;
+    // grid-template-columns: auto auto;
+    // grid-column-gap: @sidebar-width*0.8;
+}
 
-.dropdown-1 {
-    position: relative;
-    display: inline-block;
-    font-color: #FFFFFF
+
+ .dropdown-1 {
+     position: relative;
+     display: inline-block;
+     font-color: #FFFFFF
                     // background: #FFFFFF;
 }
 

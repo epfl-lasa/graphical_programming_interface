@@ -13,13 +13,15 @@ fields:
   label: Reference
   name: reference
   type: eulerPose
+  unit: mm_deg
 - attr: property
-  label: Force [N]
+  label: Force
   name: force
   type: slider
+  unit: N
   settings:
-    - min: 0
-      max: 50
+    min: 0
+    max: 50
 - attr: input
   label: Input
   name: input

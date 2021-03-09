@@ -7,14 +7,14 @@
 @screen-width: 100vw;
 @screen-height: 100vh;
 
-@propwidth: ~"calc(@{screen-width}/@{reference-screen-width})";
-@propheight: ~"calc(@{screen-height}/@{reference-screen-height})";
-
 // Document dimensions
 // Block Dimensions
 @block-width: 9.0vw;
 @block-height: @block-width;
-@marginBlock: @block-width*0.25;
+@block-container-width: 12vw;
+@block-container-height: 12vw;
+
+// @marginBlock: @block-width*0.25;
 
 // Header
 @header-height: 7.5vh;
@@ -24,8 +24,8 @@
 
 @height-icon-logo: 3.0vh;
 @height-min-button: 3.6vh;
-@height-icon-small: 4.1vh;
-@height-icon-medium: 6.3vh;
+@height-icon-small: 5.5vh;
+@height-icon-medium: 7.0vph;
 
 @border-width: 2px;
 
@@ -54,6 +54,8 @@
 // @font-secondary: ''
 
 .aica-icon-medium {
+  touch-action: none;
+  -ms-touch-action: none;
   cursor: pointer;
   height: @height-icon-medium;
   width: @height-icon-medium;
@@ -64,6 +66,8 @@
 }
 
 .aica-icon-small {
+  touch-action: none;
+  -ms-touch-action: none;
   cursor: pointer;
   height: @height-icon-small;
   width: @height-icon-small;

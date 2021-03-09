@@ -33,6 +33,7 @@
          @click="showMenu($event)"
          @touchstart="showMenu($event)"
          >
+
   </div>
 </div>
 </template>
@@ -81,12 +82,14 @@ export default {
         e.preventDefault()
       }
       this.isActive = false
+      console.log('Hide Menu')
     },
     showMenu (e) {
       if (e.type === 'touchend') {
         e.preventDefault()
       }
       this.isActive = true
+      console.log('Show Menu')
     },
     addModule (module) {
       this.$emit('addModule', module)
@@ -107,7 +110,6 @@ export default {
 .library-header {
     height: @height-icon-small;
     width: @height-icon-small*5;
-
     text-align: left;
 }
 
@@ -118,7 +120,7 @@ export default {
 }
 
 .title-box {
-    width: @sidebar-width*0.7;
+    width: @sidebar-width*0.6;
 }
 
 #buttonCloseLibrariesRight {

@@ -1,7 +1,7 @@
 <!--
 TODO:>
  Divide sensible into links, block, & container
-  -->
+-->
 
 <template>
 <div class="vue-block"  :style="style"
@@ -311,10 +311,11 @@ export default {
     background:@color-main-dark;
     position: absolute;
 
-    width: ~"calc(2*@{marginBlock} + @{block-width})";
-    height: ~"calc(2*@{marginBlock} + @{block-height})";
+    width: var(--block-container-height);
+    height: var(--block-container-height);
     z-index: 1;
     opacity: 1.0;
+    border-radius: var(--margin-block);
 
     .icon-container {
         background:@color-main-medium;
@@ -323,8 +324,8 @@ export default {
 
         // Put at center of parent
         position: relative;
-        left: @marginBlock;
-        top: @marginBlock;
+        left: var(--margin-block);
+        top: var(--margin-block);
 
         &.selected {
             box-shadow: 0px 0px 20px 4px var(--color-main-bright);
@@ -341,8 +342,8 @@ export default {
         color: @fontcolor-main;
         // text-align: center;
         position: relative;
-        top: @marginBlock;
-        left:@marginBlock;
+        top: var(--margin-block);
+        left: var(--margin-block);
     }
 }
 </style>

@@ -1,7 +1,7 @@
-name: idle
-title: Idle
+name: home
+title: Home
 
-description: Idle Module
+description: Home / Wait
 
 family: movement
 iconpath: idle_pause.svg
@@ -14,10 +14,15 @@ fields:
   label: Reference
   name: reference
   type: eulerPose
+  unit: mm_deg
 - attr: property
   label: Stiffness
   name: stiffness
   type: slider
+  unit: N/mm
+  settings:
+    min: 0
+    max: 5
 - attr: input
   label: Input
   name: input
