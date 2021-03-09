@@ -1,0 +1,37 @@
+information: 'Replay & follow path from demonstration while applying a force.'
+
+name: followpath
+title: Follow Path
+
+description: Follow Path with Predefined Force
+family: intelligent
+
+iconpath: learning_of_motion_with_force.svg
+
+fields:
+- attr: property
+  label: Reference
+  name: reference
+  type: eulerPose
+  unit: mm_deg
+- attr: property
+  label: Learned Data
+  name: learning_data
+  type: database
+  onlyOneRecording: true
+- attr: property
+  label: Force
+  name: force
+  unit: mm
+  settings:
+    min: 0
+    max: 49
+  type: slider
+- attr: input
+  label: Input
+  name: input
+  type: event
+- attr: output
+  label: Input
+  name: output
+  type: event
