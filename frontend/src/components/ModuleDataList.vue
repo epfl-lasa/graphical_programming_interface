@@ -2,6 +2,25 @@
   <div class="data-window">
     <h2> Recorded Data </h2>
     <!-- <p>Test id: {{module.id }} </p> -->
+    <br>
+    <div v-if="robotIsMoving">
+      <div  class="aica-button danger" id="run-module"
+               @click="stopRobot($event)" @touchstart="stopRobot($event)"
+               >
+        <p> Stop Moving </p>
+      </div>
+    </div>
+    <div v-else class="reference-button-container">
+      <div class="aica-button reference-button"
+        @click="moveToStartPoint($event)" @touchstart="moveToStartPoint($event)">
+        <p> Move To Start-Point </p>
+      </div>
+      <div class="aica-button" id="run-module"
+           @click="moveToEndPoint($event)" @touchstart="moveToEndPoint($event)">
+        <p> Move To End-Point </p>
+      </div>
+    </div>
+    <br>
     <div class="file-table-content">
       <b-table
         class="data-table"
@@ -18,16 +37,26 @@
         </b-table>
     </div>
     <br>
-    <template v-if="true">
+    <div v-if="true" class="reference-button-container">
+    <!-- <template v-if="true"> -->
         <div v-if="isRecording" class="aica-button reference-button"
           @click="stopRecording($event)" @touchstart="stopRecording($event)">
-           <p> Stop </p>
+           <p> Stop Recording </p>
         </div>
         <div v-else class="aica-button reference-button"
           @click="startAndReplaceRecording($event)" @touchstart="startAndReplaceRecording($event)">
            <p> New Recording </p>
         </div>
-    </template>
+        <div v-if="robotIsMoving" class="aica-button danger" id="run-module"
+               @click="stopRobot($event)" @touchstart="stopRobot($event)"
+               >
+          <p> Stop Moving </p>
+        </div>
+        <div v-else class="aica-button" id="run-module"
+             @click="replayData($event)" @touchstart="replayData($event)">
+          <p> Replay Data </p>
+        </div>
+    </div>
     <template v-else>
       <div id="table-button-container">
         <div v-if="isRecording" class="aica-button reference-button"
@@ -70,6 +99,11 @@ export default {
     // console.log(this.module.id)
     // console.log(this.module)
     this.getDatabase()
+  },
+  beforeUnmount () {
+    if (this.isRecording) {
+      this.stopRecording()
+    }
   },
   data () {
     return {
@@ -126,12 +160,78 @@ export default {
         })
     },
     stopRecording (e) {
-      if (e.type === 'touchstart') {
+      if (e !== null && e.type === 'touchstart') {
         e.preventDefault()
       }
       this.isRecording = false
       axios.get(this.$localIP + `/stoprecording`,
                 {'params': {}})
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    stopRobot (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.$emit('stopRobot')
+    },
+    moveToStartPoint (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      if (this.selected === null) {
+        this.selected = this.database[0]
+      }
+
+      this.$emit('setRobotStateMoving')
+      axios.get(this.$localIP + `/movetofirstdatapoint/` + this.module.id + '/' + this.selected.name,
+                {'params': {}})
+        .then(response => {
+          console.log(response.statusText)
+          // Finished robot movement - reset to not moving.
+          this.$emit('stopRobot')
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    moveToEndPoint (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      if (this.selected === null) {
+        this.selected = this.database[0]
+      }
+
+      this.$emit('setRobotStateMoving')
+      axios.get(this.$localIP + `/movetolastdatapoint/` + this.module.id + '/' + this.selected.name,
+                {'params': {}})
+        .then(response => {
+          console.log(response.statusText)
+          // Finished robot movement - reset to not moving.
+          this.$emit('stopRobot')
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    replayData (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.moveToStartPoint(e)   // TODO: don't pass event...
+      if (this.selected === null) {
+        this.selected = this.database[0]
+      }
+      this.$emit('setRobotStateMoving')
+      axios.get(this.$localIP + `/replaydata/` + this.module.id + '/' + this.selected.name,
+                {'params': {}})
+        .then(response => {
+          console.log(response.statusText)
+          // Finished robot movement - reset to not moving.
+          this.$emit('stopRobot')
+        })
         .catch(error => {
           console.log(error)
         })
@@ -155,6 +255,7 @@ export default {
         .catch(error => {
           console.log(error)
         })
+      this.selected = null
     },
     getDatabase () {
       console.log('@ModuleDataList:')
@@ -194,6 +295,13 @@ export default {
     display: grid;
     grid-template-columns: auto auto;
 }
+
+.reference-button-container{
+    display: grid;
+    grid-template-columns: auto auto;
+    // grid-column-gap: $right;
+}
+
 /* .data-window { */
     /* position: absolute; */
     /* top: 15%; */

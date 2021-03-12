@@ -7,6 +7,7 @@ __author__ = "Lukas Huber"
 __email__ = "lukas@aica.tech"
 
 import warnings
+import time
 
 # ROS2 utils
 import rclpy
@@ -39,6 +40,7 @@ class SequenceHandler(Node):
 
         # TIMERS / Create here or in script(?)
         # self.create_timer(timer_period, self.timer_callback)
+        # rclpy.spin(node=self)
 
     @property
     def robot_is_moving(self):
@@ -67,9 +69,9 @@ class SequenceHandler(Node):
 
     @sequence.setter
     def sequence(self, value):
-        print('Sequence updated', value)
+        # print('Sequence updated', value)
         self._sequence = value
-    
+
     @property
     def sequence_it(self):
         return self._sequence_it
@@ -85,10 +87,26 @@ class SequenceHandler(Node):
     def get_euler_pose(seq):
         return seq['values']['property']['reference']['value']
 
+    def get_home_position_it(self):
+        ''' Start homee if none is chosens / given in the beginning.'''
+        for ii in range(len(self.sequence)):
+            if self.sequence[ii]['type'] == 'idle':
+                return ii
+
+        warnings.warn('No home-position found. Starting at 0.')
+        return 0
+
     def publish_trajectory(self, msg, force=0, time_sleep=0.02):
+        print('start spinning for waiting')
+        
         while self.movement_execution_in_progress:
             # rclpy.spin_once(node=self, timeout_sec=time_sleep)
+            # time_sleep=0.5
+            # print('Sleeping slow')
             rclpy.spin_once(node=self._MainRosHandler, timeout_sec=time_sleep)
+            # time.sleep(time_sleep)
+
+        print('end spinning for waiting')            
 
         if force is not None:
             self._MainRosHandler.set_force_parameter(force)
@@ -148,9 +166,13 @@ class SequenceHandler(Node):
             msg_path = Path()
             msg_path.poses.append(pose)
 
-        elif (self.sequence[sequence_it]['type'] == 'learn_motion'):
-            print('Module: Learned motion')
+        elif (self.sequence[sequence_it]['type'] == 'follow_path'):
+            print('Module: Following Path')
             msg_path = self._MainRosHandler.get_module_database_as_path(self.sequence[sequence_it]['id'])
+
+        elif (self.sequence[sequence_it]['type'] == 'learn_motion'):
+            warnings.warn("Unknown module of type <{}>.".format(self.sequence[sequence_it]['type']))
+            return
             
         else:
             warnings.warn("Unknown module of type <{}>.".format(self.sequence[sequence_it]['type']))
@@ -201,10 +223,14 @@ class SequenceHandler(Node):
             self.sequence_it = self.get_position_of_module_id(module_id)
         elif sequence_it is not None:
             self.sequence_it = sequence_it
+        else:
+            # Chose first home position as starting point 
+            self.sequence_it = self.get_home_position_it()
 
         sequence_loop_it = 0
         while self.robot_is_moving:
             # The module is only executed when previous is completed
+            print('Loop sequence')
             self.execute_module(self.sequence_it)
             self.sequence_it += 1
 
@@ -216,6 +242,8 @@ class SequenceHandler(Node):
                 self.robot_is_moving = False
                 print('Max iteration reached')
                 break
+
+            print('Loop sequence')
 
         print('Done looping')
         return 0

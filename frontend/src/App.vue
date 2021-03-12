@@ -111,7 +111,7 @@ export default {
     this.loadedLibrary = 'polishing_machine'
 
     // setTimeout(() => {
-      // this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
+    // this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
     // }, 500)
     // When loading finished, press default
     // this.projectName = axios.get(this.$localIP + `/getprojectName`)
@@ -187,7 +187,14 @@ export default {
     // Robot main movement handler
     runSequence () {
       this.setRobotStateMoving()
-      axios.get(this.$localIP + `/executesequence`)
+      let paramData
+      if (this.selectedBlock) {
+        paramData = {'moduleId': this.selectedBlock.id}
+      } else {
+        paramData = {}
+      }
+
+      axios.get(this.$localIP + `/executesequence`, {'params': paramData})
         .then(response => {
           console.log(response.statusText)
         })
@@ -196,7 +203,7 @@ export default {
         })
       this.loopAndUpdateActiveModule()
     },
-    async loopAndUpdateActiveModule (deltaTime = 200) {
+    async loopAndUpdateActiveModule (deltaTime = 330) {
       this.startSequenceLoop = true
       // wait
       while (this.robotIsMoving) {
@@ -217,6 +224,7 @@ export default {
     stopRobot () {
       this.robotIsMoving = false
       // this.stopRobot()
+      console.log('Stopping robot')
       axios.get(this.$localIP + `/stoprobot`)
         .catch(error => {
           console.log(error)
@@ -279,6 +287,8 @@ export default {
     },
     loadScene (filename = null) {
       if (filename === null) {
+        // TODO: seperate into two functions...
+        // Load the list which it can be loaded from.
         axios.get(this.$localIP + `/getfilelist`, {'params': {}})
           .then(response => {
             this.localFiles = response.data.localfiles

@@ -5,6 +5,13 @@ URGENT URGENT:
 
 > Touchstart at right screen side (show menu) is currently passive. This does not allow for event.preventDefault() ! Fix it...
 
+>Don't updte environment while running...
+
+> Reset everything @ startup!!! (front & backend + send message to each other...)
+
+> Error handling for empty recording!
+
+> Force Controller
 
 
 URGENT:

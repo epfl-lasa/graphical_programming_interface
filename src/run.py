@@ -3,6 +3,7 @@ AICA user interface launcher
 
 (c) AICA SarL
 '''
+
 __author__ = "Lukas, Gustav"
 __email__ = "lukas@aica.tech"
 
@@ -10,8 +11,8 @@ import os
 import sys
 import warnings
 import copy
-import json # use json for data-exchange
-import yaml # use yaml for configuration 
+import json    # use json for data-exchange
+import yaml    # use yaml for configuration 
 import time
 import datetime
 from random import *
@@ -51,6 +52,7 @@ cors = CORS(app)
 data_directory = os.path.join('backend', 'userdata')
 
 IMPORT_COMMUNACTION_CONTROLLER = False
+AUTOMATICALLY_UPDATE_ROS_HANDLER = True
 
 # ----------------------------------------
 #    Execute this at the startup
@@ -104,11 +106,17 @@ def executemodule(module_id):
     return '0: Success'
 
 @app.route('/executesequence')
-def executesequence():
-    print('@run.py: Start executing sequence')
+def executesequence(*args, **kwargs):
+    ''' Execute sequence starting at 0 OR at chosen module.'''
+    try:
+        module_id = request.args.get('moduleId')
+        module_id = int(module_id)
+    except:
+        print('No module selected')
+        module_id = None
     # Start / end position
-    status = RosMainHandler.execute_sequence()
-    print('@run.py: Finished executing sequence')
+    # import pdb; pdb.set_trace()
+    status = RosMainHandler.execute_sequence(module_id=module_id)
     return '0: Success'
 
 @app.route('/getactivemoduleid')
@@ -123,9 +131,29 @@ def getcurrentrobotposition():
     return pose_data
 
 # ----------------------------------------
+#   DataReplay & Handling
+# ----------------------------------------
+@app.route('/movetofirstdatapoint/<int:my_id>/<string:my_filename>')
+def movetofirstdatapoint(my_id, my_filename):
+    data_path = RosMainHandler.get_module_database_as_path(my_id, file_name=my_filename, data_it=0)
+    state = RosMainHandler.move_to_position(msg_path=data_path)
+    return '0'
+
+@app.route('/movetolastdatapoint/<int:my_id>/<string:my_filename>')
+def movetolasttdatapoint(my_id, my_filename):
+    data_path = RosMainHandler.get_module_database_as_path(my_id, file_name=my_filename, data_it=-1)
+    state = RosMainHandler.move_to_position(msg_path=data_path)
+    return '0'
+
+@app.route('/replaydata/<int:my_id>/<string:my_filename>')
+def replaydata(my_id, my_filename):
+    data_path = RosMainHandler.get_module_database_as_path(my_id, file_name=my_filename, data_it=None)
+    state = RosMainHandler.move_to_position(msg_path=data_path)
+    return '0: success'
+
+# ----------------------------------------
 #   Record Data for a specific Module
 # ----------------------------------------
-
 @app.route('/startforcerecording')
 def startforcerecording():
     status = RosMainHandler.start_force_recording()
@@ -189,7 +217,7 @@ def updatebackend(*args, **kwargs):
         return '202: Could not transfer data' 
 
     statusMessage = RosMainHandler.update_scene(scene)
-    print(statusMessage)
+    # print(statusMessage)
     
     return '0: Transfer successful'
 
@@ -243,6 +271,11 @@ def loadfromfile(my_filename):
     # Transform to dict (?)
     if not 'scene' in data:
         data = {'scene': data}
+
+    print('data scene', data['scene'])
+    # Update directly ROS2
+    if AUTOMATICALLY_UPDATE_ROS_HANDLER:
+        RosMainHandler.update_scene(scene=copy.deepcopy(data['scene']))
 
     return data
 

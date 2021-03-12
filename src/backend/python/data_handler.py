@@ -17,10 +17,9 @@ import json
 
 import numpy as np
 
-
 class DataHandler():
     ''' The datahandler manages the file-management and storage. 
-    Backend handler which interacts with file-system '''
+    Backend handler which interacts with file-system. '''
     def __init__(self, local_path='.'):
         self.data_directory = os.path.join(local_path, '..', 'userdata', 'projects')
         self.module_directory = os.path.join(local_path, 'module_library')
@@ -59,12 +58,12 @@ class DataHandler():
         return self.get_module_database_list(module_id)
         # Try to create file_path if it does not exist
 
-    def load_from_module_database(self, module_id, file_name=None):
-        ''' Load from data of a module. '''
+    def load_from_module_database(self, module_id, file_name=None, data_it=None):
+        ''' Load from data of a recording of one specific module. '''
         module_path = self.get_recordings_path(module_id, try_to_create_dir=False)
         
         if file_name is None:
-            # By default take the last element
+            # By default take the last (recorded) element
             local_library_list = os.listdir(module_path)
             file_name = local_library_list[-1]
 
@@ -80,7 +79,12 @@ class DataHandler():
 
         # Skip header row
         file_data = np.loadtxt(file_path, skiprows=1, delimiter=',')
-            
+
+        if data_it is not None:
+            file_data = file_data[:, data_it]
+             # Recreate 2D array
+            file_data = np.reshape(file_data, (-1, 1))
+
         return first_line, file_data
 
     def delete_module_database(self, module_id, file_name):

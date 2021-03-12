@@ -12,6 +12,10 @@ from nav_msgs.msg import Path
 from geometry_msgs.msg import WrenchStamped, Pose, PoseStamped
 
 from rclpy.parameter import Parameter
+from rcl_interfaces.msg import ParameterType
+from rcl_interfaces.msg import ParameterValue
+from rcl_interfaces.msg import ParameterDescriptor
+from rcl_interfaces.srv import SetParameters
 
 # Personal library
 from sequence_handler import SequenceHandler
@@ -26,9 +30,11 @@ class ControllerNodeSimulator(Node):
         'controller_command': '/linear_controller/command',
         'controller_success': '/linear_controller/path_executed',
     }
-    
+
+    my_node_name = 'motion_generator2'
     def __init__(self):
-        super().__init__('ros_main_handler')
+        
+        super().__init__(self.my_node_name)
 
         self.subscription_trajectory = self.create_subscription(
             Path, self.topic_names['controller_command'], self.callback_trajectory, 2)
@@ -39,14 +45,30 @@ class ControllerNodeSimulator(Node):
             Bool, self.topic_names['controller_success'], 2)
 
         self._action_server = ActionServer(self,
-                                         FollowPath,
-                                         'follow_path',
-                                         self.callback_execute_action)
+                                           FollowPath,
+                                           '/' + self.my_node_name + '/' + 'follow_path',
+                                           self.callback_execute_action)
 
         self.robot_is_moving = False
 
+        # my_parameter_descriptor = ParameterDescriptor(type=ParameterType.BOOl)
+        self.declare_parameter('compliant_mode')
+        # self.param_compliant = Parameter('compliant_mode', Parameter.Type.BOOL, False)
+        self.param_compliant = Parameter(
+            name='compliant_mode', value=False, type_=Parameter.Type.BOOL)
+        
+        # self.param_compliant = Parameter(name='compliant_mode', value=ParameterValue(integer_value=3, type=ParameterType.PARAMETER_INTEGER))
+        self.set_parameters([self.param_compliant])
+
+        # self.create_service(SetParameters, '/motion_generator2/compliant_mode', self.param_callback)
         print('Start spinning')
-        rclpy.spin(node=self)
+        # rclpy.spin(node=self)
+        while True:
+            rclpy.spin_once(node=self, timeout_sec=0.5)
+            print('Parameter value: {}', self.param_compliant.value)
+
+    def param_callback(self):
+        print('This is workign')
         
     def __del__(self):
         rclpy.shutdown()

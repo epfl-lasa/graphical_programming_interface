@@ -2,15 +2,15 @@
 <div class="side-menu">
   <div class="side-menu-header">
     <h1> {{ module.title }} </h1>
-    <div v-if="robotIsMoving" class="aica-button danger" id="run-module"
-         @click="stopRobot($event)" @touchstart="stopRobot($event)"
-         >
-      <p> Stop Moving </p>
-    </div>
-    <div v-else class="aica-button" id="run-module"
-         @click="executeModule($event)" @touchstart="executeModule($event)">
-      <p> Run Module </p>
-    </div>
+  <!--   <div v-if="robotIsMoving" class="aica-button danger" id="run-module" -->
+  <!--        @click="stopRobot($event)" @touchstart="stopRobot($event)" -->
+  <!--        > -->
+  <!--     <p> Stop Moving </p> -->
+  <!--   </div> -->
+  <!--   <div v-else class="aica-button" id="run-module" -->
+  <!--        @click="executeModule($event)" @touchstart="executeModule($event)"> -->
+  <!--     <p> Run Module </p> -->
+  <!--   </div> -->
   </div>
   <div class="property-panel side-menu-body">
      <div class="property" v-for="(p, propKey) in properties">
@@ -36,7 +36,7 @@
         <template v-for="(dir, key) in p.value.orientation">
           <label>{{key}}:</label>
           <input type="number" pattern="[0-9]*" inputmode="numeric"
-                  class="position-input"
+                 class="orientation-input"
                  v-model="p.value.orientation[key]">
           <!-- <input type="number" pattern="[0-9]*" inputmode="numeric"> -->
         </template>
@@ -53,7 +53,9 @@
             <p> Move Robot </br> to Reference </p>
           </div>
 
-          <div v-if="!(robotIsMoving)" @click="setToRobotPosition" class="aica-button reference-button">
+          <div v-if="!(robotIsMoving)" @click="setToRobotPosition"
+               class="aica-button reference-button"
+               :class="{critical: awaitRobotPosition}">
             <p> Set to </br> Robot Position </p>
           </div>
         </div>
@@ -90,13 +92,14 @@
       </div>
 
       <div class="property-box" v-else-if="p.type==='database'">
+
         <ModuleDataList
           :module="module"
           :robotIsMoving="robotIsMoving"
           :multipleRecordings="true"
           :settings=p.settings
           @setRobotStateMoving="setRobotStateMoving"
-          @stopRobot="stopRobot"
+          @stopRobot="$emit('stopRobot')"
           />
       </div>
 
@@ -181,7 +184,8 @@ export default {
       properties: [],
       robotIsCoupledToPose: false,
       // isMovingToReference: false,
-      moveToButtonLabel: ''
+      moveToButtonLabel: '',
+      awaitRobotPosition: false
     }
   },
   // computed: {
@@ -310,12 +314,15 @@ export default {
       if (e.type === 'touchstart') {
         e.preventDefault()
       }
+      // Set property to position
+      this.awaitRobotPosition = true
 
       axios.get(this.$localIP + `/getrobotposition`)
         .then(response => {
           this.properties.reference.value.frameId = response.data.pose.frameId
           this.properties.reference.value.position = response.data.pose.position
           this.properties.reference.value.orientation = response.data.pose.orientation
+          this.awaitRobotPosition = false
         })
         .catch(error => {
           console.log(error)
@@ -522,10 +529,10 @@ export default {
 }
 
 
- .dropdown-1 {
-     position: relative;
-     display: inline-block;
-     font-color: #FFFFFF
+.dropdown-1 {
+    position: relative;
+    display: inline-block;
+    font-color: #FFFFFF
                     // background: #FFFFFF;
 }
 
@@ -547,4 +554,13 @@ export default {
     margin-left: 5px;
     margin-right: 5px;
 }
+
+.position-input {
+    width: 100px;
+}
+
+.orientation-input {
+    width: 100px;
+}
+
 </style>

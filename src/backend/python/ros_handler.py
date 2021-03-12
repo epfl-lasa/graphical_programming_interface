@@ -3,6 +3,7 @@ AICA user data handler
 
 (c) AICA SarL
 '''
+
 __author__ = "Lukas Huber"
 __email__ = "lukas@aica.tech"
 
@@ -11,6 +12,7 @@ import sys
 import copy
 import warnings
 import threading
+import time
 
 import yaml
 
@@ -26,9 +28,14 @@ from rclpy.action import ActionClient
 # ROS messages
 from std_msgs.msg import Bool
 from nav_msgs.msg import Path
-from geometry_msgs.msg import WrenchStamped, Pose, PoseStamped
+from geometry_msgs.msg import WrenchStamped, Pose, PoseStamped, Quaternion
 
-from rclpy.parameter import Parameter
+# from rclpy.parameter import Parameter
+from rcl_interfaces.msg import Parameter
+from rcl_interfaces.msg import ParameterType
+from rcl_interfaces.msg import ParameterValue
+from rcl_interfaces.msg import ParameterDescriptor, ParameterValue
+from rcl_interfaces.srv import SetParameters, GetParameters, ListParameters
 
 # Personal library
 from sequence_handler import SequenceHandler
@@ -36,6 +43,8 @@ from force_listener import ForceListener
 
 # Custom action & messages
 from modulo_msgs.action import FollowPath
+
+default_frame = 'iiwa_link_0'
 
 class RosHandler(Node):
     ''' The datahandler manages the ROS and sending it to the frontend. '''
@@ -51,9 +60,18 @@ class RosHandler(Node):
         'controller_force': '/linear_controller/force',
     }
 
-    action_name = {
-        'action_path': '/path/action',
-    }
+    # action_name = {
+        # 'action_path': '/motion_generator/follow_path',
+    # }
+
+    controller_node_name = '/motion_generator'
+
+    compliant_node_name = '/robot_interface'
+    
+    # transform from mm to m
+    factor_dist_front_backend_dist = 1000
+
+    default_frame = 'iiwa_link_0'
 
     @staticmethod
     def initialize_ros():
@@ -66,7 +84,6 @@ class RosHandler(Node):
         # self.thread = threading.Thread(target=rclpy.spin, args=(self, ), daemon=True)
         # self.thread.start()
         
-        
         # Publisher
         self.publisher_trajectory = self.create_publisher(
             Path, self.topic_names['controller_command'], 2)
@@ -78,6 +95,9 @@ class RosHandler(Node):
         # Declare callback messages
         self.msg_robot_pose = None
         self.msg_ft_sensor = None
+
+        # The handler of goals for the action-server
+        self._goal_handle = None
         
         # Subcription (potentially: only activate this when actually needed...)
         self.subscription_robot_robot = self.create_subscription(
@@ -85,11 +105,33 @@ class RosHandler(Node):
 
         self.subscription_ft_sensor = self.create_subscription(
             WrenchStamped, self.topic_names['ft_sensor'], self.callback_ft_sensor, 5)
+        
+        # self._action_client_path = ActionClient(self, FollowPath, RosHandler.action_name[0])
+        self._action_client_path = ActionClient(
+            self, FollowPath, self.controller_node_name + '/follow_path')
 
-        self._action_client_path = ActionClient(self, FollowPath, 'follow_path')
+        warnings.warn('test 115')
+        print('test 115')
 
         # Initialize the sequence handler
         self.SequenceHandler = SequenceHandler(MainRosHandler=self)
+
+        warnings.warn('test 120')
+        print('test 120')
+        # self.cli = self.create_client(SetParameters, '/another_node/set_parameters')
+        self.client_setparams_controller = self.create_client(
+            SetParameters, self.controller_node_name+'/set_parameters')
+
+        self.client_setparams = self.create_client(
+            SetParameters, self.compliant_node_name+'/set_parameters')
+
+
+        print('test 120')
+        while (not self.client_setparams.wait_for_service(timeout_sec=1.0) or
+               not self.client_setparams_controller.wait_for_service(timeout_sec=1.0)):
+            self.get_logger().info('service not available, waiting again...')
+            
+        self.req_params = SetParameters.Request()
             
         # self.publisher_controller = self.create_publisher(String, self.controller_topic, 10)
         # self.publisher_trajectory = self.create_publisher(String, self.controller_topic, 10)
@@ -104,8 +146,15 @@ class RosHandler(Node):
         self.data_recording = True
 
         self.start_time = self.get_clock().now().to_msg()
-
+        
         self.DataHandler = DataHandler
+
+        # Spin all of it.
+        # warnings.warn('Start spinning...')
+        # print('Start spinning...')
+        # rclpy.spin(node=self)
+        print('Finished init.')
+        warnings.warn('Finished init.')
 
     def __del__(self):
         # Sure about shutdown of rclpy(?)
@@ -131,17 +180,25 @@ class RosHandler(Node):
     @robot_is_moving.setter
     def robot_is_moving(self, value):
         if value:
-            self.publisher_stop.publish(Bool(data=False))
+            self._goal_handle = None
+            print('Doing nothing -- robot is moving.')
+            # self.publisher_stop.publish(Bool(data=False))
         else:
+            # Cancel_goal_async
+            if self._goal_handle is None:
+                warnings.warn('No goal handle detected..')
+            else:
+                self._goal_handle.cancel_goal_async()
             self.publisher_stop.publish(Bool(data=True))
         self._robot_is_moving = value
 
+    
     @staticmethod
-    def transform_poseROS_to_eulerPose(pose, frameId=None):
+    def transform_poseROS_to_eulerPose(pose, frameId=None, round_pose=True):
         ''' Torm to front-end readable & human-understandable degrees json.'''
         # Default frame Id
         if frameId is None:
-            frameId = 'none'
+            frameId = RosHandler.default_frame
             
         orientation = Rotation.from_quat([
             pose.orientation.x,
@@ -154,9 +211,9 @@ class RosHandler(Node):
             'type': 'eulerPose',
             'frameId': frameId,
             'position': {
-                'x': pose.position.x,
-                'y': pose.position.y,
-                'z': pose.position.z
+                'x': pose.position.x * RosHandler.factor_dist_front_backend_dist,
+                'y': pose.position.y * RosHandler.factor_dist_front_backend_dist,
+                'z': pose.position.z * RosHandler.factor_dist_front_backend_dist
             },
             'orientation': {
                 'x': orientation_euler[0],
@@ -164,6 +221,14 @@ class RosHandler(Node):
                 'z': orientation_euler[2],
             },
         }
+
+        if round_pose:
+            for key in euler_pose['position']:
+                euler_pose['position'][key] = round(euler_pose['position'][key], 1)
+
+            for key in euler_pose['orientation']:
+                euler_pose['orientation'][key] = round(euler_pose['orientation'][key], 1)
+        
         return euler_pose
 
     @staticmethod
@@ -179,9 +244,9 @@ class RosHandler(Node):
         qq = orientation.as_quat()
 
         pose = Pose()
-        pose.position.x = float(euler_pose['position']['x'])
-        pose.position.y = float(euler_pose['position']['y'])
-        pose.position.z = float(euler_pose['position']['z'])
+        pose.position.x = float(euler_pose['position']['x']) / RosHandler.factor_dist_front_backend_dist
+        pose.position.y = float(euler_pose['position']['y']) / RosHandler.factor_dist_front_backend_dist
+        pose.position.z = float(euler_pose['position']['z']) / RosHandler.factor_dist_front_backend_dist
         
         pose.orientation.x = qq[0]
         pose.orientation.y = qq[1]
@@ -189,6 +254,50 @@ class RosHandler(Node):
         pose.orientation.w = qq[3]
 
         return pose
+
+    def set_compliant_mode(self, value):
+        ''' Set Compliant mode. '''
+        # ros2 service type /robot_interface/set_parameters
+        # rcl_interfaces/srv/SetParameters
+        # compliant_mode
+        # type_bool = 1
+
+        new_param_value = ParameterValue(type=ParameterType.PARAMETER_BOOL, bool_value=bool(value))
+        new_param = Parameter(name='compliant_mode',  value=new_param_value)
+        self.req_params.parameters = [new_param]
+
+        self.future = self.client_setparams.call_async(self.req_params)
+
+        if bool(value): # True
+            if self.msg_robot_pose is None:
+                warnings.warn('No robot state ever recieved. Not resetting attractor.')
+                return
+            
+            # PARAMETER_DOUBLE_ARRAY = 8
+            # Get latest message
+            rclpy.spin_once(node=self, timeout_sec=0.02)
+            param_value = [self.msg_robot_pose.position.x,
+                           self.msg_robot_pose.position.y,
+                           self.msg_robot_pose.position.z,
+                           self.msg_robot_pose.orientation.w,
+                           self.msg_robot_pose.orientation.x,
+                           self.msg_robot_pose.orientation.y,
+                           self.msg_robot_pose.orientation.z
+            ]
+            # param_value = [6,6,6, 6,6,6,6]
+            new_param_value = ParameterValue(type=ParameterType.PARAMETER_DOUBLE_ARRAY, double_array_value=param_value)
+            new_param = Parameter(name='attractor_pose',  value=new_param_value)
+            self.req_params.parameters = [new_param]
+            # self.future = self.client_setparams.call_async(self.req_params)
+            self.future_controller = self.client_setparams_controller.call_async(self.req_params)
+        print('done')
+        # my_new_param = rclpy.parameter.Parameter(
+            # 'compliant_mode',
+            # rclpy.Parameter.Type.BOOL,
+            # value
+        # )
+        # self.set_parameters([my_new_param])
+        
 
     def set_force_parameter(self, desired_force=0):
         debugging = True
@@ -213,30 +322,36 @@ class RosHandler(Node):
     ################################################
     ### Active moving of the robots
     ################################################
-    def move_to_position(self, euler_pose):
+    def move_to_position(self, euler_pose=None, msg_path=None):
         ''' Move to specific euler pose.'''
         self.set_force_parameter(0)
         print('Start moving')
-        
-        pose = PoseStamped()
-        pose.header.frame_id = 'none'
-        # pose.header.stamp = (?)
-        pose.pose = self.transform_eulerPose_to_poseROS(euler_pose)
 
-        # Create Path
-        msg_path = Path()
-        msg_path.poses.append(pose)
+        if msg_path is None:
+            pose = PoseStamped()
+            pose.header.frame_id = RosHandler.default_frame
         
+            pose.pose = self.transform_eulerPose_to_poseROS(euler_pose)
+            # Create Path
+            msg_path = Path()
+            msg_path.poses.append(ros_pose)
+
         self.startup_robot()
         # self.publisher_trajectory.publish(msg_path)
+        print('moving to position')
         self.send_action_path(msg_path)
 
+        timeout_sec = 0.1
         while(self.movement_execution_in_progress):
-            rclpy.spin_once(node=self, timeout_sec=0.1)
+            # print('waiting for execution')
+            rclpy.spin_once(node=self, timeout_sec=timeout_sec)
+            # time.sleep(timeout_sec)
             
         return 0
 
     def send_action_path(self, msg_path):
+        ''' Send path to the action.'''
+        print('308 ---------------- Send action path ')
         self.movement_execution_in_progress = True
         msg_goal = FollowPath.Goal()
         msg_goal.path = msg_path
@@ -257,6 +372,7 @@ class RosHandler(Node):
 
         print('finished', goal_handle.status)
         self._get_result_future = goal_handle.get_result_async()
+        self._goal_handle = goal_handle
         self._get_result_future.add_done_callback(self.callback_goal_result)
     
     def callback_goal_result(self, future):
@@ -277,10 +393,13 @@ class RosHandler(Node):
         ''' Run the module '''
         print('TODO: execute sequence')
         self.startup_robot()
-        status_message = self.SequenceHandler.execute_module_including_reseting(module_id)
+        # status_message = self.SequenceHandler.execute_module_including_reseting(module_id)
+        status_message = self.SequenceHandler.execute_module(module_id)
 
+        timeout_sec=0.1
         while(self.movement_execution_in_progress):
-            rclpy.spin_once(node=self, timeout_sec=0.1)
+            rclpy.spin_once(node=self, timeout_sec=timeout_sec)
+            # time.sleep(timeout_sec)
 
         return status_message
 
@@ -289,8 +408,10 @@ class RosHandler(Node):
         self.startup_robot()
         status_message = self.SequenceHandler.execute_sequence(module_id)
 
+        timeout_sec = 0.1
         while(self.movement_execution_in_progress):
-            rclpy.spin_once(node=self, timeout_sec=0.1)
+            rclpy.spin_once(node=self, timeout_sec=timeout_sec)
+            # time.sleep(timeout_sec)
         
         return status_message
 
@@ -298,13 +419,14 @@ class RosHandler(Node):
         return self.SequenceHandler.get_current_module_id()
 
     ################################################
-    ### Force Recordingh
+    ### Force Recording
     ################################################
     def start_force_recording(self):
         ''' Activate or initialize force listener. '''
         if self.force_listener is None:
             self.force_listener = ForceListener(start_time=self.start_time)
 
+        # self.set_compliant_mode(True)
         self.force_listener.activate()
         return 0
 
@@ -323,6 +445,25 @@ class RosHandler(Node):
     ################################################
     ### Get position and states
     ################################################
+    def get_default_position_from_file(self, file_name='default_pos.txt'):
+        ''' Get current position of the robot. '''
+        # TODO: don't do data importing here...
+        default_position_file = os.path.join('/home/ros2/src/backend/python', file_name)
+        with open(default_position_file, 'r') as ff:
+            default_data = yaml.load(ff, Loader=yaml.FullLoader)
+
+        default_pose = Pose()
+        default_pose.position = Position(default_data[0], default_data[1], default_data[2])
+        default_pose.orientation = Quaternion(default_pose[0], default_pose[1], default_pose[2])
+
+        default_pose = self.RosMainHandler.transform_poseROS_to_eulerPose()
+        return default_pose
+
+    def set_default_position(self, file_name='default_pos.txt'):
+        ''' Get current position of the robot. '''
+        pose_data = self.RosMainHandler.get_default_pose(pose_type='eulerpose')
+        return pose_data
+
     def get_current_robot_joint_position(self):
         # TODO - for future...
         raise NotImplementedError('Not implented')
@@ -338,12 +479,14 @@ class RosHandler(Node):
                 return ' '
             it += 1
             rclpy.spin_once(node=self, timeout_sec=time_sleep)
+            # time.sleep(time_sleep)
 
         euler_data = self.transform_poseROS_to_eulerPose(self.msg_robot_pose)
         return {'pose': euler_data}
     
     def record_module_database(self, module_id, DataHandler, max_recording=1000, time_sleep=0.1):
         ''' Record Data and Send to Database. '''
+        self.set_compliant_mode(True)
         self.data_recording = True
 
         recorded_data = []
@@ -360,23 +503,27 @@ class RosHandler(Node):
                 warnings.warn('@ros_handler: recieved none robot position')
 
             rclpy.spin_once(node=self, timeout_sec=time_sleep)
+            # time.sleep(time_sleep)
             
         self.data_recording = False
+        # self.set_attractor_as_current(Pose)
+        self.set_compliant_mode(False)
             
         data_list = self.DataHandler.save_to_module_database(module_id, my_data=recorded_data)
         return data_list
 
-    def get_module_database_as_path(self, module_id):
+    def get_module_database_as_path(self, module_id, data_it=None, file_name=None):
         ''' Replay a module based on points in the database. '''
         # data = 
         # import pdb; pdb.set_trace()
-        header, module_data = self.DataHandler.load_from_module_database(module_id)
+        header, module_data = self.DataHandler.load_from_module_database(
+            module_id, file_name=file_name, data_it=data_it)
 
         msg_path = Path()
         if header == 'pos[x], pos[y], pos[z], quat[w], quat[x], quat[y], quat[z]':
             # TODO: include time-stamp and
             pose = PoseStamped()
-            pose.header.frame_id = '/none'
+            pose.header.frame_id = RosHandler.default_frame
             # pose.header.stamp = (?)
             
             for ii in range(module_data.shape[1]):
@@ -471,6 +618,8 @@ class RosHandler(Node):
         self.robot_is_moving = False
 
     def callback_stop_robot(self):
+        ''' Shutdown all processes. '''
+        self.movement_execution_in_progress = False
         self.robot_is_moving = False
 
     def callback_robot_pose(self, msg):

@@ -6,7 +6,9 @@ tmux new-session -d -s $session
 
 tmux rename-window -t 0 'backend'
 sleep 1.0
-tmux send-keys "FLASK_APP=src/run.py flask run" C-m
+# tmux send-keys "FLASK_APP=src/run.py flask run" C-m
+tmux send-keys "FLASK_APP=src/run.py flask run --host 0.0.0.0" C-m
+
 
 # tmux split-window -h -t $session
 # tmux split-window -h -t $session:1 -n 'frontend'
