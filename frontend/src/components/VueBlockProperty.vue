@@ -127,7 +127,8 @@
       </div>
     </div>
 
-    <div id="save-button-container">
+     <!-- Currently no saving / canceling implemented -->
+    <div v-if="false" id="save-button-container">
       <div class="aica-button reference-button"
            @click="save($event)" @touchstart="save($event)"
            >

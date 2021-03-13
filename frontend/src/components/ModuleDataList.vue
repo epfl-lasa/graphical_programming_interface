@@ -220,7 +220,7 @@ export default {
       if (e.type === 'touchstart') {
         e.preventDefault()
       }
-      this.moveToStartPoint(e)   // TODO: don't pass event...
+      // this.moveToStartPoint(e)   // TODO: don't pass event...
       if (this.selected === null) {
         this.selected = this.database[0]
       }

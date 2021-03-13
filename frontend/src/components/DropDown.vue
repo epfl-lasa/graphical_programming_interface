@@ -136,19 +136,20 @@ export default {
 
 .dropdown-list {
     position: fixed;
-    z-index: 2;
+    z-index: 7;
 }
 
 .dropdown-element {
-    margin: 5px;
-    padding: 10px 15px;
+    z-index: 10;
+    font-size: @fontsize-medium;
 
-    font-size: 20px;
+    margin: @fontsize-medium*0.15;
+    padding: @fontsize-medium*0.3 @fontsize-medium*1.0;
 
     border-style: solid;
-    border-color: @color-main-medium;
+    border-color: @color-main-mediumbright;
     border-width: 1px;
-    // border-radius: 10px;
+    // border-color: @color-border;
 
     background:@color-main-dark;
     color: @fontcolor-main;

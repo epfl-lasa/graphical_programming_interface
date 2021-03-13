@@ -1,11 +1,34 @@
 <template>
   <div class="loadsave-window">
-    <h1 v-if="appMode==='load'"> Load Module </h1>
-      <h1 v-else-if="appMode==='save'"> Save as </h1>
+    <h1 v-if="appMode==='load'" class="window-title"> Load Module </h1>
+      <h1 v-else-if="appMode==='save'" class="window-title"> Save as </h1>
     <h1 v-else> List Directory </h1>
 
-    <div class="file-table-content">
-      <b-table
+    <div class="file-table-content" :class="{load: appMode==='load', save: appMode==='save'}">
+      <table id="load-save-table">
+        <thead>
+          <tr>
+            <th> File Name </th>
+            <th> Last Modified </th>
+            <th> Type </th>
+          </tr>
+        </thead>
+        <!-- <template> -->
+          <!-- <tr v-for="mod in module_list"> -->
+        <tbody>
+          <tr v-for="row in localFiles"
+              :class="{selected: selectedListItem.name===row.name}"
+              @click="selectNew($event, row)"
+              @touchstart="">
+            <td> {{row.name}} </td>
+            <td> {{row.datemodified}} </td>
+            <td> {{row.type}} </td>
+            <td> {{selectedListItem.name === row.name}} </td>
+          </tr>
+        </tbody>
+        <!-- <template> -->
+      </table>
+      <b-table v-if="false"
         :data="localFiles"
         :selected.sync="selectedListItem"
         focusable>
@@ -30,11 +53,25 @@
       <label> File Name </label>
       <input class="position-input" type="text" v-model="saveName">
     </template>
-    <b-button v-if="appMode==='load'"
-              v-on:click="loadScene(selectedListItem.name)"> Load </b-button>
-    <b-button v-else-if="appMode==='save'"
-              v-on:click="saveScene(saveName)"> Save </b-button>
-    <b-button v-on:click="cancelLoading()"> Cancel </b-button>
+    <div id="save-button-container">
+      <div v-if="appMode==='load'" class="aica-button reference-button"
+           @click="loadScene($event, selectedListItem.name)"
+           @touchstart="loadScene($event, selectedListItem.name)"
+              >
+        Load
+      </div>
+      <div v-else-if="appMode==='save'" class="aica-button reference-button"
+           @click="saveScene($event, saveName)"
+           @touchstart="saveScene($event, saveName)"
+           >
+        Save
+      </div>
+      <div class="aica-button critical reference-button"
+           @click="cancelLoading($event)"
+           @touchstart="cancelLoading($event)">
+        Cancel
+      </div>
+    </div>
   </div>
 </template>
 
@@ -62,22 +99,47 @@ export default {
     // selectItemSync (item) {
     // this.selectedListItemName = item.name
     // },
+    selectNew (e, item) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      if (this.selectedListItem.name === item.name) {
+        // Allow selection toggle
+        this.selectedListItem = {'name': null}
+      } else {
+        this.selectedListItem = item
+      }
+    },
     notImplemented () {
       console.log('Not implemented yet.')
     },
-    cancelLoading () {
+    closeLoading () {
       this.$parent.loadSaveMode = false
       this.$parent.appMode = 'main'
     },
-    loadScene (fileName) {
-      console.log('Load')
-      this.$parent.loadScene(fileName)
-      this.cancelLoading()
+    cancelLoading (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.closeLoading()
+      console.log('Load/Saving canceled.')
     },
-    saveScene (fileName) {
-      console.log('Save')
-      this.$parent.saveScene(fileName)
-      this.cancelLoading()
+    loadScene (e, fileName) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      // console.log('Doing loadging.')
+      this.$emit('loadScene', fileName)
+      // this.$parent.loadScene(fileName)
+      this.closeLoading()
+    },
+    saveScene (e, fileName) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      // console.log('Save')
+      this.$emit('saveScene', fileName)
+      this.closeLoading()
     }
   },
   watch: {
@@ -91,31 +153,106 @@ export default {
 </script>
 
 
-<style scoped>
+<style scoped lang="less">
+@import './../assets/styles/main.less';
+
+table {
+    width: 100%;
+}
+
+thead {
+    position: sticky;
+    top: 0;
+}
+
+
+table, th, td {
+    color: var(--fontcolor-main);
+    // border: 1px solid var(--color-main-mediumbright);
+    border-collapse: collapse;
+}
+
+table {
+    th {
+        size: @fontsize-large;
+        background-color: var(--color-main-dark);
+        border-bottom: 1px solid var(--color-main-mediumbright);
+
+        padding-left: @fontsize-medium*0.5;
+        padding-right: @fontsize-medium*0.8;
+        padding-top: @fontsize-medium*0.3;
+        padding-bottom: @fontsize-medium*0.3;
+    }
+
+    td {
+        size: @fontsize-medium;
+        border-top: 1px solid var(--color-main-mediumbright);
+        border-bottom: 1px solid var(--color-main-mediumbright);
+
+        padding-left: @fontsize-medium*0.5;
+        padding-right: @fontsize-medium*0.8;
+        padding-top: @fontsize-medium*0.3;
+        padding-bottom: @fontsize-medium*0.3;
+    }
+
+    .selected {
+        background-color: var(--color-main-mediumbright);
+    }
+}
+
+.file-table-content{
+    overflow-y: auto;
+
+    &.save {
+        max-height: 60%;
+    }
+
+    &.load {
+        max-height: 70%;
+    }
+}
+
+
+
+#save-button-container {
+    align-self: center;
+    // position: absolute;
+    // right: @sidebar-width *0.08;
+    // bottom: @header-height;
+    // padding: 20px;
+    position: absolute;
+    bottom: @header-height*1.4;
+    right: @sidebar-width*0.5;
+
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-column-gap: @sidebar-width * 0.3;
+
+    background-color: var(--color-main-dark);
+}
+
+.aica-button {
+    // size: @fontsize-large;
+    size: @fontsize-large;
+}
+
+.window-title{
+    size: @fontsize-huge;
+    margin-bottom: @fontsize-huge*0.3;
+    font-color: @fontcolor-main;
+}
+
 .loadsave-window {
     position: absolute;
-    top: 15%;
-    right: 10%;
-    width: 80%;
-    height: 80%;
-    padding: 20px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: @header-height;
 
-    background-color: #d0d0d0;
-
-    z-index: 3;
-    border: 5px solid #0c0c0c;
-    border-radius: 10px;
+    background-color: var(--color-main-dark);
+    z-index: 10;
 }
 
 
-.file-table-content {
-    max-height: 80%;
-    overflow-y: auto;
-}
-
-/* Fix header !? --- TODO */
-/* .file-table-content { */
-    /* max-height: 80%; */
-    /* overflow-y: auto; */
-/* } */
 </style>

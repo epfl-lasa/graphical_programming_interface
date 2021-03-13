@@ -147,6 +147,13 @@ def movetolasttdatapoint(my_id, my_filename):
 
 @app.route('/replaydata/<int:my_id>/<string:my_filename>')
 def replaydata(my_id, my_filename):
+    # Move to start point first
+    data_path = RosMainHandler.get_module_database_as_path(my_id, file_name=my_filename, data_it=0)
+    state = RosMainHandler.move_to_position(msg_path=data_path)
+    
+    print('Reached starting point. Moving there now')
+    # TODO: check if not cancelled(!!!)
+    # Execute sequence with force... (TODO: force!!!)
     data_path = RosMainHandler.get_module_database_as_path(my_id, file_name=my_filename, data_it=None)
     state = RosMainHandler.move_to_position(msg_path=data_path)
     return '0: success'

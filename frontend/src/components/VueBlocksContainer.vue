@@ -998,6 +998,7 @@ export default {
     background-color: @color-main-dark;
     position: static;
     height: 100%;
+    width: 100%;
 
     margin: 0;
 

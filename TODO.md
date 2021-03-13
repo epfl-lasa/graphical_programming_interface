@@ -1,5 +1,21 @@
 # Extensive Todo List for Possible Projects
 
+TODO Baptiste
+> Force Controller [Baptiste]
+
+> Action Server
+
+> Parameter Tuning
+
+
+Sequence recording:
+> [Bapstiste] Scale up velocity / Keep it at max
+
+> [Lukas] Decrease sampling
+
+> 
+
+
 URGENT URGENT:
 > TEST (!)
 
@@ -11,7 +27,27 @@ URGENT URGENT:
 
 > Error handling for empty recording!
 
-> Force Controller
+> MOvement States: Movement sent, movement recieved, movement 
+(Potentially: Align with action?)
+
+> DS handler! [Speed etc.]
+
+> Force Parameter (ros_handler)
+> Velocity Parameter (ros_handler)
+
+> Clear everything at shutdown..
+
+> Degrees to radian!
+
+> Include force in direct module replay(!!!) + check if canceled
+
+> Cancel Goal: reset to current position!
+
+> Fix euler angles
+
+> reset everything on shutdown/startupreload
+
+> 
 
 
 URGENT:

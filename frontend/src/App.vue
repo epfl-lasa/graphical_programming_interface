@@ -55,6 +55,8 @@
       class="loadsave"
       :localFiles="localFiles"
       :appMode="appMode"
+      @loadScene="loadScene"
+      @saveScene="saveScene"
       />
   </template>
 
@@ -457,11 +459,26 @@ export default {
 @import './assets/styles/main.less';
 @import './assets/styles/main.css';
 
+@font-face {
+    font-family: 'Antarctica-Regular';
+    src: url(./assets/fonts/AntarcticaBeta-Regular.otf) format("truetype");
+}
+
+
+@font-face {
+    font-family: 'Antarctica-Medium';
+    src: url(./assets/fonts/AntarcticaBeta-Medium.otf) format("opentype");
+}
+
+// div.FontMarket {
+    // font-family:  Market Deco;
+// }
 
 html, body {
     margin: 0;
     padding: 0;
     color: @fontcolor-main;
+    font-family: 'Antarctica-Regular';
 }
 
 html {

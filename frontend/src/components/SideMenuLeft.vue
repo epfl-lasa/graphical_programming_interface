@@ -28,7 +28,7 @@
     <img class="aica-icon-small"
          src='./../assets/icons/keyboard_arrow_right-white-18dp.svg'
          @click="showMenu($event)"
-         @touchstart="hideMenu($event)"
+         @touchstart="showMenu($event)"
          >
              <!-- @touchstart="showMenu($event)" -->
 
@@ -177,7 +177,8 @@ export default {
 
 .side-menu-button-container {
     position: absolute;
-    top: @header-height*0.2;
+    // top: @header-height*0.2;
+    bottom: 50vh; // TODO: exactly in the middle?
     left: @header-padding-sideways;
     z-index: 5;
 }

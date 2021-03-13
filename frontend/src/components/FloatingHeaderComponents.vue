@@ -1,6 +1,9 @@
 <template>
 <header>
   <div class="floating-header">
+    <div id="home-logo">
+      <img src='./../assets/logotypes/aica_small_closed_white.svg'>
+    </div>
     <div class="aica-dropdown-menu" id="drop-down">
       <ul class="dropdown-head aica-dropdown-menu">
         <img src='./../assets/icons/keyboard_arrow_down-white-18dp.svg'
@@ -18,11 +21,6 @@
       <ul class="aica-dropdown-menu" v-if="dropdownActive"
           @click="createNew($event)" @touchstart="createNew($event)"> Create New </ul>
     </div>
-
-    <div id="home-logo">
-      <img src='./../assets/logotypes/aica_small_closed_white.svg'>
-    </div>
-
     <div v-if="robotIsMoving"  class="aica-button danger" id="run-sequence"
          @click="stopRobot($event)" @touchstart="stopRobot($event)" >
       <p> Stop Moving </p>
@@ -34,8 +32,6 @@
   </div>
 </header>
 </template>
-
-
 
 <script>
 export default {
@@ -222,6 +218,7 @@ export default {
 <style lang="less" scoped>
 @import './../assets/styles/main.less';
 
+
 .floating-header{
     height: @header-height;
     width: 100%;
@@ -232,7 +229,7 @@ export default {
     top: 0;
     left: 0;
 
-    padding-top: @header-height*0.1;
+    padding-top: @header-height*0.2;
     padding-bottom: @header-height*0.1;
     padding-left: @header-padding-sideways;
     padding-right: @header-padding-sideways;
@@ -243,22 +240,23 @@ export default {
 
     #drop-down {
         z-index: 4;
-        left: ~"calc(50% - @{height-icon-small}/2.0 - 3.0*@{height-icon-small})";
+        left: ~"calc(@{height-icon-logo} +  2.0*@{height-icon-small})";
 
         > ul {
             cursor: pointer;
 
-            font-size: 15pt;
-            padding-top: @header-height*0.1;
-            padding-bottom: @header-height*0.05;
-            padding-left:@header-height*0.3;
-            padding-right:@header-height*0.7;
-            border-color: @color-border;
-            background-color: @color-main-dark;
-            border-style: solid;
-            border-color: @color-main-medium;
-            border-width: 1px;
+            font-size: @fontsize-medium;
 
+            margin: 0;
+            padding: @fontsize-medium*0.3 @fontsize-medium*1.0;
+            width: @sidebar-width*0.7;
+
+            background-color: @color-main-dark;
+
+            border-color: @color-border;
+            border-style: solid;
+            border-color: @color-main-mediumbright;
+            border-width: 1px;
 
             &.dropdown-head {
                 border-style: none;
@@ -267,21 +265,22 @@ export default {
         }
     }
 
-    #home-logo {
-        z-index: 4;
-        width: @height-icon-small;
-        height: @height-icon-small;
-        left: ~"calc(50% - @{height-icon-small}/2.0)";
+}
 
-        cursor: pointer;
-        z-level: 5;
+#run-sequence {
+    z-index: 4;
+    left: ~"calc(50vw - @{height-icon-small}*2)";
+    top: @height-icon-small * 0.4;
+}
 
-    }
-
-    #run-sequence {
-        z-index: 4;
-        left: ~"calc(50% + @{height-icon-small}/2.0 + @{height-icon-small}*2)";
-        top: @height-icon-small * 0.3;
-    }
+#home-logo {
+    z-index: 4;
+    width: @height-icon-small;
+    height: @height-icon-small;
+    // left: ~"calc(50% - @{height-icon-small}/2.0)";
+    left: @height-icon-logo * 1.5;
+    top: @header-height*0.3;
+    cursor: pointer;
+    z-level: 5;
 }
 </style>

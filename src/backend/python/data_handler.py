@@ -19,7 +19,7 @@ import numpy as np
 
 class DataHandler():
     ''' The datahandler manages the file-management and storage. 
-    Backend handler which interacts with file-system. '''
+    Backend handler which interacts with file-system '''
     def __init__(self, local_path='.'):
         self.data_directory = os.path.join(local_path, '..', 'userdata', 'projects')
         self.module_directory = os.path.join(local_path, 'module_library')
@@ -81,9 +81,9 @@ class DataHandler():
         file_data = np.loadtxt(file_path, skiprows=1, delimiter=',')
 
         if data_it is not None:
-            file_data = file_data[:, data_it]
+            file_data = file_data[data_it, :]
              # Recreate 2D array
-            file_data = np.reshape(file_data, (-1, 1))
+            file_data = np.reshape(file_data, (1, -1))
 
         return first_line, file_data
 

@@ -131,7 +131,8 @@ export default {
 
 .side-menu-button-container {
     position: absolute;
-    top: @header-height*0.2;
+    bottom: 50vh; // TODO: exactly in the middle?
+    // top: @header-height*0.2;
     right: @header-padding-sideways;
     z-index: 3;
 }
