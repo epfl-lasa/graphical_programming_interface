@@ -3,13 +3,13 @@
   <div v-if="isActive" class="side-menu">
     <div  class="side-menu-header">
       <div class="title-box">
-        <h1 > {{libraryName}}</h1>
+        <h1> {{libraryName}}</h1>
       </div>
-      <img class="aica-icon-small"
-             src='./../assets/icons/keyboard_arrow_down-white-18dp.svg'
-             @click="dropDownLibrary($event)"
-             @touchstart="dropDownLibrary($event)"
-             >
+      <!-- <img class="aica-icon-small" -->
+             <!-- src='./../assets/icons/keyboard_arrow_down-white-18dp.svg' -->
+             <!-- @click="dropDownLibrary($event)" -->
+             <!-- @touchstart="dropDownLibrary($event)" -->
+             <!-- > -->
         <img id="buttonCloseLibrariesRight" class="aica-icon-small"
              src='./../assets/icons/keyboard_arrow_right-white-18dp.svg'
              @click="hideMenu($event)"
@@ -72,20 +72,20 @@ export default {
       }
     },
     dropDownLibrary (e) {
-      if (e.type === 'touchend') {
+      if (e.type === 'touchstart') {
         e.preventDefault()
       }
       console.log('@@SideMenuHeader: TODO hide')
     },
     hideMenu (e) {
-      if (e.type === 'touchend') {
+      if (e.type === 'touchstart') {
         e.preventDefault()
       }
       this.isActive = false
       console.log('Hide Menu')
     },
     showMenu (e) {
-      if (e.type === 'touchend') {
+      if (e.type === 'touchstart') {
         e.preventDefault()
       }
       this.isActive = true
@@ -107,6 +107,7 @@ export default {
     margin-top: 0;
 }
 
+
 .library-header {
     height: @height-icon-small;
     width: @height-icon-small*5;
@@ -125,16 +126,30 @@ export default {
 
 #buttonCloseLibrariesRight {
     position: absolute;
-    top: @header-height*0.2;
-    right: @header-padding-sideways;
+    bottom: 50vh;
+    right: ~"calc(@{sidebar-width} - 0.6 * @{height-icon-small})";
+    -webkit-filter: invert(100%); // Invert colors (?)
+    // border-width: 1px;
+    // border-style: solid;
 }
 
 .side-menu-button-container {
     position: absolute;
     bottom: 50vh; // TODO: exactly in the middle?
     // top: @header-height*0.2;
-    right: @header-padding-sideways;
+    right: @header-padding-sideways*2;
     z-index: 3;
+}
+
+.side-menu-body{
+    padding-top: @header-height*0.5;
+}
+
+    // .property-panel{
+// }
+
+.property-title {
+    size: @fontsize-huge;
 }
 
 </style>

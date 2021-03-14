@@ -29,6 +29,13 @@
   --color-highlight3-bright: ##ff4e2f;
   --color-highlight3-dark: #ff230d;
 
+  /* Static vw / vh || This is preferable to use on mobile...*/
+  /* --vh: 1vh; */
+  /* --vw: 1vw; */
+  --vw: 12.05px;
+  --vh: 7.53px;
+
+
   /* Dimensions */
   --block-width: 9.0vw;
   /* --block-height: 9.0vw; */
@@ -37,6 +44,13 @@
   --block-container-height: 12.0vw;
   --margin-block: calc((var(--block-container-height) - var(--block-width))/2.0);
 }
+
+:root {
+  input{
+    background-color: var(--color-main-mediumbright);
+  }
+}
+
 
 /* :root { */
   /* touch-action: none; */

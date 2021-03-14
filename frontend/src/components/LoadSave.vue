@@ -13,38 +13,17 @@
             <th> Type </th>
           </tr>
         </thead>
-        <!-- <template> -->
-          <!-- <tr v-for="mod in module_list"> -->
         <tbody>
           <tr v-for="row in localFiles"
               :class="{selected: selectedListItem.name===row.name}"
               @click="selectNew($event, row)"
-              @touchstart="">
+              @touchstart="selectNew($event, row)">
             <td> {{row.name}} </td>
             <td> {{row.datemodified}} </td>
             <td> {{row.type}} </td>
-            <td> {{selectedListItem.name === row.name}} </td>
           </tr>
         </tbody>
-        <!-- <template> -->
       </table>
-      <b-table v-if="false"
-        :data="localFiles"
-        :selected.sync="selectedListItem"
-        focusable>
-        <!-- :columns="columns"> -->
-        <b-table-column field="name" label="File Name" width="40" v-slot="props">
-          {{ props.row.name }}
-        </b-table-column>
-
-        <b-table-column field="datemodified" label="Last Modified" width="40" v-slot="props">
-          {{ props.row.datemodified }}
-        </b-table-column>
-
-        <b-table-column field="type" label="Type" width="40" v-slot="props">
-          {{ props.row.type }}
-        </b-table-column>
-      </b-table>
     </div>
     <br>
 
@@ -77,6 +56,7 @@
 
 
 <script>
+// TODO: move load-save here...
 // import axios from 'axios' // Needed to pass. Only temporarily?
 export default {
   name: 'LoadSave',
@@ -105,7 +85,7 @@ export default {
       }
       if (this.selectedListItem.name === item.name) {
         // Allow selection toggle
-        this.selectedListItem = {'name': null}
+        this.selectedListItem = {'name': ''}
       } else {
         this.selectedListItem = item
       }
@@ -191,8 +171,9 @@ table {
 
         padding-left: @fontsize-medium*0.5;
         padding-right: @fontsize-medium*0.8;
-        padding-top: @fontsize-medium*0.3;
-        padding-bottom: @fontsize-medium*0.3;
+
+        padding-top: @fontsize-medium*0.8;
+        padding-bottom: @fontsize-medium*0.4;
     }
 
     .selected {
@@ -211,8 +192,6 @@ table {
         max-height: 70%;
     }
 }
-
-
 
 #save-button-container {
     align-self: center;
@@ -240,6 +219,7 @@ table {
     size: @fontsize-huge;
     margin-bottom: @fontsize-huge*0.3;
     font-color: @fontcolor-main;
+    margin-bottom: $size*1.0;
 }
 
 .loadsave-window {

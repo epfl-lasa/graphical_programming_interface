@@ -1,5 +1,7 @@
 // TODO: replace with native-cssxo
 
+// TODO: don't use window height...
+
 // Screen Dimension
 @reference-screen-width: 1024px;
 @reference-screen-height: 768px;
@@ -7,8 +9,15 @@
 @screen-width: 100vw;
 @screen-height: 100vh;
 
+// @vw: 1vw;
+// @vh: 1vh;
+
+@vw: 12.05px;
+@vh: 7.53px;
+
+
 // Document dimensions
-// Block Dimensions
+// Blocks Dimensions
 @block-width: 9.0vw;
 @block-height: @block-width;
 @block-container-width: 12vw;
@@ -17,23 +26,28 @@
 // @marginBlock: @block-width*0.25;
 
 // Header
-@header-height: 7.5vh;
-@header-padding-sideways: 3.9vh;
+@header-height: 7.5*@vh;
+@header-padding-sideways: 3.9*@vh;
 
 @sidebar-width: 32.1vw;
 
-@height-icon-logo: 3.0vh;
-@height-min-button: 3.6vh;
-@height-icon-small: 5.5vh;
+@height-icon-logo: 3.0*@vh;
+@height-min-button: 3.6*@vh;
+@height-icon-small: 5.5*@vh;
 @height-icon-medium: 7.0vph;
 
 @border-width: 2px;
 
 // Font References
-@fontsize-small: 2.0vh;
-@fontsize-medium: @fontsize-small*1.8;
-@fontsize-large: @fontsize-small*2.3;
+// @fontsize-small: 1.5*@vh;
+@fontsize-small: 7pt;
+@fontsize-medium: @fontsize-small*1.5;
+@fontsize-large: @fontsize-small*2.0;
 @fontsize-huge: @fontsize-small*2.5;
+@fontsize-megahuge: @fontsize-small*3.0;
+
+// Font Size Menu Header
+@fontsize-sidemenu-header: @fontsize-huge;
 
 // Colors
 @color-main-black: #000000;

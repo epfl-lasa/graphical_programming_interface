@@ -18,8 +18,9 @@
           @click="saveBlocks($event)" @touchstart="saveBlocks($event)"> Save Blocks </ul>
       <ul class="aica-dropdown-menu" v-if="dropdownActive"
           @click="loadBlocks($event)" @touchstart="loadBlocks($event)"> Load Blocks </ul>
-      <ul class="aica-dropdown-menu" v-if="dropdownActive"
-          @click="createNew($event)" @touchstart="createNew($event)"> Create New </ul>
+      <!-- TODO: implement later... -->
+      <!-- <ul class="aica-dropdown-menu" v-if="dropdownActive" -->
+          <!-- @click="createNew($event)" @touchstart="createNew($event)"> Create New </ul> -->
     </div>
     <div v-if="robotIsMoving"  class="aica-button danger" id="run-sequence"
          @click="stopRobot($event)" @touchstart="stopRobot($event)" >
@@ -245,11 +246,11 @@ export default {
         > ul {
             cursor: pointer;
 
-            font-size: @fontsize-medium;
+            font-size: @fontsize-large;
 
             margin: 0;
-            padding: @fontsize-medium*0.3 @fontsize-medium*1.0;
-            width: @sidebar-width*0.7;
+            padding: $font-size*0.4 $font-size*1.0;
+            width: @sidebar-width*0.6;
 
             background-color: @color-main-dark;
 
@@ -268,9 +269,13 @@ export default {
 }
 
 #run-sequence {
+    font-size: @fontsize-huge;
+    border-radius: $font-size;
+    padding-top: $font-size*0.2;
+
     z-index: 4;
     left: ~"calc(50vw - @{height-icon-small}*2)";
-    top: @height-icon-small * 0.4;
+    top: $font-size*0.3;
 }
 
 #home-logo {

@@ -16,11 +16,13 @@ TODO:>
   <!-- <div :class="'icon-container ' + selected"> -->
     <img v-bind:src="require('./../' + 'assets/icons_library/' + iconpath)" />
   </div>
-  <h2 class='icon-description'> {{title}} </h2>
+  <h2 class='icon-name'> {{title}} </h2>
   </div>
 </template>
 
 <script>
+import blockloaderHelper from '../helpers/blockloader'
+
 export default {
   name: 'VueBlock',
   props: {
@@ -44,10 +46,6 @@ export default {
       type: String,
       default: 'Title'
     },
-    // library: {
-    // type: String,
-    // default: ''
-    // },
     blockData: Object,
 
     inputs: Array,
@@ -81,7 +79,14 @@ export default {
     // this.linking = false
     this.dragging = false
   },
-  beforeDestroy () {
+  async mounted () {
+    // Prepare Block for later inspection & menu-modification.
+    await this.setupPropertyAndUpdate()
+
+    // TODO: check how to suppress the previous update [currently there are two.. at mounting..]
+    this.$emit('update')
+  },
+  beforeUnmount () {
     this.removeHandles()
   },
   data () {
@@ -98,6 +103,9 @@ export default {
     }
   },
   methods: {
+    setupPropertyAndUpdate () {
+      this.blockData.values.property = blockloaderHelper.propertyLoader(this.blockData.values.property)
+    },
     initializeHandles () {
       document.documentElement.addEventListener('mousemove', this.handleMove, true)
       document.documentElement.addEventListener('mouseup', this.handleUp, true)
@@ -147,10 +155,11 @@ export default {
         this.hasDragged = true
 
         this.$emit('disableBlockMenu')
-      } else {
-        // Remove if ever true / or the whole condition after debugging
-        console.log('@VueBlock: Testing if condition ever false. Remove NOW.')
       }
+      // else {
+      // Remove if ever true / or the whole condition after debugging
+      // console.log('@VueBlock: Testing if condition ever false. Remove NOW.')
+      // }
     },
     handleDown (e) {
       if (e.type === 'touchstart') {
@@ -289,14 +298,18 @@ export default {
       return './../assets/images/idle.jpeg'
     }
     // headerStyle () {
-      // return {
-        // height: this.options.titleHeight + 'px'
-      // }
+    // return {
+    // height: this.options.titleHeight + 'px'
+    // }
     // }
   },
   watch: {
     iconpath () {
       console.log('iconpath updated')
+    },
+    linkingMode (newValue) {
+      console.log('We are linking')
+      console.log(newValue)
     }
   }
 }
@@ -337,8 +350,8 @@ export default {
         }
     }
 
-    .icon-description {
-        font-size: @fontsize-small;
+    .icon-name {
+        font-size: @fontsize-medium;
         color: @fontcolor-main;
         // text-align: center;
         position: relative;
@@ -346,4 +359,4 @@ export default {
         left: var(--margin-block);
     }
 }
-</style>
+</Style>

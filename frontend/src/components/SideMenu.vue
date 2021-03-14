@@ -131,7 +131,7 @@ export default {
 }
 
 #force-graph {
-    padding-top: @screen-height*0.10;
+    // padding-top: @screen-height*0.10;
     width: @sidebar-width * 0.9;
     height: $width * 0.9;
 }

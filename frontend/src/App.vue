@@ -1,5 +1,7 @@
 <template>
 <div id="app">
+  <!-- <Test /> -->
+  <!-- <template v-if="false"> -->
   <FloatingHeaderComponents
     ref="floatingHeaderComponents"
     :showRightIcon="selectedBlock || loadedLibrary"
@@ -36,30 +38,26 @@
     @blockDeselect="deselectBlock"
     @updateBackendProgram="updateBackendProgram"/>
 
-  <template v-if="selectedBlock">
-    <VueBlockProperty
-      :module="selectedModule"
-      :property="selectedBlockProperty"
-      :robotIsMoving="robotIsMoving"
-      ref="property"
-      @save="saveProperty"
-      @setRobotStateMoving="setRobotStateMoving"
-      @stopRobot="stopRobot"
-      />
-  </template>
+  <VueBlockProperty
+    v-if="selectedBlock"
+    :module="selectedModule"
+    :property="selectedBlockProperty"
+    :robotIsMoving="robotIsMoving"
+    ref="property"
+    @save="saveProperty"
+    @setRobotStateMoving="setRobotStateMoving"
+    @stopRobot="stopRobot"
+    />
 
-
-  <template v-if="loadSaveMode">
-    <LoadSave
-      ref="loadsave"
-      class="loadsave"
-      :localFiles="localFiles"
-      :appMode="appMode"
-      @loadScene="loadScene"
-      @saveScene="saveScene"
-      />
-  </template>
-
+  <LoadSave
+    v-if="loadSaveMode"
+    ref="loadsave"
+    class="loadsave"
+    :localFiles="localFiles"
+    :appMode="appMode"
+    @loadScene="loadScene"
+    @saveScene="saveScene"
+    />
   </div>
 </template>
 
@@ -67,9 +65,10 @@
 <script>
 import merge from 'deepmerge'
 
+import domHelper from './helpers/dom'
+
 import VueBlocksContainer from './components/VueBlocksContainer'
 import VueBlockProperty from './components/VueBlockProperty'
-import domHelper from './helpers/dom'
 
 // import Header from './components/Header'
 import FloatingHeaderComponents from './components/FloatingHeaderComponents'
@@ -79,6 +78,8 @@ import VueModuleLibrary from './components/VueModuleLibrary'
 import SideMenuLeft from './components/SideMenuLeft'
 import SideMenuRight from './components/SideMenuRight'
 
+import Test from './components/Test'
+
 import axios from 'axios' // Needed to pass. Only temporarily?
 
 // import {blocks, links} from '../../backend/userdata/default_data.json'
@@ -87,6 +88,7 @@ const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, millise
 export default {
   name: 'App',
   components: {
+    Test,
     FloatingHeaderComponents,
     LoadSave,
     VueBlocksContainer,
@@ -96,27 +98,18 @@ export default {
     SideMenuRight
   },
   mounted () {
+    // this.resetBackend()
     // alert('Your screen resolution is: ' + screen.width + 'x' + screen.height)
-    // axios.get(this.$localIP + `/startup/`, {'params': {}})
-    // .then(response => {
-    // console.log('@App: mounted successfull.')
-    // })
-    // .catch(error => {
-    // console.log(error)
-    // })
-    // TODO: at each new / load / save store filename
+    let vw = screen.width / 100.0
+    let vh = screen.height / 100.0
+    console.log('Measures are: vw: ' + vw + 'px // vh:' + vh + 'px')
+    // TODO: set css property
 
     // For Debugging & Development
     this.loadLibraries()
     // this.loadScene('default')
     this.loadScene('default')
     this.loadedLibrary = 'polishing_machine'
-
-    // setTimeout(() => {
-    // this.$refs.container.blockSelect(this.$refs.container.scene.blocks[0])
-    // }, 500)
-    // When loading finished, press default
-    // this.projectName = axios.get(this.$localIP + `/getprojectName`)
   },
   data: function () {
     return {
@@ -187,7 +180,12 @@ export default {
   },
   methods: {
     // Robot main movement handler
+    // resetBackend () {
+    // },
     runSequence () {
+      let loopIsClosed = this.$refs.container.orderBlocklistAndCheckIfIsLoop()
+      console.log('Loop is Closed')
+      console.log(loopIsClosed)
       this.setRobotStateMoving()
       let paramData
       if (this.selectedBlock) {
@@ -434,10 +432,14 @@ export default {
       // console.log(`@App: Update blocks`)
       // console.log('blocks', JSON.stringify(newValue))
     },
-    scene (newValue) {
+    // scene (newValue) {
       // console.log('@App: Update scene')
-      // console.log('scene', JSON.stringify(newValue))
-    },
+      // let ii
+      // for (ii = 0; ii < newValue.blocks.length; ii++) {
+        // console.log('ii', ii)
+        // console.log(newValue.blocks[0].values.property.force.value)
+      // }
+    // },
     robotIsMoving (newValue) {
       if (newValue) {
         console.log('@App: Robot Motion is Started.')
@@ -494,16 +496,36 @@ body {
 }
 
 h1 {
-    font-size: @fontsize-large;
+    font-size: @fontsize-huge;
 }
 
 h2 {
-    font-size: @fontsize-medium;
+    font-size: @fontsize-large;
     // color: @fontcolor-main;
 }
 
-h2 {
-    font-size: @fontsize-small;
+h3 {
+    font-size: @fontsize-medium;
+}
+
+input {
+    background-color: var(--color-main-bright);
+    text-color: var(--fontcolor-main);
+    outline: none;
+
+    font-size: @fontsize-medium;
+    margin-left: @fontsize-medium*0.8;
+    margin-right: @fontsize-medium*0.4;
+
+    height: $font-size * 2.0;
+    margin-top: $height*0.25;
+    margin-bottom: $height*0.25;
+
+    text-align: right;
+
+    &.number {
+        text-align: right;
+    }
 }
 
 #app {
@@ -528,6 +550,10 @@ h2 {
     // box-sizing: border-box;
 
     .side-menu-header {
+        h1 {
+            font-size: @fontsize-sidemenu-header;
+        }
+
         background: @color-main-medium;
         height: @header-height;
 
@@ -551,19 +577,11 @@ h2 {
         height: ~"calc(100% - @{header-height})";
         padding-left: @header-padding-sideways;
         padding-right: @header-padding-sideways;
-        padding-top: @header-height*0.1;
+        // padding-top: @header-height*0.5;
         padding-bottom: @header-height*0.3;
     }
 }
 
-// .container {
-    // Warning: now container class anymore...
-    // max-width: none;
-    // width: 100%;
-    // height: 100%;n
-    // height: ~"calc(100% - 65px)";
-    // padding: none;
-// }
 
 #contextMenu {
     position: absolute;

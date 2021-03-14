@@ -3,43 +3,9 @@
     <h2> Recorded Data </h2>
     <!-- <p>Test id: {{module.id }} </p> -->
     <br>
-    <div v-if="robotIsMoving">
-      <div  class="aica-button danger" id="run-module"
-               @click="stopRobot($event)" @touchstart="stopRobot($event)"
-               >
-        <p> Stop Moving </p>
-      </div>
-    </div>
-    <div v-else class="reference-button-container">
-      <div class="aica-button reference-button"
-        @click="moveToStartPoint($event)" @touchstart="moveToStartPoint($event)">
-        <p> Move To Start-Point </p>
-      </div>
-      <div class="aica-button" id="run-module"
-           @click="moveToEndPoint($event)" @touchstart="moveToEndPoint($event)">
-        <p> Move To End-Point </p>
-      </div>
-    </div>
-    <br>
-    <div class="file-table-content">
-      <b-table
-        class="data-table"
-        :data="database"
-        :selected.sync="selected"
-        focusable
-        >
-        <b-table-column field="id" label="ID" width="20" v-slot="props">
-          {{ props.row.id }}
-        </b-table-column>
-        <b-table-column field="datemodified" label="Created" width="40" v-slot="props">
-          {{ props.row.datemodified }}
-        </b-table-column>
-        </b-table>
-    </div>
-    <br>
     <div v-if="true" class="reference-button-container">
     <!-- <template v-if="true"> -->
-        <div v-if="isRecording" class="aica-button reference-button"
+        <div v-if="isRecording" class="aica-button reference-button critical"
           @click="stopRecording($event)" @touchstart="stopRecording($event)">
            <p> Stop Recording </p>
         </div>
@@ -73,6 +39,40 @@
          </div>
       </div>
     </template>
+    <br>
+    <div class="file-table-content">
+      <b-table
+        class="data-table"
+        :data="database"
+        :selected.sync="selected"
+        focusable
+        >
+        <b-table-column field="id" label="ID" width="20" v-slot="props">
+          {{ props.row.id }}
+        </b-table-column>
+        <b-table-column field="datemodified" label="Created" width="40" v-slot="props">
+          {{ props.row.datemodified }}
+        </b-table-column>
+        </b-table>
+    </div>
+    <br>
+    <div v-if="robotIsMoving">
+      <div  class="aica-button danger" id="run-module"
+               @click="stopRobot($event)" @touchstart="stopRobot($event)"
+               >
+        <p> Stop Moving </p>
+      </div>
+    </div>
+    <div v-else class="reference-button-container">
+      <div class="aica-button reference-button"
+        @click="moveToStartPoint($event)" @touchstart="moveToStartPoint($event)">
+        <p> Move To </br> Start-Point </p>
+      </div>
+      <div class="aica-button" id="run-module"
+           @click="moveToEndPoint($event)" @touchstart="moveToEndPoint($event)">
+        <p> Move To </br> End-Point </p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -290,8 +290,8 @@ export default {
 @import './../assets/styles/main.less';
 
 #table-button-container {
-    padding-left: ;
-    padding-right: ;
+    // padding-left: ;
+    // padding-right: ;
     display: grid;
     grid-template-columns: auto auto;
 }
@@ -301,21 +301,6 @@ export default {
     grid-template-columns: auto auto;
     // grid-column-gap: $right;
 }
-
-/* .data-window { */
-    /* position: absolute; */
-    /* top: 15%; */
-    /* right: 10%; */
-    /* width: 80%; */
-    /* height: 80%; */
-    /* padding: 20px; */
-    /* background-color: #d0d0d0; */
-
-    /* z-index: 3; */
-    /* border: 5px solid #0c0c0c; */
-    /* border-radius: 10px; */
-/* } */
-
 
 .file-table-content {
     max-height: 80%;

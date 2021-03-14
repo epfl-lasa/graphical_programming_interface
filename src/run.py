@@ -3,6 +3,7 @@ AICA user interface launcher
 
 (c) AICA SarL
 '''
+DEBUG_FLAG = True
 
 __author__ = "Lukas, Gustav"
 __email__ = "lukas@aica.tech"
@@ -29,11 +30,12 @@ if not path_communication_handler in sys.path:
     sys.path.append(path_communication_handler)
 
 from data_handler import DataHandler
-DataLocalHandler = DataHandler(dir_path)
 
 from ros_handler import RosHandler
-RosHandler.initialize_ros()
-RosMainHandler = RosHandler(DataHandler=DataLocalHandler)
+
+DataLocalHandler = None
+RosMainHandler = None
+
 
 app = Flask(__name__,
             static_folder="./dist/static",
@@ -53,6 +55,25 @@ data_directory = os.path.join('backend', 'userdata')
 
 IMPORT_COMMUNACTION_CONTROLLER = False
 AUTOMATICALLY_UPDATE_ROS_HANDLER = True
+
+# ----------------------------------------
+#    Startup & resetting
+# ----------------------------------------
+@app.route('/startupenvironment')
+def startupenvironment():
+    global DataLocalHandler
+    global RosMainHandler
+    
+    # Create Data Handle
+    DataLocalHandler = DataHandler(dir_path)
+
+    # Create ROS handler
+    RosHandler.initialize_ros()
+    RosMainHandler = RosHandler(DataHandler=DataLocalHandler, DEBUG_FLAG=DEBUG_FLAG)
+
+def send_reset_to_front_end():
+    # TODO:
+    pass
 
 # ----------------------------------------
 #    Execute this at the startup
@@ -300,6 +321,11 @@ def getlibrariesandmodules():
 @app.route('/home')
 def home():
     return DataLocalHandler.get_scene()
+
+@app.route('/test')
+def test():
+    return requests.get('http://localhost:8080/test')
+
     
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -309,7 +335,12 @@ def catch_them_all(path):
     return render_template("index.html")
 
 
+# Startup evertyhing when using FLASK
+# Should this be in if bellow, i.e. only when__main__ (?)
+startupenvironment() 
+
 if __name__ == "__main__":
     app.run(debug=True)
-
-    print('Starting Flask')
+    # print('Starting Flask')
+    pass
+    

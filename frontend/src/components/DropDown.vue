@@ -3,8 +3,9 @@
      :style="dropDownStyle">
   <!-- TODO: separate element -->
   <template v-if="selectionType==='block'">
-    <div class="dropdown-element">
-      <p @mousedown="newBlockConnection($event)"
+    <div class="dropdown-element dropdown-connect">
+      <p class="dropdown-connect"
+         @mousedown="newBlockConnection($event)"
          @touchstart="newBlockConnection($event)"
          > Connect to </p>
     </div>
@@ -137,14 +138,18 @@ export default {
 .dropdown-list {
     position: fixed;
     z-index: 7;
+
+    cursor: pointer;
 }
 
 .dropdown-element {
     z-index: 10;
-    font-size: @fontsize-medium;
+    font-size: @fontsize-large;
 
-    margin: @fontsize-medium*0.15;
-    padding: @fontsize-medium*0.3 @fontsize-medium*1.0;
+    cursor: pointer;
+
+    margin: $font-size*0.15;
+    padding: $font-size*0.3 $font-size*1.0;
 
     border-style: solid;
     border-color: @color-main-mediumbright;

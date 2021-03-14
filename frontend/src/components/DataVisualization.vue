@@ -182,7 +182,7 @@ export default {
 
       let layout = {
         xaxis: {
-          titloe: {
+          title: {
             text: ' Time [s]'
           }
         },
@@ -218,8 +218,8 @@ export default {
 // }
 
 #force-graph {
-    padding-top: @screen-height*0.10;
-    width: @sidebar-width * 0.9;
+    // margin-top: @screen-height*0;
+    width: @sidebar-width * 0.85;
     height: $width * 0.9;
 }
 

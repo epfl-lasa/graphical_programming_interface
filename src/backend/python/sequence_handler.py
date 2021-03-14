@@ -42,6 +42,10 @@ class SequenceHandler(Node):
         # self.create_timer(timer_period, self.timer_callback)
         # rclpy.spin(node=self)
 
+    def __del__(self):
+        # On shutdown
+        pass
+
     @property
     def robot_is_moving(self):
         return self._MainRosHandler.robot_is_moving

@@ -104,7 +104,7 @@ export default {
 
     .icon-name {
         // display: inline;
-        font-size: @fontsize-small;
+        font-size: @fontsize-medium;
         margin-top: 1px;
     }
 }

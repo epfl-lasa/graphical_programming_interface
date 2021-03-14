@@ -17,13 +17,13 @@ Vue.use(Buefy)
 // Vue.prototype.$relativeNodeDir = `./../../frontend/`
 
 // Create IP as global Variable
-// Vue.prototype.$localIP = `http://localhost:5000`
+Vue.prototype.$localIP = `http://localhost:5000`
 
 // Home Network [Lukas Computer]
 // Vue.prototype.$localIP = `http://192.168.1.102:5000`
 
 // EPFL Network [Lukas Computer]
-Vue.prototype.$localIP = `http://128.178.145.3:5000`
+// Vue.prototype.$localIP = `http://128.178.145.3:5000`
 
 Vue.config.productionTip = false
 

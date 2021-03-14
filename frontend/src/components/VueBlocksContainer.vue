@@ -1,29 +1,18 @@
 <template>
-<!--
-Nomenclature Introduction
+<div
+     class="blocks-container" id="main-element-container"
+     @touchstart="handleDown($event)"
+     @mousedown="handleDown($event)"
+     >
 
-# Application
+  <div v-if="false"
+       class="aica-button danger reference-button"
+       @click="testUpdate()"
+       style="position: absolute; top: 60px; left: 60px; z-index:20;"
+       >
+    <p> Update Scene </p>
+  </div>
 
-# Task
-Task is
-
-# Action
-An action is the most basic module that can exist.
-
-# Module
-A module is
-
-# Block
-Block is the visual element created for a 'module'
-
-# Link
-Links two different modules
-
-# Line
-Line is the visual element which is created from a link between modules
-  -->
-<!-- <div class="vue-container" id="main-element-container"> -->
-<div class="blocks-container" id="main-element-container">
   <!-- TODO: Iterate over links, too! -->
   <VueLink :lines="lines"
            :linkingMode = "linkingMode"
@@ -129,17 +118,6 @@ export default {
     }
   },
   mounted () {
-    document.documentElement.addEventListener('touchmove', this.handleMove, true)
-    document.documentElement.addEventListener('touchstart', this.handleDown, true)
-    document.documentElement.addEventListener('touchend', this.handleUp, true)
-
-    document.documentElement.addEventListener('mousemove', this.handleMove, true)
-    document.documentElement.addEventListener('mousedown', this.handleDown, true)
-    document.documentElement.addEventListener('mouseup', this.handleUp, true)
-
-    document.documentElement.addEventListener('wheel', this.handleWheel, true)
-    // document.documentElement.addEventListener('gesturechange', this.handleWheel, true)
-
     this.centerX = this.$el.clientWidth / 2
     this.centerY = this.$el.clientHeight / 2
 
@@ -159,16 +137,8 @@ export default {
     this.blockHeightInPixel = this.blockWidthInPixel
   },
   beforeDestroy () {
-    document.documentElement.removeEventListener('touchmove', this.handleMove, true)
-    document.documentElement.removeEventListener('touchstart', this.handleDown, true)
-    document.documentElement.removeEventListener('touchend', this.handleUp, true)
-
-    document.documentElement.removeEventListener('mousemove', this.handleMove, true)
-    document.documentElement.removeEventListener('mousedown', this.handleDown, true)
-    document.documentElement.removeEventListener('mouseup', this.handleUp, true)
-
-    document.documentElement.removeEventListener('wheel', this.handleWheel, true)
-    // document.documentElement.addEventListener('gesturechange', this.handleWheel, true)
+    // Just to be sure...
+    this.removeMouseAndTouchListener()
   },
   data () {
     return {
@@ -243,7 +213,7 @@ export default {
         })
 
         if (!originBlock || !targetBlock) {
-          console.log('@VueBlockContainer: Remove invalid link', link)
+          // console.log('@VueBlockContainer: Remove invalid link', link)
           this.removeLink(link.id)
           continue
         }
@@ -307,13 +277,76 @@ export default {
     }
   },
   methods: {
-    // Events
-    /** @param e {MouseEvent} */
-    handleMove (e) {
+    // ------------------------------------
+    // Mouese Event Listener
+    // ------------------------------------
+    createMouseAndTouchListener () {
+      document.documentElement.addEventListener('touchmove', this.handleMove, true)
+      document.documentElement.addEventListener('mousemove', this.handleMove, true)
+
+      document.documentElement.addEventListener('touchend', this.handleUp, true)
+      document.documentElement.addEventListener('mouseup', this.handleUp, true)
+
+      document.documentElement.addEventListener('wheel', this.handleWheel, true)
+    },
+    removeMouseAndTouchListener () {
+      document.documentElement.removeEventListener('touchmove', this.handleMove, true)
+      document.documentElement.removeEventListener('mousemove', this.handleMove, true)
+
+      // document.documentElement.removeEventListener('touchstart', this.handleDown, true)
+      // document.documentElement.removeEventListener('mousedown', this.handleDown, true)
+
+      document.documentElement.removeEventListener('mouseup', this.handleUp, true)
+      document.documentElement.removeEventListener('touchend', this.handleUp, true)
+
+      document.documentElement.removeEventListener('wheel', this.handleWheel, true)
+    },
+    handleMoveLinking (e) {
       if (e.type === 'touchmove') {
         e.preventDefault()
-        // console.log('@VueBlocksContainer: Do something')
       }
+      console.log('Update Linking Move')
+      let mouse = mouseHelper.getMousePosition(this.$el, e)
+      this.mouseX = mouse.x
+      this.mouseY = mouse.y
+
+      // TODO: remove if statement
+      if (this.linkingMode && this.linkStartData) {
+        let linkStartPos = this.getConnectionPos(this.linkStartData.block, this.linkStartData.slotNumber, false)
+        this.tempLink = {
+          x1: linkStartPos.x,
+          y1: linkStartPos.y,
+          x2: this.mouseX,
+          y2: this.mouseY
+        }
+      }
+    },
+    handleMoveDragging (e) {
+      if (e.type === 'touchmove') {
+        e.preventDefault()
+      }
+      console.log('Update Dragging Move')
+      let mouse = mouseHelper.getMousePosition(this.$el, e)
+      this.mouseX = mouse.x
+      this.mouseY = mouse.y
+
+      let diffX = this.mouseX - this.lastMouseX
+      let diffY = this.mouseY - this.lastMouseY
+
+      this.lastMouseX = this.mouseX
+      this.lastMouseY = this.mouseY
+
+      this.centerX += diffX
+      this.centerY += diffY
+
+      this.hasDragged = true
+    },
+    handleMove (e) {
+      // TODO: depricated - remove
+      if (e.type === 'touchmove') {
+        e.preventDefault()
+      }
+      console.log('Update move')
 
       let mouse = mouseHelper.getMousePosition(this.$el, e)
       this.mouseX = mouse.x
@@ -351,13 +384,14 @@ export default {
         target = e.target || e.srcElement
       }
 
+      let mouse = mouseHelper.getMousePosition(this.$el, e)
+      this.mouseX = mouse.x
+      this.mouseY = mouse.y
+
+      this.createMouseAndTouchListener()
+
       if ((target === this.$el || target.matches('svg, svg *'))) {
         this.dragging = true
-
-        let mouse = mouseHelper.getMousePosition(this.$el, e)
-
-        this.mouseX = mouse.x
-        this.mouseY = mouse.y
 
         this.lastMouseX = this.mouseX
         this.lastMouseY = this.mouseY
@@ -370,22 +404,16 @@ export default {
       if (this.linkingMode) {
         let clickElementInd = this.$children.filter(item => item.$el.className === 'vue-block')
             .find(item => item.$el.contains(target))
-        if (clickElementInd === undefined) {
+
+        if (clickElementInd === undefined && target.className !== 'dropdown-connect') {
           this.linkingStopDrawing()
         }
       }
     },
     handleUp (e) {
-      // let target
       if (e.type === 'touchend') {
         e.preventDefault()
-        // target
       }
-
-      // console.log('@VueBlocksContainer-touchend: Do something')
-      // } else {
-      // target = e.target || e.srcElement
-      // }
 
       if (this.dragging) {
         this.dragging = false
@@ -395,13 +423,8 @@ export default {
           this.hasDragged = false
         }
       }
-
-      // if (this.$el.contains(target) && (typeof target.className !== 'string' || target.className.indexOf(this.inputSlotClassName) === -1)) {
-      // this.linking = false
-      // this.tempLink = null
-      // this.linkStartData = null
-      // console.log('@VueBlocksContainer: debugin without link adapting')
-      // }
+      // No event listening anymore
+      this.removeMouseAndTouchListener()
     },
     handleWheel (e) {
       let target
@@ -445,7 +468,9 @@ export default {
         this.updateScene()
       }
     },
+    // ------------------------------------
     // Processing
+    // ------------------------------------
     getConnectionPos (block, slotNumber, isInput, fromCenter = true) {
       if (!block || slotNumber === -1) {
         return undefined
@@ -528,10 +553,12 @@ export default {
           this.updateScene()
         }
       }
+      console.log('Linking line:513')
       this.linkingStopDrawing()
     },
     linkingStopDrawing () {
       // Stop linking Everywhere
+      console.log('Stop linking')
       this.linkStartData = null
       this.tempLink = null
     },
@@ -845,10 +872,12 @@ export default {
       }
       // Send to backend if complete
 
-      this.orderBlocklistAndCheckIfIsLoop()
-      if (this.loopIsClosed) {
-        this.$emit('updateBackendProgram')
-      }
+      // this.orderBlocklistAndCheckIfIsLoop()
+      // console.log('Not ordering.')
+      // if (this.loopIsClosed) {
+      // this.$emit('updateBackendProgram')
+      // console.log('Not updating backend.')
+      // }
     },
     exportScene () {
       let clonedBlocks = merge([], this.blocks)
@@ -870,8 +899,9 @@ export default {
       // Send to app-vue
       this.$emit('update:scene', this.exportScene())
       // Send scene to backend file
-      this.orderBlocklistAndCheckIfIsLoop()
 
+      this.orderBlocklistAndCheckIfIsLoop()
+      // console.log('Update scene')
       if (this.loopIsClosed) {
         this.$emit('updateBackendProgram')
       }
@@ -943,6 +973,7 @@ export default {
       } else {
         this.loopIsClosed = true
       }
+      return this.loopIsClosed
     }
   },
   watch: {
@@ -983,6 +1014,24 @@ export default {
         this.blocks.forEach(element => {
           element.currentlyPlaying = false
         })
+      }
+    },
+    linkingMode (newValue) {
+      if (newValue) {
+        document.documentElement.addEventListener('touchmove', this.handleMoveLinking, true)
+        document.documentElement.addEventListener('mousemove', this.handleMoveLinking, true)
+      } else {
+        document.documentElement.removeEventListener('touchmove', this.handleMoveLinking, true)
+        document.documentElement.removeEventListener('mousemove', this.handleMoveLinking, true)
+      }
+    },
+    dragging (newValue) {
+      if (newValue) {
+        document.documentElement.addEventListener('touchmove', this.handleMoveDragging, true)
+        document.documentElement.addEventListener('mousemove', this.handleMoveDragging, true)
+      } else {
+        document.documentElement.removeEventListener('touchmove', this.handleMoveDragging, true)
+        document.documentElement.removeEventListener('mousemove', this.handleMoveDragging, true)
       }
     }
   }

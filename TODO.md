@@ -17,11 +17,13 @@ Sequence recording:
 
 
 URGENT URGENT:
-> TEST (!)
+> When adding new block, parameters are only adapted late...
+
+> TEST (!) with Motion (Simulator)
 
 > Touchstart at right screen side (show menu) is currently passive. This does not allow for event.preventDefault() ! Fix it...
 
->Don't updte environment while running...
+> Don't updte environment while running...
 
 > Reset everything @ startup!!! (front & backend + send message to each other...)
 
@@ -33,6 +35,7 @@ URGENT URGENT:
 > DS handler! [Speed etc.]
 
 > Force Parameter (ros_handler)
+
 > Velocity Parameter (ros_handler)
 
 > Clear everything at shutdown..
@@ -40,10 +43,6 @@ URGENT URGENT:
 > Degrees to radian!
 
 > Include force in direct module replay(!!!) + check if canceled
-
-> Cancel Goal: reset to current position!
-
-> Fix euler angles
 
 > reset everything on shutdown/startupreload
 

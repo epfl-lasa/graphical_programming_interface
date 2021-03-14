@@ -2,15 +2,6 @@
 <div class="side-menu">
   <div class="side-menu-header">
     <h1> {{ module.title }} </h1>
-  <!--   <div v-if="robotIsMoving" class="aica-button danger" id="run-module" -->
-  <!--        @click="stopRobot($event)" @touchstart="stopRobot($event)" -->
-  <!--        > -->
-  <!--     <p> Stop Moving </p> -->
-  <!--   </div> -->
-  <!--   <div v-else class="aica-button" id="run-module" -->
-  <!--        @click="executeModule($event)" @touchstart="executeModule($event)"> -->
-  <!--     <p> Run Module </p> -->
-  <!--   </div> -->
   </div>
   <div class="property-panel side-menu-body">
      <div class="property" v-for="(p, propKey) in properties">
@@ -25,22 +16,31 @@
             </template>
         </b-dropdown>
         </div>
-        <h3> Position [mm]</h3>
-        <template v-for="(dir, key) in p.value.position">
-          <label>{{key}}:</label>
-          <input class="position-input" type="number" v-model="p.value.position[key]">
-        </template>
-        <br> <br>
+        <div class="button-container-pose">
 
-        <h3> Orientation [deg]</h3>
-        <template v-for="(dir, key) in p.value.orientation">
-          <label>{{key}}:</label>
-          <input type="number" pattern="[0-9]*" inputmode="numeric"
-                 class="orientation-input"
-                 v-model="p.value.orientation[key]">
-          <!-- <input type="number" pattern="[0-9]*" inputmode="numeric"> -->
-        </template>
-        <br> <br>
+          <div>
+            <h3> Position [mm]</h3>
+            <div v-for="(dir, key) in p.value.position">
+              <label>{{key}}:</label>
+              <input type="number" pattern="[0-9]*" inputmode="numeric"
+                     class="pose-input position"
+                     v-model="p.value.position[key]" />
+                     >
+            </div>
+          </div>
+
+          <div>
+            <h3> Orientation [deg]</h3>
+            <div v-for="(dir, key) in p.value.orientation">
+              <label>{{key}}:</label>
+              <input type="number" pattern="[0-9]*" inputmode="numeric"
+                     class="pose-input orientation"
+                     v-model="p.value.orientation[key]" />
+
+              <!-- <input type="number" pattern="[0-9]*" inputmode="numeric"> -->
+            </div>
+          </div>
+        </div>
 
         <div class="reference-button-container">
           <div v-if="robotIsMoving" class="aica-button danger reference-button"
@@ -53,7 +53,8 @@
             <p> Move Robot </br> to Reference </p>
           </div>
 
-          <div v-if="!(robotIsMoving)" @click="setToRobotPosition"
+          <div v-if="!(robotIsMoving)"
+               @click="setToRobotPosition($event)" @touchstart="setToRobotPosition($event)"
                class="aica-button reference-button"
                :class="{critical: awaitRobotPosition}">
             <p> Set to </br> Robot Position </p>
@@ -66,13 +67,13 @@
         <h3> {{p.label}} </h3>
         <template v-for="(dir, key) in p.value">
           <label>{{key}}:</label>
-          <input class="position-input" type="text" v-model="p.value[key]">
+          <input class="position-input" type="number" v-model="p.value[key]">
         </template>
       </div>
 
       <div class="property-box" v-else-if="p.type==='slider'">
         <label> {{ p.label }} </label>
-        <input class="slider-input" type="number" v-model="p.value">
+        <input class="slider-input" type="number" v-model="p.value"/>
 
         <b-field class="slider-field">
           <b-slider rounded
@@ -149,6 +150,9 @@
 <script>
 import axios from 'axios' // Needed to pass. Only temporarily?
 
+import sliderHelpers from '../helpers/slider'
+import blockloaderHelper from '../helpers/blockloader'
+
 import ModuleDataList from './ModuleDataList'
 
 export default {
@@ -161,10 +165,14 @@ export default {
     // No coupling at startup
     this.robotIsCoupledToPose = false
     // this.moveToButtonLabel = this.buttonLabelsList[0]
+    // Update Scene [TODO: only for new ones..]
+    // this.$emit('updateScene')
   },
   beforeUnmount () {
     console.log('Unmount')
-    this.stopRobot()
+    if (this.robotIsMoving) {
+      this.stopRobot()
+    }
   },
   props: {
     robotIsMoving: Boolean,
@@ -193,6 +201,9 @@ export default {
   // },
   methods: {
     // Basic math methods
+    test () {
+      sliderHelpers.getSliderTicks(null)
+    },
     log10 (x) {
       return Math.log(x) / Math.log(10)
     },
@@ -209,6 +220,9 @@ export default {
       return Math.round(x * Math.pow(10, step)) / Math.pow(10, step)
     },
     getSliderTicks (settings, minNumTicks = 4) {
+      return sliderHelpers.getSliderTicks(settings, minNumTicks)
+    },
+    getSliderTicksOld (settings, minNumTicks = 4) {
       const min = parseFloat(settings.min)
       const max = parseFloat(settings.max)
 
@@ -277,6 +291,7 @@ export default {
 
       console.log('@Block Property: Button Value')
       console.log(this.properties['action'].value)
+      console.log(this.properties)
     },
     executeModule (e) {
       if (e.type === 'touchstart') {
@@ -377,8 +392,14 @@ export default {
       } else {
         this.properties = null
       }
-      console.log('@BlockProperties')
-      console.log(this.properties)
+      this.property = blockloaderHelper.propertyLoader(this.property)
+    },
+    loadModuleOld () {
+      if (this.module) {
+        this.properties = this.module.values.property
+      } else {
+        this.properties = null
+      }
       // Create [new] default containers
       Object.values(this.properties)
         .forEach(prop => {
@@ -420,7 +441,8 @@ export default {
               }
             }
             // Create steps and slider on creation
-            this.getSliderTicks(prop.settings)
+            // sliderHelpers.getSliderTicks(prop.settings)
+            // this.getSliderTicks(prop.settings)
 
             // TODO: maybe safe in json / only modify on creation
           } else if (prop.type === 'button') {
@@ -483,6 +505,26 @@ export default {
 
 <style lang="less" scoped>
 @import './../assets/styles/main.less';
+@import './../assets/styles/main.css';
+
+.button-container-pose {
+    display: grid;
+    grid-template-columns: auto auto;
+    margin-bottom: @header-height*0.5;
+}
+
+.pose-input {
+    // font-size: @fontsize-medium;
+    width: @sidebar-width * 0.2;
+    text-align: right;
+    // float: right;
+    // clear: both;
+}
+
+.menu-title {
+    size: @fontsize-medium;
+}
+
 
 #run-module {
     position: absolute;
@@ -496,18 +538,20 @@ export default {
     }
 }
 
-
 .reference-button-container{
     display: grid;
     grid-template-columns: auto auto;
-    // grid-column-gap: $right;
 }
 
+.property-title {
+    font-size: @fontsize-huge;
+}
 .property-panel {
     .property {
+        // border-top: 1px solid @color-border;
         border-bottom: 1px solid @color-border;
-        padding-top: 20px;
-        padding-bottom: 20px;
+        padding-top: @header-height*0.5;
+        padding-bottom: $padding-top;
     }
 }
 
@@ -522,29 +566,10 @@ export default {
     grid-column-gap: $right;
 }
 
-.two-button-container {
-    // padding: 20px;
-    // display: grid;
-    // grid-template-columns: auto auto;
-    // grid-column-gap: @sidebar-width*0.8;
-}
-
-
 .dropdown-1 {
     position: relative;
     display: inline-block;
     font-color: #FFFFFF
-                    // background: #FFFFFF;
-}
-
-.position-input {
-    width: 50px;
-    margin-right: 10px;
-}
-
-.orientaion-input {
-    width: 50px;
-    margin-right: 10px;
 }
 
 .slider-input {
@@ -554,14 +579,6 @@ export default {
 .slider-field{
     margin-left: 5px;
     margin-right: 5px;
-}
-
-.position-input {
-    width: 100px;
-}
-
-.orientation-input {
-    width: 100px;
 }
 
 </style>

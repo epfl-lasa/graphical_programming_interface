@@ -78,7 +78,7 @@ class RosHandler(Node):
         # Initialize(?)
         rclpy.init()
 
-    def __init__(self, DataHandler=None, set_parameters=True):
+    def __init__(self, DataHandler=None, DEBUG_FLAG=False):
         super().__init__('ros_main_handler')
         # Spin in a separate thread
         # self.thread = threading.Thread(target=rclpy.spin, args=(self, ), daemon=True)
@@ -113,7 +113,7 @@ class RosHandler(Node):
         # Initialize the sequence handler
         self.SequenceHandler = SequenceHandler(MainRosHandler=self)
 
-        if set_parameters:
+        if not DEBUG_FLAG:
             self.client_setparams_controller = self.create_client(
                 SetParameters, self.controller_node_name+'/set_parameters')
 
@@ -145,9 +145,14 @@ class RosHandler(Node):
         print('Finished init.')
         warnings.warn('Finished init.')
 
+    def reset(self):
+        # How to differentiate from del (?!)
+        pass
+
     def __del__(self):
         # Sure about shutdown of rclpy(?)
         self.robot_is_moving = False # Turn robot of
+        self.reset_attractor_to_current_pose() # TODO: integrate this in normal (?)
         rclpy.shutdown()
         # self.thread.join()
         
@@ -491,11 +496,13 @@ class RosHandler(Node):
         euler_data = self.transform_poseROS_to_eulerPose(self.msg_robot_pose)
         return {'pose': euler_data}
     
-    def record_module_database(self, module_id, DataHandler, max_recording=1000, time_sleep=0.1):
+    def record_module_database(self, module_id, DataHandler, max_recording=1000,
+                               recording_delta_time=0.5):
         ''' Record Data and Send to Database. '''
         self.set_compliant_mode(True)
         self.data_recording = True
 
+        self.get_logger().info("Start recording with delta_time={}s".format(recording_delta_time))
         recorded_data = []
         it_recording = 0
         while(self.data_recording):
@@ -509,7 +516,8 @@ class RosHandler(Node):
             else:
                 warnings.warn('@ros_handler: recieved none robot position')
 
-            rclpy.spin_once(node=self, timeout_sec=time_sleep)
+            # This decides about the recording frequency
+            rclpy.spin_once(node=self, timeout_sec=recording_delta_time)
             # time.sleep(time_sleep)
             
         self.data_recording = False

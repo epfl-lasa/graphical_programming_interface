@@ -135,7 +135,11 @@ export default {
 
 #buttonCloseLibraryLeft{
     position: absolute;
-    left: @sidebar-width - @header-padding-sideways;
+    // left: @sidebar-width - @header-padding-sideways;
+    bottom: 50vh;
+    left: ~"calc(@{sidebar-width} - 0.6* @{height-icon-small})";
+    -webkit-filter: invert(100%); // Invert colors (?)
+    z-index: 6;
 }
 
 #force-graph {

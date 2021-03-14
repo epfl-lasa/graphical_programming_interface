@@ -34,6 +34,30 @@ Backend includes user data, python-tools (except main script.
 ```
 Back & Front end is split in libraries, which are further split in modules.
 This allows 
+
+### Module Container
+Nomenclature Introduction
+
+# Application
+
+# Task
+Task is
+
+# Action
+An action is the most basic module that can exist.
+
+# Module
+A module is
+
+# Block
+Block is the visual element created for a 'module'
+
+# Link
+Links two different modules
+
+# Line
+Line is the visual element which is created from a link between modules
+
     
 
 ## Build Setup
