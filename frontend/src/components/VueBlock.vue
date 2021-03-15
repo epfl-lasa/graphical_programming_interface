@@ -99,7 +99,8 @@ export default {
       presstimer: null,
       longpress: false,
 
-      connecting: false
+      connecting: false,
+      justFinishedLinking: false
     }
   },
   methods: {
@@ -191,6 +192,7 @@ export default {
         if (this.linkingMode) {
           console.log('@VueBock: Want to link')
           this.$emit('linkingStop')
+          this.justFinishedLinking = true
           return
         }
         this.dragging = false
@@ -224,11 +226,13 @@ export default {
       if (e.type === 'touchend') {
         e.preventDefault()
       }
+
       // console.log('@VueBlock: handleUp')
-      if (!this.longpress && !this.dragging) {
+      if (!this.longpress && !this.dragging && !this.justFinishedLinking) {
         this.$emit('select')
       }
 
+      this.justFinishedLinking = false
       this.cancelLongPress()
       this.removeHandles()
 

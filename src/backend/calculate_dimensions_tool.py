@@ -1,6 +1,5 @@
 import numpy as np
 
-
 ft_upright = {
     'force': [0.88956034, 0.020819, -8.9924709],
     'torque': [0.00550106, -0.01819782, 0.00019738],
@@ -31,6 +30,34 @@ def force_evaluation():
         print('')
 
 
+def torque_evalution():
+    for ft in [ft_sideways_1, ft_sideways_2]:
+        force = np.linalg.norm(ft['force'])
+
+        # print('force {} N'.format(round(force, 3)))
+        
+        torque_xy = ft['torque'][:2]
+        
+        # print('torque xy N', torque_xy, 3)
+        torque_xy_norm  = np.linalg.norm(torque_xy)
+        # print('torque xy {} N'.format(round(torque_xy_norm, 3)))
+
+        # T = F x dist
+        # dist = T/f
+        dist_centermass_in_meter = torque_xy_norm / force
+
+        print('dist of centerMass: {} m'.format(round(dist_centermass_in_meter, 4)))
+
+        # Distance to center of mass is approximately: [0, 0, 0.073 m]
+        # frame_id = 'ee_iiwa'
+
+        #
+        # Torque: induced_torce = dist_centermass x Force [x <=> cross-product]
+        #
+        
+        
 if (__name__) == "__main__":
     force_evaluation()
+
+    torque_evalution()
     pass

@@ -123,7 +123,10 @@ class SequenceHandler(Node):
     # dep get_module_reference(self, self.sequence_it):
 
     def get_current_module_id(self):
-        return self.sequence[self.sequence_it]['id']
+        # The Sequence where the robot is in, is ahead of the secuenc_it retrieved.
+        sequence_it = self.sequence[self.sequence_it]['id'] - 1
+        sequence_it = sequence_it % len(self.sequence)
+        return sequence_it
         
     def get_position_of_module_id(self, module_id):
         ''' Find position of module with the specific id.'''

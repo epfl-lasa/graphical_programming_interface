@@ -80,6 +80,8 @@ class RosHandler(Node):
 
     def __init__(self, DataHandler=None, DEBUG_FLAG=False):
         super().__init__('ros_main_handler')
+
+        self.DEBUG_FLAG = DEBUG_FLAG
         # Spin in a separate thread
         # self.thread = threading.Thread(target=rclpy.spin, args=(self, ), daemon=True)
         # self.thread.start()
@@ -112,7 +114,7 @@ class RosHandler(Node):
 
         # Initialize the sequence handler
         self.SequenceHandler = SequenceHandler(MainRosHandler=self)
-
+        
         if not DEBUG_FLAG:
             self.client_setparams_controller = self.create_client(
                 SetParameters, self.controller_node_name+'/set_parameters')
@@ -153,7 +155,8 @@ class RosHandler(Node):
         # Sure about shutdown of rclpy(?)
         self.robot_is_moving = False # Turn robot of
         self.reset_attractor_to_current_pose() # TODO: integrate this in normal (?)
-        rclpy.shutdown()
+        
+        # rclpy.shutdown()
         # self.thread.join()
         
     # @property
@@ -267,12 +270,27 @@ class RosHandler(Node):
 
         return pose
 
+    def set_force_parameter(self, desired_force=0, parameter_name='desired_radial_force'):
+        ''' Set the force of the controller. '''
+        self.get_logger().info(('Set controller force: {}'.format(desired_force)))
+        
+        if self.DEBUG_FLAG:
+        # if True:
+            return 
+
+        new_param_value = ParameterValue(
+            type=ParameterType.PARAMETER_DOUBLE, double_value=float(desired_force))
+        new_param = Parameter(name=parameter_name,  value=new_param_value)
+        self.req_params.parameters = [new_param]
+
+        self.future = self.client_setparams.call_async(self.req_params)
+
     def set_compliant_mode(self, value):
         ''' Set Compliant mode. '''
-        # ros2 service type /robot_interface/set_parameters
-        # rcl_interfaces/srv/SetParameters
-        # compliant_mode
-        # type_bool = 1
+        self.get_logger().info(('Set compliant mode: {}'.format(value)))
+
+        if self.DEBUG_FLAG:
+            return 
 
         new_param_value = ParameterValue(type=ParameterType.PARAMETER_BOOL, bool_value=bool(value))
         new_param = Parameter(name='compliant_mode',  value=new_param_value)
@@ -280,15 +298,21 @@ class RosHandler(Node):
 
         self.future = self.client_setparams.call_async(self.req_params)
 
-        if not value: # is False
+        if not value:    # stopping Compliant Mode
             if self.msg_robot_pose is None:
                 warnings.warn('No robot state ever recieved. Not resetting attractor.')
                 return
             
             self.reset_attractor_to_current_pose()
+
             
     def reset_attractor_to_current_pose(self):
         ''' Put robot in default position.'''
+        self.get_logger().info('Reset attractor to current pose.')
+        
+        if self.DEBUG_FLAG:
+            return
+        
         rclpy.spin_once(node=self, timeout_sec=0.02)
         param_value = [self.msg_robot_pose.position.x,
                        self.msg_robot_pose.position.y,
@@ -306,14 +330,6 @@ class RosHandler(Node):
         # self.future = self.client_setparams.call_async(self.req_params)
         self.future_controller = self.client_setparams_controller.call_async(self.req_params)
 
-        
-
-    def set_force_parameter(self, desired_force=0):
-        debugging = True
-        if debugging:
-            return 
-        Parameter(self._MainRosHandler.parameter_name['controller_force'],
-                  Parameter.Type.FLOAT64, desired_force),
 
     def stop_robot(self):
         ''' Emergency Stop of the Robot. '''
@@ -444,7 +460,8 @@ class RosHandler(Node):
 
     def stop_force_recording(self):
         ''' Deactivate force recording, but dont delete node yet.'''
-        self.force_listener.deactivate()
+        if self.force_listener is not None:
+            self.force_listener.deactivate()
         return 0
 
     def update_force_data(self):

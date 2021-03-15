@@ -58,7 +58,7 @@
     <br>
     <div v-if="robotIsMoving">
       <div  class="aica-button danger" id="run-module"
-               @click="stopRobot($event)" @touchstart="stopRobot($event)"
+            @click="stopRobot($event)" @touchstart="stopRobot($event)"
                >
         <p> Stop Moving </p>
       </div>
@@ -92,12 +92,10 @@ export default {
       type: String,
       default: 'load'
     },
-    settings: Array
+    settings: Array,
+    properties: Object
   },
   mounted () {
-    // console.log('@ModuleDataList: Get Database')
-    // console.log(this.module.id)
-    // console.log(this.module)
     this.getDatabase()
   },
   beforeUnmount () {
@@ -119,7 +117,8 @@ export default {
   },
   computed: {
     onlyOneRecording () {
-      if ('onlyOneRecording' in this.settings && this.settings.onlyOneRecording) {
+      if ('onlyOneRecording' in this.learning_data.onlyOneRecording &&
+          this.learning_data.onlyOneRecording) {
         return true
       } else {
         return false
@@ -153,6 +152,7 @@ export default {
                 {'params': {}})
         .then(response => {
           this.database = response.data.moduledatabase
+          // this.module.numberOfDataPoints = this.database.length
         })
         .catch(error => {
           console.log(error)
@@ -220,13 +220,23 @@ export default {
       if (e.type === 'touchstart') {
         e.preventDefault()
       }
+
       // this.moveToStartPoint(e)   // TODO: don't pass event...
       if (this.selected === null) {
         this.selected = this.database[0]
       }
+      console.log('Settings')
+      let desiredForce
+      if ('force' in this.properties) {
+        desiredForce = this.properties.force.value
+      } else {
+        desiredForce = 0
+      }
+
+      console.log(this.properties.force.value)
       this.$emit('setRobotStateMoving')
       axios.get(this.$localIP + `/replaydata/` + this.module.id + '/' + this.selected.name,
-                {'params': {}})
+                {'params': {'force': desiredForce}})
         .then(response => {
           console.log(response.statusText)
           // Finished robot movement - reset to not moving.
@@ -265,6 +275,7 @@ export default {
                 {'params': {}})
         .then(response => {
           this.database = response.data.moduledatabase
+          // this.module.numberOfDataPoints = this.database.length
           // console.log('@ModuleDataList: success')
           // console.log(this.database)
         })

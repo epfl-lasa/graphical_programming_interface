@@ -234,5 +234,7 @@ table {
     z-index: 10;
 }
 
-
+input {
+    text-align: left;
+}
 </style>

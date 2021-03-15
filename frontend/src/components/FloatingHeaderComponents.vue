@@ -1,7 +1,8 @@
 <template>
 <header>
   <div class="floating-header">
-    <div id="home-logo">
+    <div id="home-logo"
+         @click="mainMenuToggle($event)" @touchstart="mainMenuToggle($event)">
       <img src='./../assets/logotypes/aica_small_closed_white.svg'>
     </div>
     <div class="aica-dropdown-menu" id="drop-down">
@@ -22,6 +23,7 @@
       <!-- <ul class="aica-dropdown-menu" v-if="dropdownActive" -->
           <!-- @click="createNew($event)" @touchstart="createNew($event)"> Create New </ul> -->
     </div>
+    <template v-if="!robotIsCompliant">
     <div v-if="robotIsMoving"  class="aica-button danger" id="run-sequence"
          @click="stopRobot($event)" @touchstart="stopRobot($event)" >
       <p> Stop Moving </p>
@@ -30,9 +32,46 @@
          @click="executeSequence($event)" @touchstart="executeSequence($event)">
       <p> Run All </p>
     </div>
+    </template>
+
+    <div v-if="!robotIsMoving"
+         class="aica-button" :class="{compliant: robotIsCompliant}" id="compliant-button"
+         @click="compliantModeToggle($event)" @touchstart="compliantModeToggle($event)" >
+      <p v-if="robotIsCompliant"> Stop Compliant </p>
+      <p v-else> Start Compliant </p>
+    </div>
+  </div>
+
+  <div v-if="mainMenuActive" class="main-menu-page">
+    <div class="logo-container">
+      <img  class="logo-large" src='./../assets/logotypes/aica_original_white.svg'>
+    </div>
+    <div  class="aica-button"
+          @click="mainMenuToggle($event)" @touchstart="mainMenuToggle($event)">
+          <p> Start Programming </p>
+    </div>
+    <div v-if="robotIsMoving"  class="aica-button danger"
+         @click="stopRobot($event)" @touchstart="stopRobot($event)" >
+      <p> Stop Moving </p>
+    </div>
+    <div v-else class="aica-button reference-button" :class="{critical: isResetting}"
+         @click="resetBackendAll"
+         @touchstart="resetBackendAll"
+         >
+      Reset Backend
+    </div>
+    <div class="aica-button reference-button"
+         @click="mainMenuToggle($event)" @touchstart="mainMenuToggle($event)"
+         >
+      Cancel
+    </div>
+    <div v-if="isResetting" id="restart-message">
+      <p> Please wait for restart...</p>
+    </div>
   </div>
 </header>
 </template>
+
 
 <script>
 export default {
@@ -41,15 +80,17 @@ export default {
     return {
       // For testing
       defaultVar: [],
-      dropdownActive: false
+      dropdownActive: false,
+      mainMenuActive: false,
+      isResetting: false
     }
   },
   mounted () {
     // window.addEventListener("keypress", function(event) {
-      // if (!(event.which == 115 && event.ctrlKey) && !(event.which == 19)) return true
-      // alert("Ctrl-S pressed")
-      // event.preventDefault()
-      // return false
+    // if (!(event.which == 115 && event.ctrlKey) && !(event.which == 19)) return true
+    // alert("Ctrl-S pressed")
+    // event.preventDefault()
+    // return false
     // })
   },
   // beforeDestroy () {
@@ -62,7 +103,10 @@ export default {
     showLogoIcon: true,
     showDropDown: true,
 
+    // Robot states
     robotIsMoving: false,
+    robotIsCompliant: false,
+
     modules: {
       type: Object,
       default: {}
@@ -124,6 +168,12 @@ export default {
       }
       this.dropdownActive = true
     },
+    compliantModeToggle (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.$emit('setRobotStateCompliant', !this.robotIsCompliant)
+    },
     stopRobot (e) {
       if (e.type === 'touchstart') {
         e.preventDefault()
@@ -184,6 +234,21 @@ export default {
       this.$parent.loadModuleLibrary(library)
       this.dropdownActive = false
     },
+    mainMenuToggle (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.mainMenuActive = !(this.mainMenuActive)
+      console.log('Showing Main Menu')
+      console.log(this.mainMenuActive)
+    },
+    resetBackendAll (e) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.isResetting = true
+      this.$emit('resetBackendAll')
+    },
     goHome () {
       console.log('Implement Home.')
     },
@@ -218,7 +283,6 @@ export default {
 
 <style lang="less" scoped>
 @import './../assets/styles/main.less';
-
 
 .floating-header{
     height: @header-height;
@@ -265,16 +329,31 @@ export default {
             }
         }
     }
+}
 
+#compliant-button {
+    font-size: @fontsize-large;
+    border-radius: $font-size;
+    margin-top: $font-size*0.8;
+    padding-top: $font-size*0.2;
+
+    width: @sidebar-width*0.6;
+
+    z-index: 4;
+    left: ~"calc(50*@{vw} - @{sidebar-width}*1.0)";
+    top: $font-size*0.3;
 }
 
 #run-sequence {
-    font-size: @fontsize-huge;
+    font-size: @fontsize-large;
     border-radius: $font-size;
+    margin-top: $font-size*0.8;
     padding-top: $font-size*0.2;
 
+    width: @sidebar-width*0.6;
+
     z-index: 4;
-    left: ~"calc(50vw - @{height-icon-small}*2)";
+    left: ~"calc(50*@{vw} - @{sidebar-width}*0.2)";
     top: $font-size*0.3;
 }
 
@@ -287,5 +366,52 @@ export default {
     top: @header-height*0.3;
     cursor: pointer;
     z-level: 5;
+}
+
+.main-menu-page{
+    position: absolute;
+    left: 0;
+    top: 0;
+
+    width: 100vw;
+    height: 100vw;
+
+    z-index: 10;
+
+    background-color: @color-main-dark;
+
+    .aica-button {
+        font-size: @fontsize-huge;
+        margin-top: $font-size * 1.0;
+        margin-bottom: $font-size * 1.0;
+
+        padding-top: $font-size * 0.4;
+        padding-bottom: $font-size * 0.4;
+        width: @sidebar-width * 0.9;
+
+        text-align: center;
+
+        position: relative;
+        // top: 10*@vw;
+        top: 10*@vw;
+    }
+
+}
+.logo-container{
+    text-align: center;
+}
+
+.logo-large {
+    height: @sidebar-width * 0.4;
+
+    position: relative;
+    top: 8*@vw;
+}
+
+#restart-message {
+    text-align: center;
+    position: relative;
+    top: 10*@vw;
+    font-size: @fontsize-small;
 }
 </style>

@@ -31,7 +31,7 @@ class ControllerNodeSimulator(Node):
         'controller_success': '/linear_controller/path_executed',
     }
 
-    my_node_name = 'motion_generator2'
+    my_node_name = 'motion_generator'
     def __init__(self):
         
         super().__init__(self.my_node_name)

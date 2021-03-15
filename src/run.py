@@ -3,8 +3,6 @@ AICA user interface launcher
 
 (c) AICA SarL
 '''
-DEBUG_FLAG = True
-
 __author__ = "Lukas, Gustav"
 __email__ = "lukas@aica.tech"
 
@@ -14,9 +12,7 @@ import warnings
 import copy
 import json    # use json for data-exchange
 import yaml    # use yaml for configuration 
-import time
-import datetime
-from random import *
+import subprocess
 
 # To import
 from flask import Flask, render_template, jsonify, request
@@ -33,9 +29,10 @@ from data_handler import DataHandler
 
 from ros_handler import RosHandler
 
+RosHandler.initialize_ros()
+
 DataLocalHandler = None
 RosMainHandler = None
-
 
 app = Flask(__name__,
             static_folder="./dist/static",
@@ -56,11 +53,28 @@ data_directory = os.path.join('backend', 'userdata')
 IMPORT_COMMUNACTION_CONTROLLER = False
 AUTOMATICALLY_UPDATE_ROS_HANDLER = True
 
+# DEBUG_FLAG = True
+DEBUG_FLAG = False
+
 # ----------------------------------------
 #    Startup & resetting
 # ----------------------------------------
+@app.route('/resetbackend')
+def resetbackend():
+    print('Reset backend')
+    startupenvironment()
+
+    return '0: all good'
+    
 @app.route('/startupenvironment')
 def startupenvironment():
+    if DEBUG_FLAG:
+        print('\n\n\n[WARNING !!!!] Flask is started in DEBUG-MODE\n\n\n')
+
+    if not DEBUG_FLAG:
+        # (Re-)start nodes of KUKA / simulator
+        subprocess.call(['sh', './src/startup_remote.sh'])
+
     global DataLocalHandler
     global RosMainHandler
     
@@ -68,15 +82,16 @@ def startupenvironment():
     DataLocalHandler = DataHandler(dir_path)
 
     # Create ROS handler
-    RosHandler.initialize_ros()
     RosMainHandler = RosHandler(DataHandler=DataLocalHandler, DEBUG_FLAG=DEBUG_FLAG)
+
+    return '0: all good'
 
 def send_reset_to_front_end():
     # TODO:
     pass
 
 # ----------------------------------------
-#    Execute this at the startup
+#    
 # ----------------------------------------
 @app.route('/startup')
 def startup():
@@ -95,6 +110,12 @@ def emergencystop():
 @app.route('/stoprobot')
 def stoprobot():
     RosMainHandler.callback_stop_robot()
+    return '0'
+
+@app.route('/setcompliantmode/<int:is_compliant_mode>')
+def setcompliantmode(is_compliant_mode):
+    # True=1 compliant // False=0 noncompliant
+    RosMainHandler.set_compliant_mode(value=is_compliant_mode)
     return '0'
 
 @app.route('/movetomodulestart/<int:module_id>')

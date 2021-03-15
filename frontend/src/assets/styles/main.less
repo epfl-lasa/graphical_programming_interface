@@ -56,6 +56,9 @@
 @color-main-mediumbright: #323232;
 @color-main-bright: #E7E7E7;
 
+@color-highlight1-bright: #006cf5;
+@color-highlight1-dark: #0045f5;
+
 @color-ok: #4CBF6E;
 @color-warning: #B7B7B7;
 @color-danger: #FA573A;
@@ -136,6 +139,13 @@
 
   &.critical {
     background-color: @color-main-bright;
+    border-color: @color-main-dark;
+
+    color: @color-main-dark;
+  }
+
+  &.compliant {
+    background-color: @color-highlight1-bright;
     border-color: @color-main-dark;
 
     color: @color-main-dark;

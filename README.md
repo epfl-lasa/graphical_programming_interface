@@ -7,9 +7,10 @@
 * vue-router: 3.0.1
 * axios: 0.16.2
 
-@thanksto:  
+@thanksto:
 - oleg-agapov / flask-vue-spa 
 - ghostiam / vue-blocks 
+- mistahuba / aica-software
 
 # TODO
 > 
@@ -35,6 +36,14 @@ Backend includes user data, python-tools (except main script.
 Back & Front end is split in libraries, which are further split in modules.
 This allows 
 
+### State Hirarchy
+
+States - Robot & Interface:
+Compliant - Stop - Running
+
+
+
+
 ### Module Container
 Nomenclature Introduction
 
@@ -58,7 +67,6 @@ Links two different modules
 # Line
 Line is the visual element which is created from a link between modules
 
-    
 
 ## Build Setup
 ``` bash

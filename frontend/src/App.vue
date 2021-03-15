@@ -8,8 +8,11 @@
     :drawMode="isInDrawingMode"
     :modules="modules"
     :robotIsMoving="robotIsMoving"
+    :robotIsCompliant="robotIsCompliant"
+    @resetBackendAll="resetBackendAll"
     @runSequence="runSequence"
     @setRobotStateMoving="setRobotStateMoving"
+    @setRobotStateCompliant="setRobotStateCompliant"
     @stopRobot="stopRobot"
     @showLibrary="loadedLibrary = true"
     />
@@ -58,7 +61,7 @@
     @loadScene="loadScene"
     @saveScene="saveScene"
     />
-  </div>
+</div>
 </template>
 
 
@@ -154,7 +157,8 @@ export default {
       robotProperties: {
         type: 'KUKA IIWA'
       },
-      robotIsMoving: false
+      robotIsMoving: false,
+      robotIsCompliant: false
     }
   },
   computed: {
@@ -179,13 +183,46 @@ export default {
     }
   },
   methods: {
+    resetBackendAll () {
+      console.log('Reseting backend.')
+      axios.get(this.$localIP + `/resetbackend`, {})
+        .then(response => {
+          console.log(response.statusText)
+
+          // Reload either way
+          location.reload()
+        })
+        .catch(error => {
+          console.log(error)
+
+          // Reload either way
+          location.reload()
+        })
+    },
     // Robot main movement handler
     // resetBackend () {
     // },
-    runSequence () {
-      let loopIsClosed = this.$refs.container.orderBlocklistAndCheckIfIsLoop()
-      console.log('Loop is Closed')
-      console.log(loopIsClosed)
+    async runSequence () {
+      console.log('We are async')
+      let loopIsClosedPromise = await this.$refs.container.orderBlocklistAndCheckIfIsLoop()
+      let allHaveRecordingPromise = await this.$refs.container.allDataBlocksHaveRecordings()
+
+      let allHaveRecording = await Promise.resolve(allHaveRecordingPromise)
+      let loopIsClosed = await Promise.resolve(loopIsClosedPromise)
+
+      console.log('All Have Recording')
+      console.log(allHaveRecording)
+
+      if (!allHaveRecording) {
+        alert('Make Sure all Blocks have a recording.')
+        return
+      }
+
+      if (!loopIsClosed) {
+        alert('Make Sure your loop is closed..')
+        return
+      }
+
       this.setRobotStateMoving()
       let paramData
       if (this.selectedBlock) {
@@ -193,6 +230,8 @@ export default {
       } else {
         paramData = {}
       }
+
+      await this.updateBackendProgram()
 
       axios.get(this.$localIP + `/executesequence`, {'params': paramData})
         .then(response => {
@@ -218,8 +257,20 @@ export default {
       }
       this.startSequenceLoop = false
     },
-    setRobotStateMoving () {
-      this.robotIsMoving = true
+    setRobotStateCompliant (newValue = true) {
+      this.robotIsCompliant = newValue
+      let compliantInt = this.robotIsCompliant * 1
+      console.log('Compliant', newValue)
+      axios.get(this.$localIP + `/setcompliantmode/` + compliantInt)
+        .then(
+          console.log(`Set Compliant`)
+        )
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    setRobotStateMoving (newValue = true) {
+      this.robotIsMoving = newValue
     },
     stopRobot () {
       this.robotIsMoving = false
@@ -241,10 +292,10 @@ export default {
           console.log(error)
         })
     },
-    updateBackendProgram () {
+    async updateBackendProgram () {
       let goal = this.$localIP + `/updatebackend`
       console.log('@app: Update backend.')
-      axios.get(goal,
+      await axios.get(goal,
                 {'params': {'scene': this.scene}})
         .then(response => {
           console.log('@App:' + response.statusText)

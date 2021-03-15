@@ -35,12 +35,15 @@ export default {
     this.preparePlot()
     // this.$emit('update:title', this.title)
     this.$emit('updateTitle')
+
+    // Always send it. Just to be sure...
+    this.stopForceRecording()
   },
   beforeUnmount () {
     console.log('Unmount')
-    if (this.backendIsGeneratingData) {
-      this.stopForceRecording()
-    }
+
+    // Always send it. Just to be sure...
+    this.stopForceRecording()
   },
   props: {
   },
@@ -135,8 +138,8 @@ export default {
         await sleep(deltaTime)
       }
     },
-    stopForceRecording (e) {
-      if (e.type === 'touchstart') {
+    stopForceRecording (e = null) {
+      if (e !== null && e.type === 'touchstart') {
         e.preventDefault()
       }
       this.backendIsGeneratingData = false

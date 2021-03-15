@@ -11,25 +11,21 @@ TODO Baptiste
 Sequence recording:
 > [Bapstiste] Scale up velocity / Keep it at max
 
-> [Lukas] Decrease sampling
-
-> 
+> [Lukas] Decrease sampling > currently at 0.5
 
 
-URGENT URGENT:
-> When adding new block, parameters are only adapted late...
+URGENT:
+> Compliant Mode
+
+> Arrows to move up & down
 
 > TEST (!) with Motion (Simulator)
 
-> Touchstart at right screen side (show menu) is currently passive. This does not allow for event.preventDefault() ! Fix it...
-
-> Don't updte environment while running...
-
-> Reset everything @ startup!!! (front & backend + send message to each other...)
+> Don't allow environment while running...
 
 > Error handling for empty recording!
 
-> MOvement States: Movement sent, movement recieved, movement 
+> Movement States: Movement sent, movement recieved, movement 
 (Potentially: Align with action?)
 
 > DS handler! [Speed etc.]
@@ -40,21 +36,18 @@ URGENT URGENT:
 
 > Clear everything at shutdown..
 
-> Degrees to radian!
-
-> Include force in direct module replay(!!!) + check if canceled
+> Include force in direct module replay(!!!) + check if cancelled
 
 > reset everything on shutdown/startupreload
 
-> 
-
-
 URGENT:
+> Touchstart at right screen side (show menu) is currently passive. This does not allow for event.preventDefault() ! Fix it...
+
 > (goal) position of arrow
 
-> Number input on touch pad (!?)
+> Number input on touch pad (!?) + Arrows
 
-> Table choosing on touchpad (?)
+> Scrolling on tablet...
 
 > Only one path / trajectory
 
@@ -100,7 +93,15 @@ status: not urgent
 
 > Connect to Robots (Add new robots)
 
-> Matrix-based position (how to implement)
+> Matrix-based positioning of pieces (how to implement)
+
+> Nice AICA logo transition (...)
+
+> Delete Modules 
+
+> Create 'clean-file'
+
+> 
 
 
 # Update / Improvement

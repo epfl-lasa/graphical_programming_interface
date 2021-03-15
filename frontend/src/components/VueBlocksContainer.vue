@@ -56,6 +56,8 @@
 </template>
 
 <script>
+import axios from 'axios' // Needed to pass. Only temporarily?
+
 import merge from 'deepmerge'
 import mouseHelper from '../helpers/mouse'
 
@@ -325,7 +327,7 @@ export default {
       if (e.type === 'touchmove') {
         e.preventDefault()
       }
-      console.log('Update Dragging Move')
+      // console.log('Update Dragging Move')
       let mouse = mouseHelper.getMousePosition(this.$el, e)
       this.mouseX = mouse.x
       this.mouseY = mouse.y
@@ -346,7 +348,7 @@ export default {
       if (e.type === 'touchmove') {
         e.preventDefault()
       }
-      console.log('Update move')
+      // console.log('Update move')
 
       let mouse = mouseHelper.getMousePosition(this.$el, e)
       this.mouseX = mouse.x
@@ -900,17 +902,44 @@ export default {
       this.$emit('update:scene', this.exportScene())
       // Send scene to backend file
 
-      this.orderBlocklistAndCheckIfIsLoop()
+      // this.orderBlocklistAndCheckIfIsLoop()
       // console.log('Update scene')
-      if (this.loopIsClosed) {
-        this.$emit('updateBackendProgram')
+      // if (this.loopIsClosed) {
+      // this.$emit('updateBackendProgram')
+      // }
+    },
+    async allDataBlocksHaveRecordings () {
+      const numDataPointsPromises = await this.blocks.map(async block => {
+        if (block.type === 'follow_path') {
+          let dataLength
+          await axios.get(this.$localIP + `/getdataofmodule/` + block.id)
+            .then(response => {
+              console.log('length', response.data.moduledatabase.length)
+              dataLength = response.data.moduledatabase.length
+            })
+            .catch(error => {
+              console.log(error)
+              console.log('@ModuleDataList: failure while updating backend.')
+              dataLength = 0
+            })
+          return dataLength
+        } else {
+          return -1
+        }
+      })
+      // console.log('numDataPointsPromises', numDataPointsPromises)
+      const numDataPoints = await Promise.all(numDataPointsPromises)
+      if (numDataPoints.includes(0)) {
+        return false
+      } else {
+        return true
       }
     },
-    orderBlocklistAndCheckIfIsLoop () {
-      // Only automatically send block to background when there is a complete loop
+    async orderBlocklistAndCheckIfIsLoop () {
+      // Oxnly automatically send block to background when there is a complete loop
       if (this.links == null || this.links.length === 0) {
         this.loopIsClosed = false
-        return
+        return this.loopIsClosed
       }
 
       // Find start bock
@@ -973,16 +1002,17 @@ export default {
       } else {
         this.loopIsClosed = true
       }
+
       return this.loopIsClosed
     }
   },
   watch: {
-    loopIsClosed (newValue) {
-      if (newValue) {
-        console.log('@VueBlocksContinaer: Update scene arrangement.')
-        this.$emit('updateBackendProgram')
-      }
-    },
+    // loopIsClosed (newValue) {
+      // if (newValue) {
+        // console.log('@VueBlocksContinaer: Update scene arrangement.')
+        // this.$emit('updateBackendProgram')
+      // }
+    // },
     blocksContent () {
       this.importBlocksContent()
     },

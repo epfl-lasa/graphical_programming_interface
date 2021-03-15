@@ -17,25 +17,45 @@
         </b-dropdown>
         </div>
         <div class="button-container-pose">
-
+          <ReferencePad v-if="poseInputFocused"
+                        :poseInputFocused.sync="poseInputFocused"
+                        :referencePadValue.sync="referencePadValue[referencePadKey]"
+                        />
           <div>
             <h3> Position [mm]</h3>
             <div v-for="(dir, key) in p.value.position">
-              <label>{{key}}:</label>
+              <label class="aica-button"
+                     :class="{critical: (poseInputFocused && referencePadType==='position' && referencePadKey===key)}"
+                     @click="poseInputFocusAction($event, p.value.position, key, 'position')"
+                     @touchstart="poseInputFocusAction($event, p.value.position, key, 'position')"
+                     >
+                {{key}}:</label>
               <input type="number" pattern="[0-9]*" inputmode="numeric"
                      class="pose-input position"
-                     v-model="p.value.position[key]" />
-                     >
+                     v-model.number="p.value.position[key]" />
+              <!-- @onfocus="poseInputFocusAction('position', key)" -->
+
+              <!-- :touchstart="poseInputFocusAction('position', key)" -->
+
+
+              <!-- :onblur="poseInputBlurAction('position', key)" -->
+              <!-- :onblur="robotOutput=false" -->
+              <!-- :onfocus="pose('position', key)" -->
             </div>
           </div>
-
           <div>
             <h3> Orientation [deg]</h3>
             <div v-for="(dir, key) in p.value.orientation">
-              <label>{{key}}:</label>
+              <label
+                class="aica-button"
+                :class="{critical: (poseInputFocused && referencePadType==='orientation' && referencePadKey===key)}"
+                @click="poseInputFocusAction($event, p.value.orientation, key, 'orientation')"
+                @touchstart="poseInputFocusAction($event, p.value.orientation, key, 'orientation')"
+                >
+                {{key}}:</label>
               <input type="number" pattern="[0-9]*" inputmode="numeric"
                      class="pose-input orientation"
-                     v-model="p.value.orientation[key]" />
+                     v-model.number="p.value.orientation[key]" />
 
               <!-- <input type="number" pattern="[0-9]*" inputmode="numeric"> -->
             </div>
@@ -98,7 +118,7 @@
           :module="module"
           :robotIsMoving="robotIsMoving"
           :multipleRecordings="true"
-          :settings=p.settings
+          :properties="properties"
           @setRobotStateMoving="setRobotStateMoving"
           @stopRobot="$emit('stopRobot')"
           />
@@ -154,11 +174,13 @@ import sliderHelpers from '../helpers/slider'
 import blockloaderHelper from '../helpers/blockloader'
 
 import ModuleDataList from './ModuleDataList'
+import ReferencePad from './ReferencePad'
 
 export default {
   name: 'VueBlockProperty',
   components: {
-    ModuleDataList
+    ModuleDataList,
+    ReferencePad
   },
   mounted () {
     this.loadModule()
@@ -194,12 +216,37 @@ export default {
       robotIsCoupledToPose: false,
       // isMovingToReference: false,
       moveToButtonLabel: '',
-      awaitRobotPosition: false
+      awaitRobotPosition: false,
+      poseInputFocused: false,
+      referencePadValue: false,
+      referencePadKey: '',
+      referencePadType: ''
     }
   },
   // computed: {
   // },
   methods: {
+    poseInputFocusAction (e, referencePadValue, key, focusType) {
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.poseInputFocused = true
+      console.log('Input is active with:', referencePadValue, key)
+      this.referencePadValue = referencePadValue
+      this.referencePadKey = key
+      this.referencePadType = focusType
+      // alert('Is active')
+    },
+    poseInputBlurAction (dataType, key) {
+      this.poseInputFocused = false
+      console.log('Input is blured with:', dataType, key)
+
+      // Set focus to dummy button
+      let dummyButton = document.getElementById('dummyButton')
+      console.log(dummyButton)
+      dummyButton.focus()
+      // alert('Is active')
+    },
     // Basic math methods
     test () {
       sliderHelpers.getSliderTicks(null)
