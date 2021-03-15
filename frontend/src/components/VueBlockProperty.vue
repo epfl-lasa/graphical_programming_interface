@@ -19,6 +19,7 @@
         <div class="button-container-pose">
           <ReferencePad v-if="poseInputFocused"
                         :poseInputFocused.sync="poseInputFocused"
+                        @updatePadReading="updatePadReading"
                         :referencePadValue.sync="referencePadValue[referencePadKey]"
                         />
           <div>
@@ -32,15 +33,8 @@
                 {{key}}:</label>
               <input type="number" pattern="[0-9]*" inputmode="numeric"
                      class="pose-input position"
+                     @onfocus="updateRobotIsCoupledToPose($event, false)"
                      v-model.number="p.value.position[key]" />
-              <!-- @onfocus="poseInputFocusAction('position', key)" -->
-
-              <!-- :touchstart="poseInputFocusAction('position', key)" -->
-
-
-              <!-- :onblur="poseInputBlurAction('position', key)" -->
-              <!-- :onblur="robotOutput=false" -->
-              <!-- :onfocus="pose('position', key)" -->
             </div>
           </div>
           <div>
@@ -50,6 +44,7 @@
                 class="aica-button"
                 :class="{critical: (poseInputFocused && referencePadType==='orientation' && referencePadKey===key)}"
                 @click="poseInputFocusAction($event, p.value.orientation, key, 'orientation')"
+                @onfocus="updateRobotIsCoupledToPose($event, false)"
                 @touchstart="poseInputFocusAction($event, p.value.orientation, key, 'orientation')"
                 >
                 {{key}}:</label>
@@ -68,10 +63,18 @@
                >
             <p> Stop Robot </p>
           </div>
+          <div v-else-if="robotIsCoupledToPose"
+               id="move-reference reference-button"
+               class="aica-button compliant"
+               @click="updateRobotIsCoupledToPose(false)"
+               @touchstart="updateRobotIsCoupledToPose(false)">
+            <p> Uncouple </br> robot </p>
+          </div>
           <div v-else class="aica-button" id="move-reference reference-button"
                @click="moveToPosition($event)" @touchstart="moveToPosition($event)">
             <p> Move Robot </br> to Reference </p>
           </div>
+
 
           <div v-if="!(robotIsMoving)"
                @click="setToRobotPosition($event)" @touchstart="setToRobotPosition($event)"
@@ -195,6 +198,7 @@ export default {
     if (this.robotIsMoving) {
       this.stopRobot()
     }
+    this.robotIsCoupledToPose = false
   },
   props: {
     robotIsMoving: Boolean,
@@ -226,6 +230,24 @@ export default {
   // computed: {
   // },
   methods: {
+    // stopPositionCoupling () {
+    // },
+    updatePadReading (newValue) {
+      this.referencePadValue[this.referencePadKey] = newValue
+
+      if (this.robotIsCoupledToPose) {
+        this.moveToPosition()
+      }
+    },
+    updateRobotIsCoupledToPose (e, newValue) {
+      // TODO: maybe with watch (?)
+      if (e.type === 'touchstart') {
+        e.preventDefault()
+      }
+      this.robotIsCoupledToPose = newValue
+
+      console.log('reest coupling', newValue)
+    },
     poseInputFocusAction (e, referencePadValue, key, focusType) {
       if (e.type === 'touchstart') {
         e.preventDefault()
@@ -326,8 +348,9 @@ export default {
       if (e.type === 'touchstart') {
         e.preventDefault()
       }
-      // console.log('Stop Robot')
+      // TODO: action command from different directions to 'stop coupling'
       this.$emit('stopRobot')
+      this.robotIsCoupledToPose = false
     },
     setValueButton (e, property, value) {
       if (e.type === 'touchstart') {
@@ -356,12 +379,16 @@ export default {
         })
     },
     moveToPosition (e) {
-      if (e.type === 'touchstart') {
+      if (e !== null && e.type === 'touchstart') {
         e.preventDefault()
       }
       // Transfer an euler pose
       this.setRobotStateMoving()
+
       this.robotIsCoupledToPose = true
+
+      console.log('Roboto coupling', this.robotIsCoupledToPose)
+
       axios.get(this.$localIP + `/movetoposition`,
                 {'params': {'eulerPose': this.property.reference.value}})
         .then(response => {
@@ -528,7 +555,7 @@ export default {
     module () {
       // console.log('@VueBlockProperty: load module')
       this.loadModule()
-      this.robotIsCoupledToPose = false // Reset at mounted
+      // this.robotIsCoupledToPose = false // Reset at mounted
     },
     property () {
       // console.log('@VueBlockProperty: load property')
@@ -540,10 +567,10 @@ export default {
       // TODO: update reference point
     },
     robotIsMoving (newValue) {
-      if (!newValue) {
+      // if (!newValue) {
         // When robot movement is stopped make sure it gets uncoupled.
-        this.robotIsCoupledToPose = false
-      }
+        // this.robotIsCoupledToPose = false
+      // }
       console.log('@VueBlockProperty: Robot is not Moving anymore')
     }
   }
@@ -580,6 +607,7 @@ export default {
 }
 
 .aica-button {
+    // width: @sidebar-width*0.4;
     &.selected {
         background-color: var(--color-highlight1-dark);
     }

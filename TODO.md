@@ -21,8 +21,6 @@ URGENT:
 
 > TEST (!) with Motion (Simulator)
 
-> Don't allow environment while running...
-
 > Error handling for empty recording!
 
 > Movement States: Movement sent, movement recieved, movement 
@@ -38,21 +36,13 @@ URGENT:
 
 > Include force in direct module replay(!!!) + check if cancelled
 
-> reset everything on shutdown/startupreload
 
 URGENT:
 > Touchstart at right screen side (show menu) is currently passive. This does not allow for event.preventDefault() ! Fix it...
 
-> (goal) position of arrow
-
 > Number input on touch pad (!?) + Arrows
 
-> Scrolling on tablet...
-
 > Only one path / trajectory
-
-> Optimize table on tablet (...)
-
 
 # Fixes
 > Don't update when blocks are only 'moved' & update block only

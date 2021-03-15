@@ -56,6 +56,9 @@ export default {
     referencePadValue: 0.0
   },
   methods: {
+    roundDec (x, dec) {
+      return Math.round(x * Math.pow(10, dec)) / Math.pow(10, dec)
+    },
     handleMouseDown (e) {
       if (e.type === 'touchstart') {
         e.preventDefault()
@@ -73,10 +76,11 @@ export default {
 
       let newValue = this.referencePadValue + increment
 
-      console.log('Incrementing')
-      this.$emit('update:referencePadValue', newValue)
+      newValue = Math.round(newValue * 10.0) / 10.0
+      // newValue = this.roundDec(newValue)
+      // newValue =
 
-      console.log('Update parent value')
+      this.$emit('updatePadReading', newValue)
     }
   }
 }

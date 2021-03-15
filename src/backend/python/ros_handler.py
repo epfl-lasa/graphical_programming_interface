@@ -52,7 +52,8 @@ class RosHandler(Node):
         'controller_stop': '/linear_controller/stop',
         'controller_command': '/linear_controller/command',
         'controller_success': '/linear_controller/path_executed',
-        'ft_sensor': '/ft_sensor/netft_data',
+        # 'ft_sensor': '/ft_sensor/netft_data',
+        'ft_sensor': '/calibrated_ft_sensor/iiwa_link_ee_polish',
         'robot_pose': '/iiwa/CartesianPosition',
     }
     
@@ -452,7 +453,7 @@ class RosHandler(Node):
     def start_force_recording(self):
         ''' Activate or initialize force listener. '''
         if self.force_listener is None:
-            self.force_listener = ForceListener(start_time=self.start_time)
+            self.force_listener = ForceListener(start_time=self.start_time, RosHandler=self)
 
         # self.set_compliant_mode(True)
         self.force_listener.activate()
