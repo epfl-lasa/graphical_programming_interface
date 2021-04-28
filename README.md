@@ -7,9 +7,13 @@
 * vue-router: 3.0.1
 * axios: 0.16.2
 
-@thanksto:  
+@thanksto:
 - oleg-agapov / flask-vue-spa 
 - ghostiam / vue-blocks 
+- mistahuba / aica-software
+
+# TODO
+> 
 
 ## Structure
 ### Frontend
@@ -31,7 +35,38 @@ Backend includes user data, python-tools (except main script.
 ```
 Back & Front end is split in libraries, which are further split in modules.
 This allows 
-    
+
+### State Hirarchy
+
+States - Robot & Interface:
+Compliant - Stop - Running
+
+
+
+
+### Module Container
+Nomenclature Introduction
+
+# Application
+
+# Task
+Task is
+
+# Action
+An action is the most basic module that can exist.
+
+# Module
+A module is
+
+# Block
+Block is the visual element created for a 'module'
+
+# Link
+Links two different modules
+
+# Line
+Line is the visual element which is created from a link between modules
+
 
 ## Build Setup
 ``` bash
@@ -52,9 +87,9 @@ virtualenv -p python3 venv
 source venv/bin/activate
 pip install -r requirements.txt
 cd ..
-
 ```
 
+## Run Setup
 Turn on debug mode
 ``` bash
 export FLASK_DEBUG=0
@@ -74,5 +109,33 @@ cd frontend
 npm run dev
 ```
 
+# IP / Localhost setup
+To make sure that the app is accessible from an external device, the frontend matches the IP of your device.
 
+``` bash
+cd frontend/src/main.js
+```
+For local development only, you can set it to 'localhost'
+
+
+## Run using Docker
+Build the Dockerimage. In a second window, build and run the backend. In the first window, run the Dockerimage and run the following code
+``` 
+FLASK_APP=src/run.py flask run --host 0.0.0.0
+```
+
+## Run a new terminal in existing docker with ID
+``` bash
+docker exec -it ID bash
+```
+
+## Run 'simulation' controller
+``` bash
+python3 /home/ros2/src/backend/python/node_controller_simulator.py
+```
+
+## Replay rosbag
+``` bash
+ros2 bag play /home/ros2/userdata/ros_recording/ros2_bag/rosbag2_2021_02_25-10_54_58_0.db3
+```
 
