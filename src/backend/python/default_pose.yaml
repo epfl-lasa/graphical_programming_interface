@@ -1,0 +1,13 @@
+# Default Position hard set
+
+position:
+  - 0.5
+  - 0.0
+  - 0.75
+
+orientation:
+  - 0.742
+  - 0.506
+  - -0.302
+  - -0.319
+
