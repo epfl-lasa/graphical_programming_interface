@@ -1,0 +1,14 @@
+# Settings for communication
+
+IMPORT_COMMUNACTION_CONTROLLER: False
+AUTOMATICALLY_UPDATE_ROS_HANDLER: True
+
+# No robot-mode (debugging / front-end + stack development)
+NO_ROBOT_MODE: True
+
+# Debugging mode
+# DEBUG_FLAG = True
+DEBUG_FLAG: True
+
+# Start ros controller via sh
+START_SH: True

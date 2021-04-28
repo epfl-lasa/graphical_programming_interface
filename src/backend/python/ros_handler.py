@@ -24,6 +24,8 @@ from scipy.spatial.transform import Rotation
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
+from rclpy.duration import Duration
+
 
 # ROS messages
 from std_msgs.msg import Bool
@@ -36,6 +38,11 @@ from rcl_interfaces.msg import ParameterType
 from rcl_interfaces.msg import ParameterValue
 from rcl_interfaces.msg import ParameterDescriptor, ParameterValue
 from rcl_interfaces.srv import SetParameters, GetParameters, ListParameters
+
+# Lookup transform
+from geometry_msgs.msg import TransformStamped
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
 
 # Personal library
 from sequence_handler import SequenceHandler
@@ -82,6 +89,12 @@ class RosHandler(Node):
     def __init__(self, DataHandler=None, DEBUG_FLAG=False):
         super().__init__('ros_main_handler')
 
+        self.buffer = Buffer()
+        self.listener = TransformListener(
+            buffer=self.buffer, node=self, spin_thread=True)
+
+        # print('After buffer')
+               
         self.DEBUG_FLAG = DEBUG_FLAG
         # Spin in a separate thread
         # self.thread = threading.Thread(target=rclpy.spin, args=(self, ), daemon=True)
@@ -96,7 +109,7 @@ class RosHandler(Node):
             Bool, self.topic_names['controller_stop'], 2)
 
         # Declare callback messages
-        self.msg_robot_pose = None
+        # self.msg_robot_pose = None
         self.msg_ft_sensor = None
 
         # The handler of goals for the action-server
@@ -104,7 +117,7 @@ class RosHandler(Node):
         
         # Subcription (potentially: only activate this when actually needed...)
         self.subscription_robot_robot = self.create_subscription(
-            Pose, self.topic_names['robot_pose'], self.callback_robot_pose, 5)
+            Pose, '/iiwa/CartesianPosition', self.callback_robot_pose, 5)
 
         self.subscription_ft_sensor = self.create_subscription(
             WrenchStamped, self.topic_names['ft_sensor'], self.callback_ft_sensor, 5)
@@ -144,9 +157,39 @@ class RosHandler(Node):
         self.start_time = self.get_clock().now().to_msg()
         
         self.DataHandler = DataHandler
+
+        self._awaiting_newpose_msg = True
         
         print('Finished init.')
         warnings.warn('Finished init.')
+
+    def get_ee_pose_from_tf(self,
+                            # target_frame='iiwa_link_ee_polish', source_frame='iiwa_link_0'
+                            target_frame='iiwa_link_0', source_frame='iiwa_link_ee_polish'
+    ):
+        time_stamp = rclpy.time.Time(seconds=0, nanoseconds=0).to_msg()
+
+        # it_count = 0
+        # max_it = 1000
+        # while not self.buffer.can_transform(target_frame=target_frame,
+                                            # source_frame=source_frame,
+                                            # time=time_stamp,
+                                            # timeout=Duration(seconds=0, nanoseconds=1000)):
+            # it_count += 1 
+            # if it_count > max_it:
+                # break
+            # pass
+            # rclpy.spin_once(node=self, timeout_sec=0.01)
+            
+        listened_transform = self.buffer.lookup_transform(
+            target_frame=target_frame, source_frame=source_frame,
+            time=time_stamp,
+            timeout=Duration(seconds=1, nanoseconds=0)
+        )
+
+        # print('New transform')
+        # print(listened_transform)
+        return listened_transform
 
     def reset(self):
         # How to differentiate from del (?!)
@@ -154,6 +197,9 @@ class RosHandler(Node):
 
     def __del__(self):
         # Sure about shutdown of rclpy(?)
+        if not hasattr(self, '_goal_handle'):
+            return 
+            
         self.robot_is_moving = False # Turn robot of
         self.reset_attractor_to_current_pose() # TODO: integrate this in normal (?)
         
@@ -167,7 +213,23 @@ class RosHandler(Node):
     # @emergency_stop_activated.setter
     # def emergency_stop_activated(self, value):
         # self._emergency_stop_activated = value
+    @property
+    def msg_robot_pose(self):
+        transform_stamped = self.get_ee_pose_from_tf()
+        transform = transform_stamped.transform
 
+        pose = Pose()
+        pose.position.x = transform.translation.x
+        pose.position.y = transform.translation.y
+        pose.position.z = transform.translation.z
+
+        pose.orientation.x = transform.rotation.x
+        pose.orientation.y = transform.rotation.y
+        pose.orientation.z = transform.rotation.z
+        pose.orientation.w = transform.rotation.w
+
+        return pose
+        
     @property
     def robot_is_moving(self):
         # TODO: maybe (?!) make this a global parameter?
@@ -284,6 +346,7 @@ class RosHandler(Node):
         new_param = Parameter(name=parameter_name,  value=new_param_value)
         self.req_params.parameters = [new_param]
 
+        # print('Updating force')
         self.future = self.client_setparams.call_async(self.req_params)
 
     def set_compliant_mode(self, value):
@@ -300,28 +363,33 @@ class RosHandler(Node):
         self.future = self.client_setparams.call_async(self.req_params)
 
         if not value:    # stopping Compliant Mode
-            if self.msg_robot_pose is None:
-                warnings.warn('No robot state ever recieved. Not resetting attractor.')
-                return
-            
             self.reset_attractor_to_current_pose()
-
+            # Spin once to make sure to get a value
+            # rclpy.spin_once(node=self, timeout_sec=0.02)
+            # if self.msg_robot_pose is None:
+                # warnings.warn('No robot state ever recieved. Not resetting attractor.')
+                # return
             
     def reset_attractor_to_current_pose(self):
         ''' Put robot in default position.'''
+        
         self.get_logger().info('Reset attractor to current pose.')
         
         if self.DEBUG_FLAG:
             return
-        
-        rclpy.spin_once(node=self, timeout_sec=0.02)
-        param_value = [self.msg_robot_pose.position.x,
-                       self.msg_robot_pose.position.y,
-                       self.msg_robot_pose.position.z,
-                       self.msg_robot_pose.orientation.w,
-                       self.msg_robot_pose.orientation.x,
-                       self.msg_robot_pose.orientation.y,
-                       self.msg_robot_pose.orientation.z
+
+        # rclpy.spin_once(node=self, timeout_sec=0.01)
+        # self._awaiting_newpose_msg = True
+        # while self._awaiting_newpose_msg:
+            
+        msg_robot_pose = self.msg_robot_pose
+        param_value = [msg_robot_pose.position.x,
+                       msg_robot_pose.position.y,
+                       msg_robot_pose.position.z,
+                       msg_robot_pose.orientation.w,
+                       msg_robot_pose.orientation.x,
+                       msg_robot_pose.orientation.y,
+                       msg_robot_pose.orientation.z
         ]
 
         # param_value = [6,6,6, 6,6,6,6]
@@ -330,6 +398,8 @@ class RosHandler(Node):
         self.req_params.parameters = [new_param]
         # self.future = self.client_setparams.call_async(self.req_params)
         self.future_controller = self.client_setparams_controller.call_async(self.req_params)
+
+        self.get_logger().info('Updated attractor...')
 
 
     def stop_robot(self):
@@ -372,7 +442,7 @@ class RosHandler(Node):
             # print('Doing execution.')
             # print(self._goal_handle)
             print('Movement in progress')
-            rclpy.spin_once(node=self, timeout_sec=timeout_sec)
+            # rclpy.spin_once(node=self, timeout_sec=timeout_sec)
             # time.sleep(timeout_sec)
             
         print('Finished movmeemet')
@@ -427,8 +497,8 @@ class RosHandler(Node):
 
         timeout_sec=0.1
         while(self.movement_execution_in_progress):
-            rclpy.spin_once(node=self, timeout_sec=timeout_sec)
-            # time.sleep(timeout_sec)
+            # rclpy.spin_once(node=self, timeout_sec=timeout_sec)
+            time.sleep(timeout_sec)
 
         return status_message
 
@@ -437,9 +507,9 @@ class RosHandler(Node):
         self.startup_robot()
         status_message = self.SequenceHandler.execute_sequence(module_id)
 
-        timeout_sec = 0.1
-        while(self.movement_execution_in_progress):
-            rclpy.spin_once(node=self, timeout_sec=timeout_sec)
+        # timeout_sec = 0.1
+        # while(self.movement_execution_in_progress):
+            # rclpy.spin_once(node=self, timeout_sec=timeout_sec)
             # time.sleep(timeout_sec)
         
         return status_message
@@ -452,11 +522,9 @@ class RosHandler(Node):
     ################################################
     def start_force_recording(self):
         ''' Activate or initialize force listener. '''
+        # self.get_logger().info('Start force recording.')
         if self.force_listener is None:
             self.force_listener = ForceListener(start_time=self.start_time, RosHandler=self)
-
-        # self.set_compliant_mode(True)
-        self.force_listener.activate()
         return 0
 
     def stop_force_recording(self):
@@ -469,7 +537,7 @@ class RosHandler(Node):
         ''' Send data back'''
         if self.force_listener is None:
             self.start_force_recording()
-            
+
         return self.force_listener.get_updated_data()
 
     ################################################
@@ -498,24 +566,30 @@ class RosHandler(Node):
         # TODO - for future...
         raise NotImplementedError('Not implented')
 
-    def get_robot_position(self, pose_type=None, time_max_wait=5, time_sleep=0.1):
+    def get_robot_position(self, pose_type=None, time_max_wait=5, time_sleep=0.01):
         ''' Get current position of the robot. '''
         num_try_max = time_max_wait/time_sleep
         
         it = 0
-        while self.msg_robot_pose is None:
-            if it > num_try_max:
-                warnings.warn('Maximum iterations reached wihout position')
-                return ' '
-            it += 1
-            rclpy.spin_once(node=self, timeout_sec=time_sleep)
+        
+        # while self._got_newpose_msg is False:
+        # Spin once to update position
+        # rclpy.spin_once(node=self, timeout_sec=time_sleep)
+            
+        # while self.msg_robot_pose is None:
+            # if it > num_try_max:
+                # warnings.warn('Maximum iterations reached wihout position')
+                # return ' '
+            # it += 1
+            # rclpy.spin_once(node=self, timeout_sec=time_sleep)
             # time.sleep(time_sleep)
 
         euler_data = self.transform_poseROS_to_eulerPose(self.msg_robot_pose)
         return {'pose': euler_data}
+
     
     def record_module_database(self, module_id, DataHandler, max_recording=1000,
-                               recording_delta_time=0.5):
+                               recording_delta_time=0.25):
         ''' Record Data and Send to Database. '''
         self.set_compliant_mode(True)
         self.data_recording = True
@@ -535,8 +609,9 @@ class RosHandler(Node):
                 warnings.warn('@ros_handler: recieved none robot position')
 
             # This decides about the recording frequency
-            rclpy.spin_once(node=self, timeout_sec=recording_delta_time)
-            # time.sleep(time_sleep)
+            # rclpy.spin_once(node=self, timeout_sec=recording_delta_time)
+            # print(self.data_recording)
+            time.sleep(recording_delta_time)
             
         self.data_recording = False
         # self.set_attractor_as_current(Pose)
@@ -649,6 +724,8 @@ class RosHandler(Node):
     ##############################################
     def callback_stoprecording(self):
         # print('Stop recording')
+        self.get_logger().info('Stop recording')
+        
         self.data_recording = False
 
     def callback_emergency_stop(self):
@@ -665,7 +742,9 @@ class RosHandler(Node):
 
     def callback_robot_pose(self, msg):
         '''ROS callback '''
-        self.msg_robot_pose = msg
+        # print('Message recieved')
+        # self.msg_robot_pose = msg
+        self._awaiting_newpose_msg = False
 
     def callback_ft_sensor(self, msg):
         '''ROS callback '''

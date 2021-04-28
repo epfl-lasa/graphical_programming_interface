@@ -50,11 +50,10 @@ cors = CORS(app)
 
 data_directory = os.path.join('backend', 'userdata')
 
-IMPORT_COMMUNACTION_CONTROLLER = False
-AUTOMATICALLY_UPDATE_ROS_HANDLER = True
+# Import Setup-File 
+with open(os.path.join(dir_path, 'setup_main.yaml'), 'r') as ff:
+    setup_data = yaml.load(ff, Loader=yaml.FullLoader)
 
-# DEBUG_FLAG = True
-DEBUG_FLAG = False
 
 # ----------------------------------------
 #    Startup & resetting
@@ -68,10 +67,12 @@ def resetbackend():
     
 @app.route('/startupenvironment')
 def startupenvironment():
-    if DEBUG_FLAG:
-        print('\n\n\n[WARNING !!!!] Flask is started in DEBUG-MODE\n\n\n')
+    # TODO: set in backend / recieve data.
+    
+    if setup_data['DEBUG_FLAG']:
+        print('\n\n\n[WARNNIG !!!!] Flask is started in DEBUG-MODE\n\n\n')
 
-    if not DEBUG_FLAG:
+    if not setup_data['DEBUG_FLAG'] and setup_data['START_SH']:
         # (Re-)start nodes of KUKA / simulator
         subprocess.call(['sh', './src/startup_remote.sh'])
 
@@ -82,7 +83,8 @@ def startupenvironment():
     DataLocalHandler = DataHandler(dir_path)
 
     # Create ROS handler
-    RosMainHandler = RosHandler(DataHandler=DataLocalHandler, DEBUG_FLAG=DEBUG_FLAG)
+    RosMainHandler = RosHandler(DataHandler=DataLocalHandler,
+                                DEBUG_FLAG=setup_data['DEBUG_FLAG'])
 
     return '0: all good'
 
@@ -164,6 +166,7 @@ def executesequence(*args, **kwargs):
 @app.route('/getactivemoduleid')
 def getactivemoduleid():
     module_id = RosMainHandler.get_active_module_id()
+    print('module_id', module_id)
     return {'moduleId': module_id}
     
 @app.route('/getrobotposition')
@@ -201,7 +204,7 @@ def replaydata(my_id, my_filename):
     return '0: success'
 
 # ----------------------------------------
-#   Record Data for a specific Module
+#   Listen to Force
 # ----------------------------------------
 @app.route('/startforcerecording')
 def startforcerecording():
@@ -323,7 +326,7 @@ def loadfromfile(my_filename):
 
     print('data scene', data['scene'])
     # Update directly ROS2
-    if AUTOMATICALLY_UPDATE_ROS_HANDLER:
+    if setup_data['AUTOMATICALLY_UPDATE_ROS_HANDLER']:
         RosMainHandler.update_scene(scene=copy.deepcopy(data['scene']))
 
     return data

@@ -88,6 +88,15 @@ import axios from 'axios' // Needed to pass. Only temporarily?
 // import {blocks, links} from '../../backend/userdata/default_data.json'
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 
+// Vue.mixin({
+  // created: function () {
+    // var myOption = this.$options.myOption
+    // if (myOption) {
+      // console.log(myOption)
+    // }
+  // }
+// })
+
 export default {
   name: 'App',
   components: {
@@ -623,6 +632,8 @@ input {
     }
 
     .side-menu-body {
+        overflow: scroll;
+
         background-color: @color-main-mediumbright;
         top: @header-height;
         height: ~"calc(100% - @{header-height})";

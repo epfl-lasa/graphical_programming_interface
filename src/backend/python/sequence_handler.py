@@ -34,6 +34,8 @@ class SequenceHandler(Node):
 
         self.max_sequence_loops = max_sequence_loops
 
+        self.default_frame_id = 'iiwa_link_0'
+
         # self.subscription_successfull_execution = self.create_subscription(
             # Bool, self._MainRosHandler.topic_names['controller_success'],
             # self.callback_loop_succesfull, 2)
@@ -83,13 +85,17 @@ class SequenceHandler(Node):
     @sequence_it.setter
     def sequence_it(self, value):
         ''' Cap at maximum iteration. Assumption of only one increment at a time.'''
-        self._sequence_it = value
-        if self._sequence_it >= len(self.sequence):
-            self._sequence_it = self._sequence_it - len(self.sequence)
+        if len(self.sequence) == 0:
+            warnings.warn('Zero sequence length')
+            
+        self._sequence_it = value % len(self.sequence)
     
     @staticmethod
     def get_euler_pose(seq):
         return seq['values']['property']['reference']['value']
+
+    def get_time_stamp(self):
+        return self.get_clock().now().to_msg()
 
     def get_home_position_it(self):
         ''' Start homee if none is chosens / given in the beginning.'''
@@ -103,14 +109,18 @@ class SequenceHandler(Node):
     def publish_trajectory(self, msg, force=0, time_sleep=0.02):
         print('start spinning for waiting')
         
-        while self.movement_execution_in_progress:
+        while self.movement_execution_in_progress and self.robot_is_moving:
             # rclpy.spin_once(node=self, timeout_sec=time_sleep)
             # time_sleep=0.5
             # print('Sleeping slow')
             rclpy.spin_once(node=self._MainRosHandler, timeout_sec=time_sleep)
             # time.sleep(time_sleep)
 
-        print('end spinning for waiting')            
+        print('end spinning for waiting')
+
+        if not self.robot_is_moving:
+            # Stop execution
+            return
 
         if force is not None:
             self._MainRosHandler.set_force_parameter(force)
@@ -124,8 +134,8 @@ class SequenceHandler(Node):
 
     def get_current_module_id(self):
         # The Sequence where the robot is in, is ahead of the secuenc_it retrieved.
-        sequence_it = self.sequence[self.sequence_it]['id'] - 1
-        sequence_it = sequence_it % len(self.sequence)
+        sequence_it = (self.sequence_it - 1) % len(self.sequence)
+        self.sequence[sequence_it]['id']
         return sequence_it
         
     def get_position_of_module_id(self, module_id):
@@ -135,7 +145,7 @@ class SequenceHandler(Node):
                 return seq_it
         # Not found
     
-    def execute_module(self, sequence_it, time_sleep=0.1):
+    def execute_module(self, sequence_it, time_sleep=0.1, ):
         ''' Exectue a module without resetting. '''
         if len(self.sequence) == 0:
             print('Zero sequence -- shutting down.')
@@ -146,8 +156,8 @@ class SequenceHandler(Node):
         if self.sequence[sequence_it]['type'] == 'idle':
             print('Module: Idle / home')
             pose = PoseStamped()
-            pose.header.frame_id = 'none'
-            # pose.header.stamp = (?)
+            pose.header.frame_id = self.default_frame_id
+            pose.header.stamp = self.get_time_stamp()
             pose.pose = self._MainRosHandler.transform_eulerPose_to_poseROS(
                 self.get_euler_pose(self.sequence[self.sequence_it]))
 
@@ -165,8 +175,8 @@ class SequenceHandler(Node):
               or self.sequence[sequence_it]['type'] == 'constant_force'):
             print('Module: Linear with/without force')
             pose = PoseStamped()
-            pose.header.frame_id = 'none'
-            # pose.header.stamp = (?)
+            pose.header.frame_id = self.default_frame_id
+            pose.header.stamp = self.get_time_stamp()
             pose.pose = self._MainRosHandler.transform_eulerPose_to_poseROS(
                 self.get_euler_pose(self.sequence[self.sequence_it]))
 
@@ -206,8 +216,8 @@ class SequenceHandler(Node):
 
         # Move to previous reference position
         pose = PoseStamped()
-        pose.header.frame_id = 'none'
-        # pose.header.stamp = (?)
+        pose.header.frame_id = self.default_frame_id
+        pose.header.stamp = self.get_time_stamp()
         pose.pose = self._MainRosHandler.transform_eulerPose_to_poseROS(
             self.get_euler_pose(self.sequence[self.sequence_it-1]))
         msg_path = Path()

@@ -1,0 +1,38 @@
+information: 'Circular Motion without force.'
+name: circular
+
+title: Circular
+description: Linear Module
+
+family: linear
+iconpath: linear_motion.svg
+
+fields:
+- attr: property
+  label: Reference
+  name: reference
+  type: eulerPose
+  unit: mm_deg
+- attr: property
+  label: Speed
+  name: speed
+  type: slider
+  unit: m/s
+  settings:
+    min: 0
+    max: 3
+# - attr: property
+#   label: Stiffness
+#   name: stiffness
+#   type: slider
+#   settings:
+#     - min: 0
+#       max: 10
+- attr: input
+  label: Input
+  name: input
+  type: event
+- attr: output
+  label: Input
+  name: output
+  type: event

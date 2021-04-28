@@ -66,8 +66,8 @@
           <div v-else-if="robotIsCoupledToPose"
                id="move-reference reference-button"
                class="aica-button compliant"
-               @click="updateRobotIsCoupledToPose(false)"
-               @touchstart="updateRobotIsCoupledToPose(false)">
+               @click="updateRobotIsCoupledToPose($event, false)"
+               @touchstart="updateRobotIsCoupledToPose($event, false)">
             <p> Uncouple </br> robot </p>
           </div>
           <div v-else class="aica-button" id="move-reference reference-button"

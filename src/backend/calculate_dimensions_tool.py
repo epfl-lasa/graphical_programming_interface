@@ -61,3 +61,9 @@ if (__name__) == "__main__":
 
     torque_evalution()
     pass
+
+
+# Manual Weighting / Measruing
+# Weight: 0.77 kg
+# Distance Center of Mass: 0.08 m
+

@@ -1013,6 +1013,11 @@ export default {
         // this.$emit('updateBackendProgram')
       // }
     // },
+    // currentlyPlayingId () {
+      // if (newValue) {
+        // console.log('@VueGetActiveId: ')
+      // }
+    // },
     blocksContent () {
       this.importBlocksContent()
     },

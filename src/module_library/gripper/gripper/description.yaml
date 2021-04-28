@@ -1,0 +1,53 @@
+name: home
+title: Home Pose
+
+description: Home / Wait
+
+family: movement
+iconpath: idle_pause.svg
+
+information: ''
+library: basic
+
+fields:
+- attr: property
+  label: Reference
+  name: reference
+  type: eulerPose
+  unit: mm_deg
+- attr: property
+  label: Stiffness
+  name: stiffness
+  type: slider
+  unit: N/mm
+  settings:
+    min: 0
+    max: 5
+- attr: input
+  label: Input
+  name: input
+  type: event
+- attr: output
+  label: Input
+  name: output
+  type: event
+
+# TODO: transform fields to inputs, outputs & properties
+inputs:
+  - name: input
+    label: Input
+    type: event
+
+outputs:
+  - name: output
+    label: Output
+    type: event
+    
+properties:
+- name: reference
+  label: Reference Frame
+  type: eulerPose
+  
+- label: Stiffness
+  name: stiffness
+  type: slider

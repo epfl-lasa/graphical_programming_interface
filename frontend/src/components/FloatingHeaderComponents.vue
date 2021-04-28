@@ -45,6 +45,8 @@
   <div v-if="mainMenuActive" class="main-menu-page">
     <div class="logo-container">
       <img  class="logo-large" src='./../assets/logotypes/aica_original_white.svg'>
+      <!-- <img  class="logo-large" src='./../assets/logotypes/recomatic.png'> -->
+      <h1 id='aica-title'> Artifical Intelligence to <br> Simplify Robot Programming </h1>
     </div>
     <div  class="aica-button"
           @click="mainMenuToggle($event)" @touchstart="mainMenuToggle($event)">
@@ -331,6 +333,13 @@ export default {
     }
 }
 
+#aica-title {
+    font-size: @fontsize-large*2.0;
+
+    position: relative;
+    top: @fontsize-large*5.5;
+}
+
 #compliant-button {
     font-size: @fontsize-large;
     border-radius: $font-size;
@@ -371,7 +380,6 @@ export default {
 .main-menu-page{
     position: absolute;
     left: 0;
-    top: 0;
 
     width: 100vw;
     height: 100vw;
@@ -382,8 +390,8 @@ export default {
 
     .aica-button {
         font-size: @fontsize-huge;
-        margin-top: $font-size * 1.0;
-        margin-bottom: $font-size * 1.0;
+        margin-top: $font-size * 0.5;
+        margin-bottom: $font-size * 0.5;
 
         padding-top: $font-size * 0.4;
         padding-bottom: $font-size * 0.4;

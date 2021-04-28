@@ -8,30 +8,24 @@
            @click="hideMenu($event)"
            @touchstart="hideMenu($event)"
            >
-                 <!-- @touchstart="hideMenu($event)" -->
-
-
-      <!-- <div v-if="robotIsMoving" class="aica-button danger" id="run-module" -->
-           <!-- @click="stopRobot($event)" @touchstart="stopRobot($event)" -->
-           <!-- > -->
-        <!-- <p> Stop Moving </p> -->
-      <!-- </div> -->
     </div>
     <div class="property-panel side-menu-body">
-      <DataVisualization
-        @updateTitle="title='Force Visualization'"
-        />
+      <DataVisualization v-if="activeTabLabel==='dataVisualization'"
+                         @updateTitle="title='Force Visualization'"
+                         />
+
+      <ImuVisualization v-if="activeTabLabel==='imuVisualization'"
+                        @updateTitle="title='Imu Visualization'"
+                        />
     </div>
   </div>
-  <!-- <div> -->
+
   <div v-else class="side-menu-button-container">
     <img class="aica-icon-small"
          src='./../assets/icons/keyboard_arrow_right-white-18dp.svg'
          @click="showMenu($event)"
          @touchstart="showMenu($event)"
          >
-             <!-- @touchstart="showMenu($event)" -->
-
   </div>
 </div>
 </template>
@@ -39,11 +33,13 @@
 
 <script>
 import DataVisualization from './DataVisualization'
+import ImuVisualization from './ImuVisualization'
 
 export default {
   name: 'SideMenuLeft',
   components: {
-    DataVisualization
+    DataVisualization,
+    ImuVisualization
   },
   mounted () {
     console.log('@SideMnueLeft: Mounted')
@@ -73,6 +69,9 @@ export default {
       //
       referenceValueY: 10,
       valueRange: [0, 50],
+
+      activeTabLabel: 'imuVisualization',
+      // activeTabLabel: 'dataVisualization',
 
       title: ''
     }

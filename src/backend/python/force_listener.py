@@ -19,11 +19,11 @@ from geometry_msgs.msg import WrenchStamped
 
 
 class ForceListener(Node):
-    def __init__(self, start_time=0, delta_time_max=5, _RosHandler=None):
+    def __init__(self, start_time=0, delta_time_max=5, RosHandler=None):
         ''' Force recording'''
         super().__init__('ros_force_listener')
         
-        self.topic = _RosHandler.topic_names['ft_sensor']
+        self.topic = RosHandler.topic_names['ft_sensor']
 
         self.time_data = []
         self.force_data = []
